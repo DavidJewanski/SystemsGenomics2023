@@ -1,0 +1,16 @@
+---
+title: "Systems Genomics data analysis pipeline"
+output: html_notebook
+---
+
+# install libraries
+```{r}
+
+```
+
+
+# load libraries
+```{r}
+
+```
+
