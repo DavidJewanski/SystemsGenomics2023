@@ -5,7 +5,8 @@ output: html_notebook
 
 # install libraries
 ```{r}
-
+install.packages(c("tidyverse","ggrepel","BiocManager","pbapply","gplots","msigdbr"))
+BiocManager::install(c("biomaRt","sva","DESeq2","edgeR"))
 ```
 
 
