@@ -12,7 +12,46 @@ BiocManager::install(c("biomaRt","sva","DESeq2","edgeR"))
 
 # load libraries
 ```{r}
-library(tidyverse)
+libraries = c("tidyverse","ggrepel","BiocManager","pbapply","gplots","msigdbr", "biomaRt","sva","DESeq2","edgeR")
+lapply(libraries, library, character.only=TRUE)
 print("Hello World")
 ```
+
+
+
+```{r}
+setwd("/Users/david/Library/CloudStorage/OneDrive-Persönlich/Master ETH/Courses/11_Systems Genomics/project local repository/data")
+samples <- list.files("rsem_genes_results_trimmed")
+expr <- sapply(samples, function(sample){
+  file <- paste0("rsem_genes_results_trimmed/",sample)
+  quant <- read.csv(file, sep="\t", header=T)
+  tpm <- setNames(quant$TPM, quant$gene_id)
+  return(tpm)
+})
+```
+```{r}
+library(dplyr)
+setwd("/Users/david/Library/CloudStorage/OneDrive-Persönlich/Master ETH/Courses/11_Systems Genomics/project local repository/data")
+meta1 <- read.csv("SRR_Acc_List.txt", sep="\t", header=T) %>%
+  inner_join(read.csv("PRJNA875066 Metadata.txt", header=T),
+    by = c("Name" = "Run"),
+    suffix = c("",".y")) 
+meta2 <- read.csv("SRR_Acc_List.txt", sep="\t", header=T) %>%
+  inner_join(read.csv("PRJNA946653 Metadata.txt", header=T),
+    by = c("Name" = "Run"),
+    suffix = c("",".y")) 
+
+#expr <- expr[,meta$Name]
+```
+
+
+```{r}
+print(meta1$Name)
+print(meta2$Name)
+```
+
+```{r}
+print(samples)
+```
+
 
