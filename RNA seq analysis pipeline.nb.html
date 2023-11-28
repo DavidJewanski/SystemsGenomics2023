@@ -1757,10 +1757,25 @@ pipeline</h1>
 <h1>install libraries</h1>
 <!-- rnb-text-end -->
 <!-- rnb-chunk-begin -->
-<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxuaW5zdGFsbC5wYWNrYWdlcyhjKFwidGlkeXZlcnNlXCIsXCJnZ3JlcGVsXCIsXCJCaW9jTWFuYWdlclwiLFwicGJhcHBseVwiLFwiZ3Bsb3RzXCIsXCJtc2lnZGJyXCIpKVxuQmlvY01hbmFnZXI6Omluc3RhbGwoYyhcImJpb21hUnRcIixcInN2YVwiLFwiREVTZXEyXCIsXCJlZGdlUlwiKSlcbmBgYCJ9 -->
-<pre class="r"><code>install.packages(c(&quot;tidyverse&quot;,&quot;ggrepel&quot;,&quot;BiocManager&quot;,&quot;pbapply&quot;,&quot;gplots&quot;,&quot;msigdbr&quot;))
-BiocManager::install(c(&quot;biomaRt&quot;,&quot;sva&quot;,&quot;DESeq2&quot;,&quot;edgeR&quot;))</code></pre>
+<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxuaW5zdGFsbC5wYWNrYWdlcyhjKFwidGlkeXZlcnNlXCIsXCJnZ3JlcGVsXCIsXCJCaW9jTWFuYWdlclwiLFwicGJhcHBseVwiLFwiZ3Bsb3RzXCIsXCJtc2lnZGJyXCIpKVxuYGBgIn0= -->
+<pre class="r"><code>install.packages(c(&quot;tidyverse&quot;,&quot;ggrepel&quot;,&quot;BiocManager&quot;,&quot;pbapply&quot;,&quot;gplots&quot;,&quot;msigdbr&quot;))</code></pre>
 <!-- rnb-source-end -->
+<!-- rnb-output-begin eyJkYXRhIjoiRXJyb3IgaW4gaW5zdGFsbC5wYWNrYWdlcyA6IFVwZGF0aW5nIGxvYWRlZCBwYWNrYWdlc1xuIn0= -->
+<pre><code>Error in install.packages : Updating loaded packages</code></pre>
+<!-- rnb-output-end -->
+<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxuQmlvY01hbmFnZXI6Omluc3RhbGwoYyhcImJpb21hUnRcIixcInN2YVwiLFwiREVTZXEyXCIsXCJlZGdlUlwiKSlcbmBgYCJ9 -->
+<pre class="r"><code>BiocManager::install(c(&quot;biomaRt&quot;,&quot;sva&quot;,&quot;DESeq2&quot;,&quot;edgeR&quot;))</code></pre>
+<!-- rnb-source-end -->
+<!-- rnb-output-begin eyJkYXRhIjoiJ2dldE9wdGlvbihcInJlcG9zXCIpJyByZXBsYWNlcyBCaW9jb25kdWN0b3Igc3RhbmRhcmQgcmVwb3NpdG9yaWVzLCBzZWUgJ2hlbHAoXCJyZXBvc2l0b3JpZXNcIiwgcGFja2FnZSA9XG5cIkJpb2NNYW5hZ2VyXCIpJyBmb3IgZGV0YWlscy5cblJlcGxhY2VtZW50IHJlcG9zaXRvcmllczpcbiAgICBDUkFOOiBodHRwczovL2NyYW4ucnN0dWRpby5jb20vXG4ifQ== -->
+<pre><code>&#39;getOption(&quot;repos&quot;)&#39; replaces Bioconductor standard repositories, see &#39;help(&quot;repositories&quot;, package =
+&quot;BiocManager&quot;)&#39; for details.
+Replacement repositories:
+    CRAN: https://cran.rstudio.com/</code></pre>
+<!-- rnb-output-end -->
+<!-- rnb-output-begin eyJkYXRhIjoiXG5SZXN0YXJ0aW5nIFIgc2Vzc2lvbi4uLlxuIn0= -->
+<pre><code>
+Restarting R session...</code></pre>
+<!-- rnb-output-end -->
 <!-- rnb-chunk-end -->
 <!-- rnb-text-begin -->
 </div>
@@ -1768,19 +1783,163 @@ BiocManager::install(c(&quot;biomaRt&quot;,&quot;sva&quot;,&quot;DESeq2&quot;,&q
 <h1>load libraries</h1>
 <!-- rnb-text-end -->
 <!-- rnb-chunk-begin -->
-<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxucHJpbnQoXCJIZWxsbyBXb3JsZFwiKVxuXG5gYGAifQ== -->
-<pre class="r"><code>print(&quot;Hello World&quot;)
+<!-- rnb-chunk-end -->
+<!-- rnb-text-begin -->
+<!-- rnb-text-end -->
+<!-- rnb-chunk-begin -->
+<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxuI3NldHdkKFwiL1VzZXJzL2RhdmlkL0xpYnJhcnkvQ2xvdWRTdG9yYWdlL09uZURyaXZlLVBlcnNvzIhubGljaC9NYXN0ZXIgRVRIL0NvdXJzZXMvMTFfU3lzdGVtcyBHZW5vbWljcy9wcm9qZWN0IGxvY2FsIHJlcG9zaXRvcnkvZGF0YVwiKVxuc2V0d2QoXCJDOi9Vc2Vycy9uaWNrcy9EZXNrdG9wL1N5c3RlbXNfR2Vub21pY3MvR2l0SHViIERhdmlkL1N5c3RlbXNHZW5vbWljczIwMjMvZGF0YVwiKVxuYGBgIn0= -->
+<pre class="r"><code>#setwd(&quot;/Users/david/Library/CloudStorage/OneDrive-Persönlich/Master ETH/Courses/11_Systems Genomics/project local repository/data&quot;)
+setwd(&quot;C:/Users/nicks/Desktop/Systems_Genomics/GitHub David/SystemsGenomics2023/data&quot;)</code></pre>
+<!-- rnb-source-end -->
+<!-- rnb-output-begin eyJkYXRhIjoiV2FybnVuZzogVGhlIHdvcmtpbmcgZGlyZWN0b3J5IHdhcyBjaGFuZ2VkIHRvIEM6L1VzZXJzL25pY2tzL0Rlc2t0b3AvU3lzdGVtc19HZW5vbWljcy9HaXRIdWIgRGF2aWQvU3lzdGVtc0dlbm9taWNzMjAyMy9kYXRhIGluc2lkZSBhIG5vdGVib29rIGNodW5rLiBUaGUgd29ya2luZyBkaXJlY3Rvcnkgd2lsbCBiZSByZXNldCB3aGVuIHRoZSBjaHVuayBpcyBmaW5pc2hlZCBydW5uaW5nLiBVc2UgdGhlIGtuaXRyIHJvb3QuZGlyIG9wdGlvbiBpbiB0aGUgc2V0dXAgY2h1bmsgdG8gY2hhbmdlIHRoZSB3b3JraW5nIGRpcmVjdG9yeSBmb3Igbm90ZWJvb2sgY2h1bmtzLlxuIn0= -->
+<pre><code>Warnung: The working directory was changed to C:/Users/nicks/Desktop/Systems_Genomics/GitHub David/SystemsGenomics2023/data inside a notebook chunk. The working directory will be reset when the chunk is finished running. Use the knitr root.dir option in the setup chunk to change the working directory for notebook chunks.</code></pre>
+<!-- rnb-output-end -->
+<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxuc2FtcGxlcyA8LSBsaXN0LmZpbGVzKFwicnNlbV9nZW5lc19yZXN1bHRzX3RyaW1tZWRcIilcbmV4cHIgPC0gc2FwcGx5KHNhbXBsZXMsIGZ1bmN0aW9uKHNhbXBsZSl7XG4gIGZpbGUgPC0gcGFzdGUwKFwicnNlbV9nZW5lc19yZXN1bHRzX3RyaW1tZWQvXCIsc2FtcGxlKVxuICBwcmludChmaWxlKVxuICBxdWFudCA8LSByZWFkLmNzdihmaWxlLCBzZXA9XCJcXHRcIiwgaGVhZGVyPVQpXG4gIHRwbSA8LSBzZXROYW1lcyhxdWFudCRUUE0sIHF1YW50JGdlbmVfaWQpXG4gIHJldHVybih0cG0pXG59KVxuYGBgIn0= -->
+<pre class="r"><code>samples &lt;- list.files(&quot;rsem_genes_results_trimmed&quot;)
+expr &lt;- sapply(samples, function(sample){
+  file &lt;- paste0(&quot;rsem_genes_results_trimmed/&quot;,sample)
+  print(file)
+  quant &lt;- read.csv(file, sep=&quot;\t&quot;, header=T)
+  tpm &lt;- setNames(quant$TPM, quant$gene_id)
+  return(tpm)
+})</code></pre>
+<!-- rnb-source-end -->
+<!-- rnb-output-begin eyJkYXRhIjoiWzFdIFwicnNlbV9nZW5lc19yZXN1bHRzX3RyaW1tZWQvU1JSMjEzNTUzODUuZ2VuZXMucmVzdWx0c1wiXG5bMV0gXCJyc2VtX2dlbmVzX3Jlc3VsdHNfdHJpbW1lZC9TUlIyMTM1NTM4Ni5nZW5lcy5yZXN1bHRzXCJcblsxXSBcInJzZW1fZ2VuZXNfcmVzdWx0c190cmltbWVkL1NSUjIxMzU1Mzg4LmdlbmVzLnJlc3VsdHNcIlxuWzFdIFwicnNlbV9nZW5lc19yZXN1bHRzX3RyaW1tZWQvU1JSMjEzNTUzODkuZ2VuZXMucmVzdWx0c1wiXG5bMV0gXCJyc2VtX2dlbmVzX3Jlc3VsdHNfdHJpbW1lZC9TUlIyMTM1NTM5MC5nZW5lcy5yZXN1bHRzXCJcblsxXSBcInJzZW1fZ2VuZXNfcmVzdWx0c190cmltbWVkL1NSUjIxMzU1MzkyLmdlbmVzLnJlc3VsdHNcIlxuWzFdIFwicnNlbV9nZW5lc19yZXN1bHRzX3RyaW1tZWQvU1JSMjEzNTUzOTMuZ2VuZXMucmVzdWx0c1wiXG5bMV0gXCJyc2VtX2dlbmVzX3Jlc3VsdHNfdHJpbW1lZC9TUlIyMTM1NTM5NC5nZW5lcy5yZXN1bHRzXCJcblsxXSBcInJzZW1fZ2VuZXNfcmVzdWx0c190cmltbWVkL1NSUjIxMzU1Mzk2LmdlbmVzLnJlc3VsdHNcIlxuWzFdIFwicnNlbV9nZW5lc19yZXN1bHRzX3RyaW1tZWQvU1JSMjEzNTUzOTcuZ2VuZXMucmVzdWx0c1wiXG5bMV0gXCJyc2VtX2dlbmVzX3Jlc3VsdHNfdHJpbW1lZC9TUlIyMTM1NTM5OC5nZW5lcy5yZXN1bHRzXCJcblsxXSBcInJzZW1fZ2VuZXNfcmVzdWx0c190cmltbWVkL1NSUjIxMzU1NDAxLmdlbmVzLnJlc3VsdHNcIlxuWzFdIFwicnNlbV9nZW5lc19yZXN1bHRzX3RyaW1tZWQvU1JSMjM5MTQ0NTAuZ2VuZXMucmVzdWx0c1wiXG5bMV0gXCJyc2VtX2dlbmVzX3Jlc3VsdHNfdHJpbW1lZC9TUlIyMzkxNDQ1MS5nZW5lcy5yZXN1bHRzXCJcblsxXSBcInJzZW1fZ2VuZXNfcmVzdWx0c190cmltbWVkL1NSUjIzOTE0NDUyLmdlbmVzLnJlc3VsdHNcIlxuWzFdIFwicnNlbV9nZW5lc19yZXN1bHRzX3RyaW1tZWQvU1JSMjM5MTQ0NTMuZ2VuZXMucmVzdWx0c1wiXG5bMV0gXCJyc2VtX2dlbmVzX3Jlc3VsdHNfdHJpbW1lZC9TUlIyMzkxNDQ1NC5nZW5lcy5yZXN1bHRzXCJcblsxXSBcInJzZW1fZ2VuZXNfcmVzdWx0c190cmltbWVkL1NSUjIzOTE0NDU1LmdlbmVzLnJlc3VsdHNcIlxuWzFdIFwicnNlbV9nZW5lc19yZXN1bHRzX3RyaW1tZWQvU1JSMjM5MTQ1NzEuZ2VuZXMucmVzdWx0c1wiXG5bMV0gXCJyc2VtX2dlbmVzX3Jlc3VsdHNfdHJpbW1lZC9TUlIyMzkxNDU3Mi5nZW5lcy5yZXN1bHRzXCJcblsxXSBcInJzZW1fZ2VuZXNfcmVzdWx0c190cmltbWVkL1NSUjIzOTE0NTczLmdlbmVzLnJlc3VsdHNcIlxuWzFdIFwicnNlbV9nZW5lc19yZXN1bHRzX3RyaW1tZWQvU1JSMjM5MTQ1NzQuZ2VuZXMucmVzdWx0c1wiXG5bMV0gXCJyc2VtX2dlbmVzX3Jlc3VsdHNfdHJpbW1lZC9TUlIyMzkxNDU3NS5nZW5lcy5yZXN1bHRzXCJcblsxXSBcInJzZW1fZ2VuZXNfcmVzdWx0c190cmltbWVkL1NSUjIzOTE0NTc2LmdlbmVzLnJlc3VsdHNcIlxuWzFdIFwicnNlbV9nZW5lc19yZXN1bHRzX3RyaW1tZWQvU1JSMjM5MTQ1NzcuZ2VuZXMucmVzdWx0c1wiXG5bMV0gXCJyc2VtX2dlbmVzX3Jlc3VsdHNfdHJpbW1lZC9TUlIyMzkxNDU3OC5nZW5lcy5yZXN1bHRzXCJcblsxXSBcInJzZW1fZ2VuZXNfcmVzdWx0c190cmltbWVkL1NSUjIzOTE0NTc5LmdlbmVzLnJlc3VsdHNcIlxuIn0= -->
+<pre><code>[1] &quot;rsem_genes_results_trimmed/SRR21355385.genes.results&quot;
+[1] &quot;rsem_genes_results_trimmed/SRR21355386.genes.results&quot;
+[1] &quot;rsem_genes_results_trimmed/SRR21355388.genes.results&quot;
+[1] &quot;rsem_genes_results_trimmed/SRR21355389.genes.results&quot;
+[1] &quot;rsem_genes_results_trimmed/SRR21355390.genes.results&quot;
+[1] &quot;rsem_genes_results_trimmed/SRR21355392.genes.results&quot;
+[1] &quot;rsem_genes_results_trimmed/SRR21355393.genes.results&quot;
+[1] &quot;rsem_genes_results_trimmed/SRR21355394.genes.results&quot;
+[1] &quot;rsem_genes_results_trimmed/SRR21355396.genes.results&quot;
+[1] &quot;rsem_genes_results_trimmed/SRR21355397.genes.results&quot;
+[1] &quot;rsem_genes_results_trimmed/SRR21355398.genes.results&quot;
+[1] &quot;rsem_genes_results_trimmed/SRR21355401.genes.results&quot;
+[1] &quot;rsem_genes_results_trimmed/SRR23914450.genes.results&quot;
+[1] &quot;rsem_genes_results_trimmed/SRR23914451.genes.results&quot;
+[1] &quot;rsem_genes_results_trimmed/SRR23914452.genes.results&quot;
+[1] &quot;rsem_genes_results_trimmed/SRR23914453.genes.results&quot;
+[1] &quot;rsem_genes_results_trimmed/SRR23914454.genes.results&quot;
+[1] &quot;rsem_genes_results_trimmed/SRR23914455.genes.results&quot;
+[1] &quot;rsem_genes_results_trimmed/SRR23914571.genes.results&quot;
+[1] &quot;rsem_genes_results_trimmed/SRR23914572.genes.results&quot;
+[1] &quot;rsem_genes_results_trimmed/SRR23914573.genes.results&quot;
+[1] &quot;rsem_genes_results_trimmed/SRR23914574.genes.results&quot;
+[1] &quot;rsem_genes_results_trimmed/SRR23914575.genes.results&quot;
+[1] &quot;rsem_genes_results_trimmed/SRR23914576.genes.results&quot;
+[1] &quot;rsem_genes_results_trimmed/SRR23914577.genes.results&quot;
+[1] &quot;rsem_genes_results_trimmed/SRR23914578.genes.results&quot;
+[1] &quot;rsem_genes_results_trimmed/SRR23914579.genes.results&quot;</code></pre>
+<!-- rnb-output-end -->
+<!-- rnb-chunk-end -->
+<!-- rnb-text-begin -->
+<!-- rnb-text-end -->
+<!-- rnb-chunk-begin -->
+<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxubGlicmFyeShkcGx5cilcbiNzZXR3ZChcIi9Vc2Vycy9kYXZpZC9MaWJyYXJ5L0Nsb3VkU3RvcmFnZS9PbmVEcml2ZS1QZXJzb8yIbmxpY2gvTWFzdGVyIEVUSC9Db3Vyc2VzLzExX1N5c3RlbXMgR2Vub21pY3MvcHJvamVjdCBsb2NhbCByZXBvc2l0b3J5L2RhdGFcIilcbnNldHdkKFwiQzovVXNlcnMvbmlja3MvRGVza3RvcC9TeXN0ZW1zX0dlbm9taWNzL0dpdEh1YiBEYXZpZC9TeXN0ZW1zR2Vub21pY3MyMDIzL2RhdGFcIilcbmBgYCJ9 -->
+<pre class="r"><code>library(dplyr)
+#setwd(&quot;/Users/david/Library/CloudStorage/OneDrive-Persönlich/Master ETH/Courses/11_Systems Genomics/project local repository/data&quot;)
+setwd(&quot;C:/Users/nicks/Desktop/Systems_Genomics/GitHub David/SystemsGenomics2023/data&quot;)</code></pre>
+<!-- rnb-source-end -->
+<!-- rnb-output-begin eyJkYXRhIjoiV2FybnVuZzogVGhlIHdvcmtpbmcgZGlyZWN0b3J5IHdhcyBjaGFuZ2VkIHRvIEM6L1VzZXJzL25pY2tzL0Rlc2t0b3AvU3lzdGVtc19HZW5vbWljcy9HaXRIdWIgRGF2aWQvU3lzdGVtc0dlbm9taWNzMjAyMy9kYXRhIGluc2lkZSBhIG5vdGVib29rIGNodW5rLiBUaGUgd29ya2luZyBkaXJlY3Rvcnkgd2lsbCBiZSByZXNldCB3aGVuIHRoZSBjaHVuayBpcyBmaW5pc2hlZCBydW5uaW5nLiBVc2UgdGhlIGtuaXRyIHJvb3QuZGlyIG9wdGlvbiBpbiB0aGUgc2V0dXAgY2h1bmsgdG8gY2hhbmdlIHRoZSB3b3JraW5nIGRpcmVjdG9yeSBmb3Igbm90ZWJvb2sgY2h1bmtzLlxuIn0= -->
+<pre><code>Warnung: The working directory was changed to C:/Users/nicks/Desktop/Systems_Genomics/GitHub David/SystemsGenomics2023/data inside a notebook chunk. The working directory will be reset when the chunk is finished running. Use the knitr root.dir option in the setup chunk to change the working directory for notebook chunks.</code></pre>
+<!-- rnb-output-end -->
+<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxubWV0YTEgPC0gcmVhZC5jc3YoXCJTUlJfQWNjX0xpc3QudHh0XCIsIHNlcD1cIlxcdFwiLCBoZWFkZXI9VCkgJT4lXG4gIGlubmVyX2pvaW4ocmVhZC5jc3YoXCJQUkpOQTg3NTA2NiBNZXRhZGF0YS50eHRcIiwgaGVhZGVyPVQpLFxuICAgIGJ5ID0gYyhcIk5hbWVcIiA9IFwiUnVuXCIpLFxuICAgIHN1ZmZpeCA9IGMoXCJcIixcIi55XCIpKSBcbm1ldGEyIDwtIHJlYWQuY3N2KFwiU1JSX0FjY19MaXN0LnR4dFwiLCBzZXA9XCJcXHRcIiwgaGVhZGVyPVQpICU+JVxuICBpbm5lcl9qb2luKHJlYWQuY3N2KFwiUFJKTkE5NDY2NTMgTWV0YWRhdGEudHh0XCIsIGhlYWRlcj1UKSxcbiAgICBieSA9IGMoXCJOYW1lXCIgPSBcIlJ1blwiKSxcbiAgICBzdWZmaXggPSBjKFwiXCIsXCIueVwiKSkgXG5cbiNleHByIDwtIGV4cHJbLG1ldGEkTmFtZV0gI3RvIG1ha2Ugc3VyZSB0aGUgY29sdW1ucyBvZiB0aGUgZXhwcmVzc2lvbiBtYXRyaXggYXJlIGluIHRoZSBzYW1lIG9yZGVyIGFzIHJvd3MgaW4gdGhlIG1ldGFkYXRhXG5gYGAifQ== -->
+<pre class="r"><code>meta1 &lt;- read.csv(&quot;SRR_Acc_List.txt&quot;, sep=&quot;\t&quot;, header=T) %&gt;%
+  inner_join(read.csv(&quot;PRJNA875066 Metadata.txt&quot;, header=T),
+    by = c(&quot;Name&quot; = &quot;Run&quot;),
+    suffix = c(&quot;&quot;,&quot;.y&quot;)) 
+meta2 &lt;- read.csv(&quot;SRR_Acc_List.txt&quot;, sep=&quot;\t&quot;, header=T) %&gt;%
+  inner_join(read.csv(&quot;PRJNA946653 Metadata.txt&quot;, header=T),
+    by = c(&quot;Name&quot; = &quot;Run&quot;),
+    suffix = c(&quot;&quot;,&quot;.y&quot;)) 
+
+#expr &lt;- expr[,meta$Name] #to make sure the columns of the expression matrix are in the same order as rows in the metadata</code></pre>
+<!-- rnb-source-end -->
+<!-- rnb-chunk-end -->
+<!-- rnb-text-begin -->
+<p>#More information about genes with biomaRt (p. 42)</p>
+<!-- rnb-text-end -->
+<!-- rnb-chunk-begin -->
+<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxubGlicmFyeShiaW9tYVJ0KVxuYGBgIn0= -->
+<pre class="r"><code>library(biomaRt)</code></pre>
+<!-- rnb-source-end -->
+<!-- rnb-output-begin eyJkYXRhIjoiUmVnaXN0ZXJlZCBTMyBtZXRob2RzIG92ZXJ3cml0dGVuIGJ5ICdkYnBseXInOlxuICBtZXRob2QgICAgICAgICBmcm9tXG4gIHByaW50LnRibF9sYXp5ICAgICBcbiAgcHJpbnQudGJsX3NxbCAgICAgIFxuIn0= -->
+<pre><code>Registered S3 methods overwritten by &#39;dbplyr&#39;:
+  method         from
+  print.tbl_lazy     
+  print.tbl_sql      </code></pre>
+<!-- rnb-output-end -->
+<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxuZW5zZW1ibCA8LSB1c2VFbnNlbWJsKGJpb21hcnQgPSBcImVuc2VtYmxcIixcbmRhdGFzZXQgPSBcImhzYXBpZW5zX2dlbmVfZW5zZW1ibFwiKVxuYGBgIn0= -->
+<pre class="r"><code>ensembl &lt;- useEnsembl(biomart = &quot;ensembl&quot;,
+dataset = &quot;hsapiens_gene_ensembl&quot;)</code></pre>
+<!-- rnb-source-end -->
+<!-- rnb-output-begin eyJkYXRhIjoiUG9zc2libGUgU1NMIGNvbm5lY3Rpdml0eSBwcm9ibGVtcyBkZXRlY3RlZC5cblBsZWFzZSByZXBvcnQgdGhpcyBpc3N1ZSBhdCBodHRwczovL2dpdGh1Yi5jb20vZ3JpbWJvdWdoL2Jpb21hUnQvaXNzdWVzXG5FcnJvciBpbiBjdXJsOjpjdXJsX2ZldGNoX21lbW9yeSh1cmwsIGhhbmRsZSA9IGhhbmRsZSkgOiBcbiAgQ291bGQgbm90IHJlc29sdmUgaG9zdDogd3d3LmVuc2VtYmwub3JnXG5cbkVuc2VtYmwgc2l0ZSB1bnJlc3BvbnNpdmUsIHRyeWluZyB1c2Vhc3QgbWlycm9yXG5FbnNlbWJsIHNpdGUgdW5yZXNwb25zaXZlLCB0cnlpbmcgYXNpYSBtaXJyb3JcbkZlaGxlciBpbiAuY2hvb3NlRW5zZW1ibE1pcnJvcihtaXJyb3IgPSBtaXJyb3IsIGh0dHJfY29uZmlnID0gaHR0cl9jb25maWcpIDogXG4gIFVuYWJsZSB0byBxdWVyeSBhbnkgRW5zZW1ibCBzaXRlXG4ifQ== -->
+<pre><code>Possible SSL connectivity problems detected.
+Please report this issue at https://github.com/grimbough/biomaRt/issues
+Error in curl::curl_fetch_memory(url, handle = handle) : 
+  Could not resolve host: www.ensembl.org
+
+Ensembl site unresponsive, trying useast mirror
+Ensembl site unresponsive, trying asia mirror
+Fehler in .chooseEnsemblMirror(mirror = mirror, httr_config = httr_config) : 
+  Unable to query any Ensembl site</code></pre>
+<!-- rnb-output-end -->
+<!-- rnb-chunk-end -->
+<!-- rnb-text-begin -->
+<!-- rnb-text-end -->
+<!-- rnb-chunk-begin -->
+<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxuZGltKGV4cHIpXG5cbmBgYCJ9 -->
+<pre class="r"><code>dim(expr)
 </code></pre>
 <!-- rnb-source-end -->
-<!-- rnb-output-begin eyJkYXRhIjoiWzFdIFwiSGVsbG8gV29ybGRcIlxuIn0= -->
-<pre><code>[1] &quot;Hello World&quot;</code></pre>
+<!-- rnb-output-begin eyJkYXRhIjoiWzFdIDE3NTM4ICAgIDI3XG4ifQ== -->
+<pre><code>[1] 17538    27</code></pre>
+<!-- rnb-output-end -->
+<!-- rnb-chunk-end -->
+<!-- rnb-text-begin -->
+<p>#pairiwse correlation coefficients (p. 46)</p>
+<!-- rnb-text-end -->
+<!-- rnb-chunk-begin -->
+<!-- rnb-source-begin eyJkYXRhIjoiYGBgclxucHJpbnQoc2FtcGxlcylcbmBgYCJ9 -->
+<pre class="r"><code>print(samples)</code></pre>
+<!-- rnb-source-end -->
+<!-- rnb-output-begin eyJkYXRhIjoiIFsxXSBcIlNSUjIxMzU1Mzg1LmdlbmVzLnJlc3VsdHNcIlxuIFsyXSBcIlNSUjIxMzU1Mzg2LmdlbmVzLnJlc3VsdHNcIlxuIFszXSBcIlNSUjIxMzU1Mzg4LmdlbmVzLnJlc3VsdHNcIlxuIFs0XSBcIlNSUjIxMzU1Mzg5LmdlbmVzLnJlc3VsdHNcIlxuIFs1XSBcIlNSUjIxMzU1MzkwLmdlbmVzLnJlc3VsdHNcIlxuIFs2XSBcIlNSUjIxMzU1MzkyLmdlbmVzLnJlc3VsdHNcIlxuIFs3XSBcIlNSUjIxMzU1MzkzLmdlbmVzLnJlc3VsdHNcIlxuIFs4XSBcIlNSUjIxMzU1Mzk0LmdlbmVzLnJlc3VsdHNcIlxuIFs5XSBcIlNSUjIxMzU1Mzk2LmdlbmVzLnJlc3VsdHNcIlxuWzEwXSBcIlNSUjIxMzU1Mzk3LmdlbmVzLnJlc3VsdHNcIlxuWzExXSBcIlNSUjIxMzU1Mzk4LmdlbmVzLnJlc3VsdHNcIlxuWzEyXSBcIlNSUjIxMzU1NDAxLmdlbmVzLnJlc3VsdHNcIlxuWzEzXSBcIlNSUjIzOTE0NDUwLmdlbmVzLnJlc3VsdHNcIlxuWzE0XSBcIlNSUjIzOTE0NDUxLmdlbmVzLnJlc3VsdHNcIlxuWzE1XSBcIlNSUjIzOTE0NDUyLmdlbmVzLnJlc3VsdHNcIlxuWzE2XSBcIlNSUjIzOTE0NDUzLmdlbmVzLnJlc3VsdHNcIlxuWzE3XSBcIlNSUjIzOTE0NDU0LmdlbmVzLnJlc3VsdHNcIlxuWzE4XSBcIlNSUjIzOTE0NDU1LmdlbmVzLnJlc3VsdHNcIlxuWzE5XSBcIlNSUjIzOTE0NTcxLmdlbmVzLnJlc3VsdHNcIlxuWzIwXSBcIlNSUjIzOTE0NTcyLmdlbmVzLnJlc3VsdHNcIlxuWzIxXSBcIlNSUjIzOTE0NTczLmdlbmVzLnJlc3VsdHNcIlxuWzIyXSBcIlNSUjIzOTE0NTc0LmdlbmVzLnJlc3VsdHNcIlxuWzIzXSBcIlNSUjIzOTE0NTc1LmdlbmVzLnJlc3VsdHNcIlxuWzI0XSBcIlNSUjIzOTE0NTc2LmdlbmVzLnJlc3VsdHNcIlxuWzI1XSBcIlNSUjIzOTE0NTc3LmdlbmVzLnJlc3VsdHNcIlxuWzI2XSBcIlNSUjIzOTE0NTc4LmdlbmVzLnJlc3VsdHNcIlxuWzI3XSBcIlNSUjIzOTE0NTc5LmdlbmVzLnJlc3VsdHNcIlxuIn0= -->
+<pre><code> [1] &quot;SRR21355385.genes.results&quot;
+ [2] &quot;SRR21355386.genes.results&quot;
+ [3] &quot;SRR21355388.genes.results&quot;
+ [4] &quot;SRR21355389.genes.results&quot;
+ [5] &quot;SRR21355390.genes.results&quot;
+ [6] &quot;SRR21355392.genes.results&quot;
+ [7] &quot;SRR21355393.genes.results&quot;
+ [8] &quot;SRR21355394.genes.results&quot;
+ [9] &quot;SRR21355396.genes.results&quot;
+[10] &quot;SRR21355397.genes.results&quot;
+[11] &quot;SRR21355398.genes.results&quot;
+[12] &quot;SRR21355401.genes.results&quot;
+[13] &quot;SRR23914450.genes.results&quot;
+[14] &quot;SRR23914451.genes.results&quot;
+[15] &quot;SRR23914452.genes.results&quot;
+[16] &quot;SRR23914453.genes.results&quot;
+[17] &quot;SRR23914454.genes.results&quot;
+[18] &quot;SRR23914455.genes.results&quot;
+[19] &quot;SRR23914571.genes.results&quot;
+[20] &quot;SRR23914572.genes.results&quot;
+[21] &quot;SRR23914573.genes.results&quot;
+[22] &quot;SRR23914574.genes.results&quot;
+[23] &quot;SRR23914575.genes.results&quot;
+[24] &quot;SRR23914576.genes.results&quot;
+[25] &quot;SRR23914577.genes.results&quot;
+[26] &quot;SRR23914578.genes.results&quot;
+[27] &quot;SRR23914579.genes.results&quot;</code></pre>
 <!-- rnb-output-end -->
 <!-- rnb-chunk-end -->
 <!-- rnb-text-begin -->
 <!-- rnb-text-end -->
 </div>
 
-<div id="rmd-source-code">LS0tDQp0aXRsZTogIlN5c3RlbXMgR2Vub21pY3MgZGF0YSBhbmFseXNpcyBwaXBlbGluZSINCm91dHB1dDogaHRtbF9ub3RlYm9vaw0KLS0tDQoNCiMgaW5zdGFsbCBsaWJyYXJpZXMNCmBgYHtyfQ0KaW5zdGFsbC5wYWNrYWdlcyhjKCJ0aWR5dmVyc2UiLCJnZ3JlcGVsIiwiQmlvY01hbmFnZXIiLCJwYmFwcGx5IiwiZ3Bsb3RzIiwibXNpZ2RiciIpKQ0KQmlvY01hbmFnZXI6Omluc3RhbGwoYygiYmlvbWFSdCIsInN2YSIsIkRFU2VxMiIsImVkZ2VSIikpDQpgYGANCg0KDQojIGxvYWQgbGlicmFyaWVzDQpgYGB7cn0NCmxpYnJhcnkodGlkeXZlcnNlKQ0KcHJpbnQoIkhlbGxvIFdvcmxkIikNCmBgYA0KDQo=</div>
+<div id="rmd-source-code">LS0tDQp0aXRsZTogIlN5c3RlbXMgR2Vub21pY3MgZGF0YSBhbmFseXNpcyBwaXBlbGluZSINCm91dHB1dDogaHRtbF9ub3RlYm9vaw0KLS0tDQoNCiMgaW5zdGFsbCBsaWJyYXJpZXMNCmBgYHtyfQ0KaW5zdGFsbC5wYWNrYWdlcyhjKCJ0aWR5dmVyc2UiLCJnZ3JlcGVsIiwiQmlvY01hbmFnZXIiLCJwYmFwcGx5IiwiZ3Bsb3RzIiwibXNpZ2RiciIpKQ0KQmlvY01hbmFnZXI6Omluc3RhbGwoYygiYmlvbWFSdCIsInN2YSIsIkRFU2VxMiIsImVkZ2VSIikpDQpgYGANCg0KDQojIGxvYWQgbGlicmFyaWVzDQpgYGB7cn0NCmxpYnJhcmllcyA9IGMoInRpZHl2ZXJzZSIsImdncmVwZWwiLCJCaW9jTWFuYWdlciIsInBiYXBwbHkiLCJncGxvdHMiLCJtc2lnZGJyIiwgImJpb21hUnQiLCJzdmEiLCJERVNlcTIiLCJlZGdlUiIpDQpsYXBwbHkobGlicmFyaWVzLCBsaWJyYXJ5LCBjaGFyYWN0ZXIub25seT1UUlVFKQ0KcHJpbnQoIkhlbGxvIFdvcmxkIikNCmBgYA0KDQoNCg0KYGBge3J9DQojc2V0d2QoIi9Vc2Vycy9kYXZpZC9MaWJyYXJ5L0Nsb3VkU3RvcmFnZS9PbmVEcml2ZS1QZXJzb8yIbmxpY2gvTWFzdGVyIEVUSC9Db3Vyc2VzLzExX1N5c3RlbXMgR2Vub21pY3MvcHJvamVjdCBsb2NhbCByZXBvc2l0b3J5L2RhdGEiKQ0Kc2V0d2QoIkM6L1VzZXJzL25pY2tzL0Rlc2t0b3AvU3lzdGVtc19HZW5vbWljcy9HaXRIdWIgRGF2aWQvU3lzdGVtc0dlbm9taWNzMjAyMy9kYXRhIikNCg0Kc2FtcGxlcyA8LSBsaXN0LmZpbGVzKCJyc2VtX2dlbmVzX3Jlc3VsdHNfdHJpbW1lZCIpDQpleHByIDwtIHNhcHBseShzYW1wbGVzLCBmdW5jdGlvbihzYW1wbGUpew0KICBmaWxlIDwtIHBhc3RlMCgicnNlbV9nZW5lc19yZXN1bHRzX3RyaW1tZWQvIixzYW1wbGUpDQogICNwcmludChmaWxlKQ0KICBxdWFudCA8LSByZWFkLmNzdihmaWxlLCBzZXA9Ilx0IiwgaGVhZGVyPVQpDQogIHRwbSA8LSBzZXROYW1lcyhxdWFudCRUUE0sIHF1YW50JGdlbmVfaWQpDQogIHJldHVybih0cG0pDQp9KQ0KYGBgDQoNCmBgYHtyfQ0KbGlicmFyeShkcGx5cikNCiNzZXR3ZCgiL1VzZXJzL2RhdmlkL0xpYnJhcnkvQ2xvdWRTdG9yYWdlL09uZURyaXZlLVBlcnNvzIhubGljaC9NYXN0ZXIgRVRIL0NvdXJzZXMvMTFfU3lzdGVtcyBHZW5vbWljcy9wcm9qZWN0IGxvY2FsIHJlcG9zaXRvcnkvZGF0YSIpDQpzZXR3ZCgiQzovVXNlcnMvbmlja3MvRGVza3RvcC9TeXN0ZW1zX0dlbm9taWNzL0dpdEh1YiBEYXZpZC9TeXN0ZW1zR2Vub21pY3MyMDIzL2RhdGEiKQ0KDQptZXRhMSA8LSByZWFkLmNzdigiU1JSX0FjY19MaXN0LnR4dCIsIHNlcD0iXHQiLCBoZWFkZXI9VCkgJT4lDQogIGlubmVyX2pvaW4ocmVhZC5jc3YoIlBSSk5BODc1MDY2IE1ldGFkYXRhLnR4dCIsIGhlYWRlcj1UKSwNCiAgICBieSA9IGMoIk5hbWUiID0gIlJ1biIpLA0KICAgIHN1ZmZpeCA9IGMoIiIsIi55IikpIA0KbWV0YTIgPC0gcmVhZC5jc3YoIlNSUl9BY2NfTGlzdC50eHQiLCBzZXA9Ilx0IiwgaGVhZGVyPVQpICU+JQ0KICBpbm5lcl9qb2luKHJlYWQuY3N2KCJQUkpOQTk0NjY1MyBNZXRhZGF0YS50eHQiLCBoZWFkZXI9VCksDQogICAgYnkgPSBjKCJOYW1lIiA9ICJSdW4iKSwNCiAgICBzdWZmaXggPSBjKCIiLCIueSIpKSANCg0KI01heWJlIGpvaW4gbWV0YTEgYW5kIG1ldGEyIGludG8gb25lIGRhdGEgZnJhbWU/DQoNCiNleHByIDwtIGV4cHJbLG1ldGEkTmFtZV0gI3RvIG1ha2Ugc3VyZSB0aGUgY29sdW1ucyBvZiB0aGUgZXhwcmVzc2lvbiBtYXRyaXggYXJlIGluIHRoZSBzYW1lIG9yZGVyIGFzIHJvd3MgaW4gdGhlIG1ldGFkYXRhDQpgYGANCiNNb3JlIGluZm9ybWF0aW9uIGFib3V0IGdlbmVzIHdpdGggYmlvbWFSdCAocC4gNDIpDQpgYGB7cn0NCiNEb2VzIG5vdCB3b3JrIHlldCwgZGlkIG5vdCBoYXZlIGludGVybmV0IG9uIHRoZSB0cmFpbg0KbGlicmFyeShiaW9tYVJ0KQ0KZW5zZW1ibCA8LSB1c2VFbnNlbWJsKGJpb21hcnQgPSAiZW5zZW1ibCIsDQpkYXRhc2V0ID0gImhzYXBpZW5zX2dlbmVfZW5zZW1ibCIpDQptZXRhX2dlbmVzIDwtIGdldEJNKGF0dHJpYnV0ZXMgPSBjKCJlbnNlbWJsX2dlbmVfaWQiLA0KImVuc2VtYmxfZ2VuZV9pZF92ZXJzaW9uIiwNCiJoZ25jX3N5bWJvbCIsDQoiZGVzY3JpcHRpb24iLA0KImNocm9tb3NvbWVfbmFtZSIsDQoic3RhcnRfcG9zaXRpb24iLA0KImVuZF9wb3NpdGlvbiIsDQoic3RyYW5kIiksDQpmaWx0ZXJzID0gImVuc2VtYmxfZ2VuZV9pZF92ZXJzaW9uIiwNCnZhbHVlcyA9IHJvd25hbWVzKGV4cHIpLA0KbWFydCA9IGVuc2VtYmwpICU+JQ0KcmlnaHRfam9pbihkYXRhLmZyYW1lKGVuc2VtYmxfZ2VuZV9pZF92ZXJzaW9uID0gcm93bmFtZXMoZXhwcikpLA0KYnkgPSAiZW5zZW1ibF9nZW5lX2lkX3ZlcnNpb24iKSAlPiUNCmRpc3RpbmN0KGVuc2VtYmxfZ2VuZV9pZF92ZXJzaW9uLCAua2VlcF9hbGwgPSBUUlVFKQ0KZXhwciA8LSBleHByW21ldGFfZ2VuZXMkZW5zZW1ibF9nZW5lX2lkX3ZlcnNpb24sXQ0KYGBgDQoNCmBgYHtyfQ0KI3ByaW50KG1ldGExJE5hbWUpDQojcHJpbnQobWV0YTIkTmFtZSkNCiNwcmludChzYW1wbGVzKQ0KDQpkaW0oZXhwcikgI21lYW5pbmcgNTY4ODQgYW5ub3RhdGVkIGdlbmVzIGFuZCAyNyBzYW1wbGVzLg0KDQphdmdfZXhwciA8LSByb3dNZWFucyhleHByKQ0KI2xheW91dChtYXRyaXgoMToyLCBucm93PTEpKQ0KaGlzdChhdmdfZXhwcikNCmhpc3QobG9nMTAoYXZnX2V4cHIgKyAxKSkNCg0KbGlicmFyeShnZ3Bsb3QyKQ0KZ2dwbG90KGRhdGEuZnJhbWUoYXZnX2V4cHIpLCBhZXMoeD1hdmdfZXhwcikpICsNCmdlb21faGlzdG9ncmFtKGJpbnMgPSA1MCkgKw0Kc2NhbGVfeF9jb250aW51b3VzKGJyZWFrcyA9IGMoMCwxLDEwLDEwMCwxMDAwLDEwMDAwLDIwMDAwKSwgdHJhbnM9ImxvZzFwIiwgZXhwYW5kPWMoMCwwKSkgKw0Kc2NhbGVfeV9jb250aW51b3VzKGJyZWFrcyA9IGMoMCwxKSwgZXhwYW5kPWMoMCwwKSwgdHJhbnM9ImxvZzFwIikgKw0KdGhlbWVfbWluaW1hbCgpICNsb2cgdHJhbnNmb3JtYXRpb24gb2YgdGhlIHkgYXhpcywgdmlzdWFsaXphdGlvbiBwdXJwb3Nlcw0KDQpudW1fZGV0IDwtIHJvd1N1bXMoZXhwciA+IDApICNjaGVjayBpbiBob3cgbWFueSBzYW1wbGVzIGVhY2ggZ2VuZSBpcyBkZXRlY3RlZC4NCmhpc3QobnVtX2RldCkNCmhlYWQobnVtX2RldCkNCg0KbnVtX2RldF90ZXN0IDwtIHJvd1N1bXMoZXhwcikgI2NoZWNrIGluIGhvdyBtYW55IHNhbXBsZXMgZWFjaCBnZW5lIGlzIGRldGVjdGVkLg0KaGlzdChudW1fZGV0X3Rlc3QpDQpoZWFkKG51bV9kZXRfdGVzdCkNCm1heChudW1fZGV0X3Rlc3QpDQoNCmV4cHJlc3NlZCA8LSByb3dNZWFucyhleHByID4gMCkgPj0gMTMgfCByb3dNZWFucyhleHByKSA+PSAxICNTb21ldGhpbmcgc2VlbXMgd3JvbmcgaGVyZS4gPj0gMTMgaW5zdGVhZCBvZiAwLjU/DQpoZWFkKGV4cHJlc3NlZCkgI2V4cHJlc3NlZCBpcyBhIHZlY3RvciBvZiBib29sZWFucw0KZXhwciA8LSBleHByW3doaWNoKGV4cHJlc3NlZCksXQ0KZGltKGV4cHIpDQojbWV0YV9nZW5lcyA8LSBtZXRhX2dlbmVzW3doaWNoKGV4cHJlc3NlZCksXQ0KDQoNCmBgYA0KI3BhaXJpd3NlIGNvcnJlbGF0aW9uIGNvZWZmaWNpZW50cyAocC4gNDYpDQpgYGB7cn0NCiNGcm9tIGhlcmUgeW91IG5lZWQgbWV0YV9nZW5lcw0KY29ycl9wZWFyc29uIDwtIGNvcihsb2cxcChleHByW21ldGFfZ2VuZXMkZXhwcmVzc2VkLF0pKQ0KY29ycl9zcGVhcm1hbiA8LSBjb3IoZXhwclttZXRhX2dlbmVzJGV4cHJlc3NlZCxdLCBtZXRob2QgPSAic3BlYXJtYW4iKQ0KYGBgDQoNCg0K</div>
 
 
 
