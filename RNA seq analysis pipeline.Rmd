@@ -5,8 +5,8 @@ output: html_notebook
 
 # install libraries
 ```{r}
-install.packages(c("tidyverse","ggrepel","BiocManager","pbapply","gplots","msigdbr"))
-BiocManager::install(c("biomaRt","sva","DESeq2","edgeR"))
+#install.packages(c("tidyverse","ggrepel","BiocManager","pbapply","gplots","msigdbr"))
+#BiocManager::install(c("biomaRt","sva","DESeq2","edgeR"))
 ```
 
 
@@ -14,7 +14,6 @@ BiocManager::install(c("biomaRt","sva","DESeq2","edgeR"))
 ```{r}
 libraries = c("tidyverse","ggrepel","BiocManager","pbapply","gplots","msigdbr", "biomaRt","sva","DESeq2","edgeR")
 lapply(libraries, library, character.only=TRUE)
-print("Hello World")
 ```
 
 
@@ -55,8 +54,10 @@ meta2 <- read.csv("SRR_Acc_List.txt", sep="\t", header=T) %>%
 ```{r}
 #Does not work yet, did not have internet on the train
 library(biomaRt)
+listDatasets(useEnsembl(biomart = "ensembl")) %>% filter(dataset == "mmusculus_gene_ensembl") #Is this the correct one?
+
 ensembl <- useEnsembl(biomart = "ensembl",
-dataset = "hsapiens_gene_ensembl")
+dataset = "mmusculus_gene_ensembl")
 meta_genes <- getBM(attributes = c("ensembl_gene_id",
 "ensembl_gene_id_version",
 "hgnc_symbol",
@@ -71,6 +72,7 @@ mart = ensembl) %>%
 right_join(data.frame(ensembl_gene_id_version = rownames(expr)),
 by = "ensembl_gene_id_version") %>%
 distinct(ensembl_gene_id_version, .keep_all = TRUE)
+
 expr <- expr[meta_genes$ensembl_gene_id_version,]
 ```
 
@@ -102,17 +104,20 @@ hist(num_det_test)
 head(num_det_test)
 max(num_det_test)
 
-expressed <- rowMeans(expr > 0) >= 13 | rowMeans(expr) >= 1 #Something seems wrong here. >= 13 instead of 0.5?
+expressed <- rowMeans(expr > 0) >= 13 | rowMeans(expr) >= 1 #Something seems wrong here. >= 13 instead of >= 0.5?
 head(expressed) #expressed is a vector of booleans
 expr <- expr[which(expressed),]
 dim(expr)
-#meta_genes <- meta_genes[which(expressed),]
+
+meta_genes$expressed <- expressed
 
 
 ```
 #pairiwse correlation coefficients (p. 46)
 ```{r}
 #From here you need meta_genes
+head(expr)
+meta_genes$expressed
 corr_pearson <- cor(log1p(expr[meta_genes$expressed,]))
 corr_spearman <- cor(expr[meta_genes$expressed,], method = "spearman")
 ```
