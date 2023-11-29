@@ -5,14 +5,121 @@ output: html_notebook
 
 # install libraries
 ```{r}
-install.packages(c("tidyverse","ggrepel","BiocManager","pbapply","gplots","msigdbr"))
-BiocManager::install(c("biomaRt","sva","DESeq2","edgeR"))
+#install.packages(c("tidyverse","ggrepel","BiocManager","pbapply","gplots","msigdbr"))
+#BiocManager::install(c("biomaRt","sva","DESeq2","edgeR"))
 ```
 
 
 # load libraries
 ```{r}
-library(tidyverse)
-print("Hello World")
+libraries = c("tidyverse","ggrepel","BiocManager","pbapply","gplots","msigdbr", "biomaRt","sva","DESeq2","edgeR")
+lapply(libraries, library, character.only=TRUE)
 ```
+
+
+
+```{r}
+#setwd("/Users/david/Library/CloudStorage/OneDrive-Persönlich/Master ETH/Courses/11_Systems Genomics/project local repository/data")
+setwd("C:/Users/nicks/Desktop/Systems_Genomics/GitHub David/SystemsGenomics2023/data")
+
+samples <- list.files("rsem_genes_results_trimmed")
+expr <- sapply(samples, function(sample){
+  file <- paste0("rsem_genes_results_trimmed/",sample)
+  #print(file)
+  quant <- read.csv(file, sep="\t", header=T)
+  tpm <- setNames(quant$TPM, quant$gene_id)
+  return(tpm)
+})
+```
+
+```{r}
+library(dplyr)
+#setwd("/Users/david/Library/CloudStorage/OneDrive-Persönlich/Master ETH/Courses/11_Systems Genomics/project local repository/data")
+setwd("C:/Users/nicks/Desktop/Systems_Genomics/GitHub David/SystemsGenomics2023/data")
+
+meta1 <- read.csv("SRR_Acc_List.txt", sep="\t", header=T) %>%
+  inner_join(read.csv("PRJNA875066 Metadata.txt", header=T),
+    by = c("Name" = "Run"),
+    suffix = c("",".y")) 
+meta2 <- read.csv("SRR_Acc_List.txt", sep="\t", header=T) %>%
+  inner_join(read.csv("PRJNA946653 Metadata.txt", header=T),
+    by = c("Name" = "Run"),
+    suffix = c("",".y")) 
+
+#Maybe join meta1 and meta2 into one data frame?
+
+#expr <- expr[,meta$Name] #to make sure the columns of the expression matrix are in the same order as rows in the metadata
+```
+#More information about genes with biomaRt (p. 42)
+```{r}
+#Does not work yet, did not have internet on the train
+library(biomaRt)
+listDatasets(useEnsembl(biomart = "ensembl")) %>% filter(dataset == "mmusculus_gene_ensembl") #Is this the correct one?
+
+ensembl <- useEnsembl(biomart = "ensembl",
+dataset = "mmusculus_gene_ensembl")
+meta_genes <- getBM(attributes = c("ensembl_gene_id",
+"ensembl_gene_id_version",
+"hgnc_symbol",
+"description",
+"chromosome_name",
+"start_position",
+"end_position",
+"strand"),
+filters = "ensembl_gene_id_version",
+values = rownames(expr),
+mart = ensembl) %>%
+right_join(data.frame(ensembl_gene_id_version = rownames(expr)),
+by = "ensembl_gene_id_version") %>%
+distinct(ensembl_gene_id_version, .keep_all = TRUE)
+
+expr <- expr[meta_genes$ensembl_gene_id_version,]
+```
+
+```{r}
+#print(meta1$Name)
+#print(meta2$Name)
+#print(samples)
+
+dim(expr) #meaning 56884 annotated genes and 27 samples.
+
+avg_expr <- rowMeans(expr)
+#layout(matrix(1:2, nrow=1))
+hist(avg_expr)
+hist(log10(avg_expr + 1))
+
+library(ggplot2)
+ggplot(data.frame(avg_expr), aes(x=avg_expr)) +
+geom_histogram(bins = 50) +
+scale_x_continuous(breaks = c(0,1,10,100,1000,10000,20000), trans="log1p", expand=c(0,0)) +
+scale_y_continuous(breaks = c(0,1), expand=c(0,0), trans="log1p") +
+theme_minimal() #log transformation of the y axis, visualization purposes
+
+num_det <- rowSums(expr > 0) #check in how many samples each gene is detected.
+hist(num_det)
+head(num_det)
+
+num_det_test <- rowSums(expr) #check in how many samples each gene is detected.
+hist(num_det_test)
+head(num_det_test)
+max(num_det_test)
+
+expressed <- rowMeans(expr > 0) >= 13 | rowMeans(expr) >= 1 #Something seems wrong here. >= 13 instead of >= 0.5?
+head(expressed) #expressed is a vector of booleans
+expr <- expr[which(expressed),]
+dim(expr)
+
+meta_genes$expressed <- expressed
+
+
+```
+#pairiwse correlation coefficients (p. 46)
+```{r}
+#From here you need meta_genes
+head(expr)
+meta_genes$expressed
+corr_pearson <- cor(log1p(expr[meta_genes$expressed,]))
+corr_spearman <- cor(expr[meta_genes$expressed,], method = "spearman")
+```
+
 
