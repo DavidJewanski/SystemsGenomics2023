@@ -1,6 +1,5 @@
 ---
 title: "Systems Genomics data analysis pipeline"
-output: html_notebook
 ---
 
 # install libraries
@@ -12,15 +11,15 @@ output: html_notebook
 
 # load libraries
 ```{r}
-libraries = c("tidyverse","ggrepel","BiocManager","pbapply","gplots","msigdbr", "biomaRt","sva","DESeq2","edgeR")
+libraries = c("tidyverse","ggrepel","BiocManager","pbapply","gplots","msigdbr", "biomaRt","sva","DESeq2","edgeR", "dplyr", "biomaRt")
 lapply(libraries, library, character.only=TRUE)
 ```
 
 
 
 ```{r}
-#setwd("/Users/david/Library/CloudStorage/OneDrive-Persönlich/Master ETH/Courses/11_Systems Genomics/project local repository/data")
-setwd("C:/Users/nicks/Desktop/Systems_Genomics/GitHub David/SystemsGenomics2023/data")
+setwd("/Users/david/Library/CloudStorage/OneDrive-Persönlich/Master ETH/Courses/11_Systems Genomics/project local repository/data")
+#setwd("C:/Users/nicks/Desktop/Systems_Genomics/GitHub David/SystemsGenomics2023/data")
 
 samples <- list.files("rsem_genes_results_trimmed")
 expr <- sapply(samples, function(sample){
@@ -33,52 +32,47 @@ expr <- sapply(samples, function(sample){
 ```
 
 ```{r}
-library(dplyr)
-#setwd("/Users/david/Library/CloudStorage/OneDrive-Persönlich/Master ETH/Courses/11_Systems Genomics/project local repository/data")
-setwd("C:/Users/nicks/Desktop/Systems_Genomics/GitHub David/SystemsGenomics2023/data")
-
-meta2 <- read.csv("SRR_Acc_List.txt", sep="\t", header=T) %>%
-  inner_join(read.csv("PRJNA875066 Metadata.txt", header=T),
-    by = c("Name" = "Run"),
-    suffix = c("",".y")) 
-
+setwd("/Users/david/Library/CloudStorage/OneDrive-Persönlich/Master ETH/Courses/11_Systems Genomics/project local repository/data")
+#setwd("C:/Users/nicks/Desktop/Systems_Genomics/GitHub David/SystemsGenomics2023/data")
 
 meta1 <- read.csv("SRR_Acc_List.txt", sep="\t", header=T) %>%
+  inner_join(read.csv("PRJNA875066 Metadata.txt", header=T),
+    by = c("Name" = "Run"),
+    suffix = c("",".y"))
+
+meta2 <- read.csv("SRR_Acc_List.txt", sep="\t", header=T) %>%
   inner_join(read.csv("PRJNA946653 Metadata.txt", header=T),
     by = c("Name" = "Run"),
     suffix = c("",".y")) 
+
+print(setdiff(colnames(meta2),colnames(meta1)))
 
 meta1$sex <- as.factor(meta1$sex)
 meta1$treatment <- as.factor(meta1$treatment)
 summary(meta1$sex)
 summary(meta1$treatment)
 
-
-#Maybe join meta1 and meta2 into one data frame?
-
 #expr <- expr[,meta$Name] #to make sure the columns of the expression matrix are in the same order as rows in the metadata
 ```
+
 #More information about genes with biomaRt (p. 42)
 ```{r}
-library(biomaRt)
 listDatasets(useEnsembl(biomart = "ensembl")) %>% filter(dataset == "mmusculus_gene_ensembl") #Is this the correct one?
 
-ensembl <- useEnsembl(biomart = "ensembl",
-dataset = "mmusculus_gene_ensembl")
+ensembl <- useEnsembl(biomart = "ensembl", dataset = "mmusculus_gene_ensembl")
 meta_genes <- getBM(attributes = c("ensembl_gene_id",
-"ensembl_gene_id_version",
-"hgnc_symbol",
-"description",
-"chromosome_name",
-"start_position",
-"end_position",
-"strand"),
-filters = "ensembl_gene_id_version",
-values = rownames(expr),
-mart = ensembl) %>%
-right_join(data.frame(ensembl_gene_id_version = rownames(expr)),
-by = "ensembl_gene_id_version") %>%
-distinct(ensembl_gene_id_version, .keep_all = TRUE)
+                                   "ensembl_gene_id_version",
+                                   "hgnc_symbol",
+                                   "description",
+                                   "chromosome_name",
+                                   "start_position",
+                                   "end_position",
+                                   "strand"),
+                    filters = "ensembl_gene_id_version",
+                    values = rownames(expr),
+                    mart = ensembl) %>%
+  right_join(data.frame(ensembl_gene_id_version = rownames(expr)), by = "ensembl_gene_id_version") %>%                                                                                                                                       by = "ensembl_gene_id_version") %>%
+  distinct(ensembl_gene_id_version, .keep_all = TRUE)
 
 expr <- expr[meta_genes$ensembl_gene_id_version,]
 ```

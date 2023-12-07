@@ -1,0 +1,83 @@
+Gene Symbol	Gene name\
+Gpr17	G protein-coupled receptor 17\
+Pcdhb9	protocadherin beta 9\
+C1qa	complement component 1, q subcomponent, alpha polypeptide\
+C4b	complement component 4B (Chido blood group)\
+Ctss	cathepsin S\
+Ctsz	cathepsin Z\
+H2-Q6	histocompatibility 2, Q region locus 6\
+Pcdhb14	protocadherin beta 14\
+Pcdhb6	protocadherin beta 6\
+Pcdhb8	protocadherin beta 8\
+Abca8a	ATP-binding cassette, sub-family A (ABC1), member 8a\
+Cirbp	cold inducible RNA binding protein\
+Ftl1	ferritin light polypeptide 1\
+H2-K1	histocompatibility 2, K1, K region\
+H2-Q7	histocompatibility 2, Q region locus 7\
+Hvcn1	hydrogen voltage-gated channel 1\
+Psmb8	proteasome (prosome, macropain) subunit, beta type 8 (large multifunctional peptidase 7)\
+Tipin	timeless interacting protein\
+Tyrobp	TYRO protein tyrosine kinase binding protein\
+Aif1	allograft inflammatory factor 1\
+B2m	beta-2 microglobulin\
+C1qb	complement component 1, q subcomponent, beta polypeptide\
+C1qc	complement component 1, q subcomponent, C chain\
+C3ar1	complement component 3a receptor 1\
+Cd52	CD52 antigen\
+Cd68	CD68 antigen\
+Cd84	CD84 antigen\
+Chordc1	cysteine and histidine-rich domain (CHORD)-containing, zinc-binding protein 1\
+Csf3r	colony stimulating factor 3 receptor (granulocyte)\
+Fcer1g	Fc receptor, IgE, high affinity I, gamma polypeptide\
+Fcgr2b	Fc receptor, IgG, low affinity IIb\
+Gfap	glial fibrillary acidic protein\
+H2-D1	histocompatibility 2, D region locus 1\
+H2-DMb1	histocompatibility 2, class II, locus Mb1\
+H2-M3	histocompatibility 2, M region locus 3\
+Hsph1	heat shock 105kDa/110kDa protein 1\
+Itgb2	integrin beta 2\
+Lag3	lymphocyte-activation gene 3\
+Laptm5	lysosomal-associated protein transmembrane 5\
+Lyz2	lysozyme 2\
+Mboat1	membrane bound O-acyltransferase domain containing 1\
+Neat1	nuclear paraspeckle assembly transcript 1 (non-protein coding)\
+P4ha1	procollagen-proline, 2-oxoglutarate 4-dioxygenase (proline 4-hydroxylase), alpha 1 polypeptide\
+Pcdhb2	protocadherin beta 2\
+Pld4	phospholipase D family, member 4\
+Ptpn6	protein tyrosine phosphatase, non-receptor type 6\
+Rbm3	RNA binding motif (RNP1, RRM) protein 3\
+Rsrp1	arginine/serine rich protein 1\
+Slc11a1	solute carrier family 11 (proton-coupled divalent metal ion transporters), member 1\
+Slc6a6	solute carrier family 6 (neurotransmitter transporter, taurine), member 6\
+Zc3hav1	zinc finger CCCH type, antiviral 1\
+Ahsa1	AHA1, activator of heat shock protein ATPase 1\
+Apod	apolipoprotein D\
+Bcl2a1b	B cell leukemia/lymphoma 2 related protein A1b\
+Ccl6	chemokine (C-C motif) ligand 6\
+Cd22	CD22 antigen\
+Cd300c2	CD300C molecule 2\
+Cd37	CD37 antigen\
+Cd48	CD48 antigen\
+Cst7	cystatin F (leukocystatin)\
+Cx3cr1	chemokine (C-X3-C motif) receptor 1\
+Cyba	cytochrome b-245, alpha polypeptide\
+Dnajb1	DnaJ heat shock protein family (Hsp40) member B1\
+Gfm2	G elongation factor, mitochondrial 2\
+Gpnmb	glycoprotein (transmembrane) nmb\
+Hexb	hexosaminidase B\
+Hist3h2a	NA\
+Irf8	interferon regulatory factor 8\
+Itgax	integrin alpha X\
+Itgb5	integrin beta 5\
+Lgals3bp	lectin, galactoside-binding, soluble, 3 binding protein\
+Lilrb4a	leukocyte immunoglobulin-like receptor, subfamily B, member 4A\
+Lpcat2	lysophosphatidylcholine acyltransferase 2\
+Lsp1	lymphocyte specific 1\
+Ly86	lymphocyte antigen 86\
+Mpeg1	macrophage expressed gene 1\
+Myo1f	myosin IF\
+Plek	pleckstrin\
+Prss50	protease, serine 50\
+Slamf9	SLAM family member 9\
+Trem2	triggering receptor expressed on myeloid cells 2\
+Unc93b1	unc-93 homolog B1, TLR signaling regulator}
