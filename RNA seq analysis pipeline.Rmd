@@ -37,14 +37,22 @@ library(dplyr)
 #setwd("/Users/david/Library/CloudStorage/OneDrive-Persönlich/Master ETH/Courses/11_Systems Genomics/project local repository/data")
 setwd("C:/Users/nicks/Desktop/Systems_Genomics/GitHub David/SystemsGenomics2023/data")
 
-meta1 <- read.csv("SRR_Acc_List.txt", sep="\t", header=T) %>%
+meta2 <- read.csv("SRR_Acc_List.txt", sep="\t", header=T) %>%
   inner_join(read.csv("PRJNA875066 Metadata.txt", header=T),
     by = c("Name" = "Run"),
     suffix = c("",".y")) 
-meta2 <- read.csv("SRR_Acc_List.txt", sep="\t", header=T) %>%
+
+
+meta1 <- read.csv("SRR_Acc_List.txt", sep="\t", header=T) %>%
   inner_join(read.csv("PRJNA946653 Metadata.txt", header=T),
     by = c("Name" = "Run"),
     suffix = c("",".y")) 
+
+meta1$sex <- as.factor(meta1$sex)
+meta1$treatment <- as.factor(meta1$treatment)
+summary(meta1$sex)
+summary(meta1$treatment)
+
 
 #Maybe join meta1 and meta2 into one data frame?
 
@@ -52,7 +60,6 @@ meta2 <- read.csv("SRR_Acc_List.txt", sep="\t", header=T) %>%
 ```
 #More information about genes with biomaRt (p. 42)
 ```{r}
-#Does not work yet, did not have internet on the train
 library(biomaRt)
 listDatasets(useEnsembl(biomart = "ensembl")) %>% filter(dataset == "mmusculus_gene_ensembl") #Is this the correct one?
 
