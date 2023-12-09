@@ -152,7 +152,7 @@ avg_expr <- rowMeans(expr) #now after the filtering
 hist(avg_expr)
 hist(log10(avg_expr + 1))
 
-#meta_genes$expressed <- expressed
+meta_genes$expressed <- expressed
 
 
 ```
@@ -228,9 +228,12 @@ estimate_variability <- function(expr){
   return(res)
 }
 ```
-
+#DESeq (slide 57)
 ```{r}
-#DESeq
+library(tidyverse)
+meta1_aDR <- meta1 %>% filter(treatment == "AL" | treatment == "aDR" )
+meta1_YMP <- meta1 %>% filter(treatment == "YMP" | treatment == "PBS" )
+
 library(biomaRt)
 ensembl <- useEnsembl(biomart = "ensembl", dataset = "mmusculus_gene_ensembl")
 tx2gene <- getBM(attributes = c("ensembl_transcript_id_version",
@@ -240,23 +243,106 @@ values = rownames(expr),
 mart = ensembl) %>%
 dplyr::select(ensembl_transcript_id_version, ensembl_gene_id_version)
 
+unique(tx2gene$ensembl_gene_id_version) %>% length()
+unique(tx2gene$ensembl_transcript_id_version) %>% length()
 
-
+setwd("C:/Users/nicks/Desktop/Systems_Genomics/GitHub David/SystemsGenomics2023/data")
 library(tximport)
-samples <- list.files("rsem")
-files <- file.path("rsem", samples, paste0(samples,".isoforms.results"))
+samples <- list.files("rsem_trimmed_dedup_nextera")
+filtered_samples <- samples[grep("\\.isoforms\\.results$",samples)]
+# Remove ".genes.results" from all column names
+files <- file.path(paste0("rsem_trimmed_dedup_nextera/", filtered_samples))
+files
 txi <- tximport(files, type = "rsem", tx2gene = tx2gene)
 
 library(DESeq2)
-dds <- DESeqDataSetFromTximport(txi,
-colData = meta,
-design = ~ Layer+Individual)ensembl <- useEnsembl(biomart = "ensembl",
+dds <- DESeqDataSetFromTximport(txi,colData = meta1, design = ~ treatment) #maybe include + sex?
+summary(dds)
+rownames(dds) %>% head() #gene_id_versions
 
+dds_filtered <- dds[intersect(meta_genes[meta_genes$expressed,2], rownames(dds)),]
+rownames(dds_filtered) %>% length() #gene_id_versions
 
+dds_filtered <- DESeq(dds_filtered, test="LRT", reduced= ~ 1) #If only one covariate, use ~1
 
+res_DESeq2 <- results(dds_filtered)
+plot(res_DESeq2$log2FoldChange, res_DESeq2$pvalue)
 
-
+table(p.adjust(res_DESeq2$pvalue, method="BH") < 0.05) #Argumentieren wieso BH correction
+      
+#res_DE %>% filter(gene %in% rownames(res_DESeq2)) %>% pull(padj)< 0.1) #res_DE ist von der manuellen Analyse
 
 ```
+#DESeq aDR/AL
+```{r}
+expr_aDR <- expr[,7:15] #only the columns with AL or aDR, 71-79
+library(biomaRt)
+ensembl <- useEnsembl(biomart = "ensembl", dataset = "mmusculus_gene_ensembl")
+tx2gene_aDR <- getBM(attributes = c("ensembl_transcript_id_version",
+"ensembl_gene_id_version"),
+filters = "ensembl_transcript_id_version",
+values = rownames(expr_aDR),
+mart = ensembl) %>%
+dplyr::select(ensembl_transcript_id_version, ensembl_gene_id_version)
+
+setwd("C:/Users/nicks/Desktop/Systems_Genomics/GitHub David/SystemsGenomics2023/data")
+library(tximport)
+samples <- list.files("rsem_trimmed_dedup_nextera")
+filtered_samples <- samples[grep("\\.isoforms\\.results$",samples)]
+filtered_samples_aDR <- filtered_samples[7:15]
+# Remove ".genes.results" from all column names
+files <- file.path(paste0("rsem_trimmed_dedup_nextera/", filtered_samples_aDR))
+files
+txi_aDR <- tximport(files, type = "rsem", tx2gene = tx2gene_aDR)
+
+library(DESeq2)
+dds_aDR <- DESeqDataSetFromTximport(txi_aDR,colData = meta1_aDR, design = ~ treatment) #maybe include + sex?
+summary(dds_aDR)
+rownames(dds_aDR) %>% head() #gene_id_versions
+
+dds_filtered_aDR <- dds[intersect(meta_genes[meta_genes$expressed,2],rownames(dds_aDR)),]
+rownames(dds_filtered_aDR) %>% length() #gene_id_versions
+
+dds_filtered_aDR <- DESeq(dds_filtered_aDR, test="LRT", reduced= ~ 1) #If only one covariate, use ~1
+
+res_DESeq2_aDR <- results(dds_filtered_aDR)
+plot(res_DESeq2_aDR$log2FoldChange, res_DESeq2_aDR$pvalue)
+
+table(p.adjust(res_DESeq2_aDR$pvalue, method="BH") < 0.05) #Argumentieren wieso BH correction
+
+plot(res_DESeq2_aDR$log2FoldChange, p.adjust(res_DESeq2_aDR$pvalue, method = "BH"))
+
+```
+#DESeq YMP
+
+#Grouping of identified genes
+```{r}
+sum(is.na(res_DESeq2_aDR$pvalue))
+res_DESeq2_aDR <- data.frame(res_DESeq2_aDR)
+res_DESeq2_aDR$pvalue_BH <- p.adjust(res_DESeq2_aDR$pvalue, method="BH")
+
+DEG_aDR <- res_DESeq2_aDR[res_DESeq2_aDR$pvalue_BH < 0.05,] #filter to only have significant data
+DEG_aDR <- na.omit(DEG_aDR) 
+DEG_aDR <- rownames(DEG_aDR) #extract rownames (names of genes)
+DEG_aDR %>% head()
+
+meta1_aDR$treatment %>% levels()
+avg_expr_aDR <- sapply(sort(unique(meta1_aDR$treatment)), function(treatment)
+rowMeans(expr_aDR[,which(meta1_aDR$treatment == treatment)])) #V1: aDR, V2: AL
+
+max_treatment_DEG <- setNames(colnames(avg_expr_aDR)[apply(avg_expr_aDR[DEG_aDR,], 1, which.max)],DEG_aDR) #Problem: avg expr aDR has transcripts, DEG aDR has genes -> incompatible. Solution: transform avg expr aDR to genes
+
+table(max_layer_DEG)
+avg_expr_DEG_list <- tapply(names(max_layer_DEG), max_layer_DEG, function(x) avg_expr[x,])
+scaled_expr_DEG_list <- lapply(avg_expr_DEG_list, function(x) t(scale(t(x))))
+layout(matrix(1:8, nrow = 2, byrow = T))
+par(mar=c(3,3,3,3))
+for(layer in names(scaled_expr_DEG_list))
+boxplot(scaled_expr_DEG_list[[layer]],
+main = paste0(layer, " (", nrow(scaled_expr_DEG_list[[layer]]),")"))
+
+```
+
+
 
 
