@@ -18,34 +18,37 @@ lapply(libraries, library, character.only=TRUE)
 
 
 ```{r}
-setwd("/Users/david/Library/CloudStorage/OneDrive-Persönlich/Master ETH/Courses/11_Systems Genomics/project local repository/data")
-#setwd("C:/Users/nicks/Desktop/Systems_Genomics/GitHub David/SystemsGenomics2023/data")
+#setwd("/Users/david/Library/CloudStorage/OneDrive-Persönlich/Master ETH/Courses/11_Systems Genomics/project local repository/data")
+setwd("C:/Users/nicks/Desktop/Systems_Genomics/GitHub David/SystemsGenomics2023/data")
 
-samples <- list.files("rsem_genes_results_trimmed")
+samples <- list.files("rsem_trimmed_dedup_nextera")
+samples <- samples[seq(1, length(samples),by=2)]
+#samples
 expr <- sapply(samples, function(sample){
-  file <- paste0("rsem_genes_results_trimmed/",sample)
+  file <- paste0("rsem_trimmed_dedup_nextera/", sample)
   #print(file)
   quant <- read.csv(file, sep="\t", header=T)
-  tpm <- setNames(quant$TPM, quant$gene_id)
+  tpm <- setNames(quant$TPM, quant[,2])
   return(tpm)
 })
+
 ```
 
 ```{r}
-setwd("/Users/david/Library/CloudStorage/OneDrive-Persönlich/Master ETH/Courses/11_Systems Genomics/project local repository/data")
-#setwd("C:/Users/nicks/Desktop/Systems_Genomics/GitHub David/SystemsGenomics2023/data")
+#setwd("/Users/david/Library/CloudStorage/OneDrive-Persönlich/Master ETH/Courses/11_Systems Genomics/project local repository/data")
+setwd("C:/Users/nicks/Desktop/Systems_Genomics/GitHub David/SystemsGenomics2023/data")
 
-meta1 <- read.csv("SRR_Acc_List.txt", sep="\t", header=T) %>%
+meta2 <- read.csv("SRR_Acc_List.txt", sep="\t", header=T) %>%
   inner_join(read.csv("PRJNA875066 Metadata.txt", header=T),
     by = c("Name" = "Run"),
     suffix = c("",".y"))
 
-meta2 <- read.csv("SRR_Acc_List.txt", sep="\t", header=T) %>%
+meta1 <- read.csv("SRR_Acc_List.txt", sep="\t", header=T) %>%
   inner_join(read.csv("PRJNA946653 Metadata.txt", header=T),
     by = c("Name" = "Run"),
     suffix = c("",".y")) 
 
-print(setdiff(colnames(meta2),colnames(meta1)))
+print(setdiff(colnames(meta1),colnames(meta2)))
 
 meta1$sex <- as.factor(meta1$sex)
 meta1$treatment <- as.factor(meta1$treatment)
@@ -71,10 +74,9 @@ meta_genes <- getBM(attributes = c("ensembl_gene_id",
                     filters = "ensembl_gene_id_version",
                     values = rownames(expr),
                     mart = ensembl) %>%
-  right_join(data.frame(ensembl_gene_id_version = rownames(expr)), by = "ensembl_gene_id_version") %>%                                                                                                                                       by = "ensembl_gene_id_version") %>%
-  distinct(ensembl_gene_id_version, .keep_all = TRUE)
+right_join(data.frame(ensembl_gene_id_version = rownames(expr)), by = "ensembl_gene_id_version") %>% distinct(ensembl_gene_id_version, .keep_all = TRUE)
 
-expr <- expr[meta_genes$ensembl_gene_id_version,]
+#expr <- expr[meta_genes$ensembl_gene_id_version,]
 ```
 
 ```{r}
