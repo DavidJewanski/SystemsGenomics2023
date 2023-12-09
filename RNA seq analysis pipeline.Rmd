@@ -7,6 +7,11 @@ title: "Systems Genomics data analysis pipeline"
 #install.packages(c("tidyverse","ggrepel","BiocManager","pbapply","gplots","msigdbr"))
 #BiocManager::install(c("biomaRt","sva","DESeq2","edgeR"))
 ```
+```{r}
+#BiocManager::install("tximport")
+library(tximport)
+```
+
 
 
 # load libraries
@@ -28,6 +33,7 @@ expr <- sapply(samples, function(sample){
   file <- paste0("rsem_trimmed_dedup_nextera/", sample)
   #print(file)
   quant <- read.csv(file, sep="\t", header=T)
+  #tpm <- setNames(quant$TPM, quant$gene_id)
   tpm <- setNames(quant$TPM, quant[,2])
   return(tpm)
 })
@@ -57,26 +63,57 @@ summary(meta1$treatment)
 
 #expr <- expr[,meta$Name] #to make sure the columns of the expression matrix are in the same order as rows in the metadata
 ```
+```{r}
+#Conversion MUST (transcript) to MUSG (gene)
+
+# Use the Ensembl dataset for Mus musculus
+ensembl <- useEnsembl(biomart = "ensembl", dataset = "mmusculus_gene_ensembl")
+
+# Specify the transcript IDs (ensm)
+transcript_ids <- rownames(expr)
+
+# Map transcript IDs to gene IDs (enmusg)
+listAttributes(ensembl)
+transcript_to_gene <- getBM(attributes = c("ensembl_transcript_id_version", "ensembl_gene_id_version"),
+                            filters = "ensembl_transcript_id_version",
+                            values = transcript_ids,
+                            mart = ensembl)
+
+# Extract gene IDs (enmusg)
+gene_ids_enmusg <- unique(transcript_to_gene$ensembl_gene_id_version)
+
+# Print the result
+print(gene_ids_enmusg)
+
+```
 
 #More information about genes with biomaRt (p. 42)
 ```{r}
 listDatasets(useEnsembl(biomart = "ensembl")) %>% filter(dataset == "mmusculus_gene_ensembl") #Is this the correct one?
+#str(expr)
+#rownames(expr)
+#head(rownames(expr),10)
+#install.packages("biomaRt", dependencies=TRUE)
+library(biomaRt)
+listDatasets(ensembl)
+
 
 ensembl <- useEnsembl(biomart = "ensembl", dataset = "mmusculus_gene_ensembl")
 meta_genes <- getBM(attributes = c("ensembl_gene_id",
                                    "ensembl_gene_id_version",
+                                   "ensembl_transcript_id_version",
                                    "hgnc_symbol",
                                    "description",
                                    "chromosome_name",
                                    "start_position",
                                    "end_position",
                                    "strand"),
-                    filters = "ensembl_gene_id_version",
+                    filters = "ensembl_transcript_id_version",
                     values = rownames(expr),
                     mart = ensembl) %>%
-right_join(data.frame(ensembl_gene_id_version = rownames(expr)), by = "ensembl_gene_id_version") %>% distinct(ensembl_gene_id_version, .keep_all = TRUE)
+right_join(data.frame(ensembl_transcript_id_version = rownames(expr)), by = "ensembl_transcript_id_version") %>% distinct(ensembl_transcript_id_version, .keep_all = TRUE)
 
-#expr <- expr[meta_genes$ensembl_gene_id_version,]
+expr_test <- expr[meta_genes$ensembl_transcript_id_version,]
 ```
 
 ```{r}
@@ -84,7 +121,7 @@ right_join(data.frame(ensembl_gene_id_version = rownames(expr)), by = "ensembl_g
 #print(meta2$Name)
 #print(samples)
 
-dim(expr) #meaning 56884 annotated genes and 27 samples.
+dim(expr) #meaning 136424 annotated genes and 15 samples
 
 avg_expr <- rowMeans(expr)
 #layout(matrix(1:2, nrow=1))
@@ -100,29 +137,126 @@ theme_minimal() #log transformation of the y axis, visualization purposes
 
 num_det <- rowSums(expr > 0) #check in how many samples each gene is detected.
 hist(num_det)
-head(num_det)
+#head(num_det)
 
-num_det_test <- rowSums(expr) #check in how many samples each gene is detected.
-hist(num_det_test)
-head(num_det_test)
-max(num_det_test)
+hist(avg_expr)
+hist(log10(avg_expr + 1))
 
-expressed <- rowMeans(expr > 0) >= 13 | rowMeans(expr) >= 1 #Something seems wrong here. >= 13 instead of >= 0.5?
+expressed <- rowMeans(expr > 0) >= 0.5 | rowMeans(expr) >= 1
 head(expressed) #expressed is a vector of booleans
 expr <- expr[which(expressed),]
 dim(expr)
 
-meta_genes$expressed <- expressed
+avg_expr <- rowMeans(expr) #now after the filtering
+#layout(matrix(1:2, nrow=1))
+hist(avg_expr)
+hist(log10(avg_expr + 1))
+
+#meta_genes$expressed <- expressed
 
 
 ```
 #pairiwse correlation coefficients (p. 46)
 ```{r}
 #From here you need meta_genes
-head(expr)
-meta_genes$expressed
-corr_pearson <- cor(log1p(expr[meta_genes$expressed,]))
-corr_spearman <- cor(expr[meta_genes$expressed,], method = "spearman")
+#meta_genes$expressed is expressed
+#meta_genes$expressed
+
+corr_pearson <- cor(log1p(expr))
+corr_spearman <- cor(expr, method = "spearman")
+
+head(corr_pearson)
+head(corr_spearman)
+```
+```{r}
+#Dendrograms
+hcl_pearson <- hclust(as.dist(1 - corr_pearson))
+hcl_spearman <- hclust(as.dist(1 - corr_spearman))
+layout(matrix(1:2,nrow=1))
+plot(hcl_pearson)
+plot(hcl_spearman)
+
+```
+```{r}
+meta1_filtered <- subset(meta1, select = c("Name", "treatment")) #Compare this to dendrogram
+```
+
+```{r}
+#PCA
+pca <- prcomp(log1p(t(expr)), center = TRUE,scale.=TRUE)
+eigs <- pca$sdev^2
+plot(1:length(eigs), eigs)
+
+ggplot(data.frame(pca$x, meta1)) +
+#geom_point(aes(x = PC1, y = PC2, color = Name, shape = treatment),size=5)
+  geom_point(aes(x = PC1, y = PC2, color = treatment),size=5)
+
+```
+
+```{r}
+#Highly variable genes identification (optional). Manual, We don't do it.
+estimate_variability <- function(expr){
+  means <- apply(expr, 1, mean)
+  vars <- apply(expr, 1, var)
+  cv2 <- vars / means^2
+  
+  
+  minMeanForFit <- unname(median(means[which(cv2 > 0.3)]))
+  useForFit <- means >= minMeanForFit
+  fit <- glm.fit(x = cbind(a0 = 1, a1tilde = 1/means[useForFit]),
+    y = cv2[useForFit],
+    family = Gamma(link = "identity"))
+  a0 <- unname(fit$coefficients["a0"])
+  a1 <- unname(fit$coefficients["a1tilde"])
+  
+  
+  xg <- exp(seq(min(log(means[means>0])), max(log(means)), length.out=1000))
+  vfit <- a1/xg + a0
+  df <- ncol(expr) - 1
+  afit <- a1/means+a0
+  varFitRatio <- vars/(afit*means^2)
+  pval <- pchisq(varFitRatio*df,df=df,lower.tail=F)
+  
+  
+  res <- data.frame(mean = means,
+    var = vars,
+    cv2 = cv2,
+    useForFit = useForFit,
+    pval = pval,
+    padj = p.adjust(pval, method="BH"),
+    row.names = rownames(expr))
+  return(res)
+}
+```
+
+```{r}
+#DESeq
+library(biomaRt)
+ensembl <- useEnsembl(biomart = "ensembl", dataset = "mmusculus_gene_ensembl")
+tx2gene <- getBM(attributes = c("ensembl_transcript_id_version",
+"ensembl_gene_id_version"),
+filters = "ensembl_transcript_id_version",
+values = rownames(expr),
+mart = ensembl) %>%
+dplyr::select(ensembl_transcript_id_version, ensembl_gene_id_version)
+
+
+
+library(tximport)
+samples <- list.files("rsem")
+files <- file.path("rsem", samples, paste0(samples,".isoforms.results"))
+txi <- tximport(files, type = "rsem", tx2gene = tx2gene)
+
+library(DESeq2)
+dds <- DESeqDataSetFromTximport(txi,
+colData = meta,
+design = ~ Layer+Individual)ensembl <- useEnsembl(biomart = "ensembl",
+
+
+
+
+
+
 ```
 
 
