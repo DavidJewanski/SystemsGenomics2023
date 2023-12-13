@@ -6,18 +6,14 @@ title: "Systems Genomics data analysis pipeline"
 ```{r}
 #install.packages(c("tidyverse","ggrepel","BiocManager","pbapply","gplots","msigdbr"))
 #BiocManager::install(c("biomaRt","sva","DESeq2","edgeR"))
-```
-```{r}
 #BiocManager::install("tximport")
-library(tximport)
 ```
-
-
 
 # load libraries
 ```{r}
 libraries = c("tidyverse","ggrepel","BiocManager","pbapply","gplots","msigdbr", "biomaRt","sva","DESeq2","edgeR", "dplyr", "biomaRt")
 lapply(libraries, library, character.only=TRUE)
+library(tximport)
 ```
 
 
@@ -27,19 +23,18 @@ lapply(libraries, library, character.only=TRUE)
 setwd("C:/Users/nicks/Desktop/Systems_Genomics/GitHub David/SystemsGenomics2023/data")
 
 samples <- list.files("rsem_trimmed_dedup_nextera")
-samples <- samples[seq(1, length(samples),by=2)]
+samples <- samples[seq(1, length(samples),by=2)] #remove the isoform files
 #samples
 expr <- sapply(samples, function(sample){
   file <- paste0("rsem_trimmed_dedup_nextera/", sample)
   #print(file)
   quant <- read.csv(file, sep="\t", header=T)
-  #tpm <- setNames(quant$TPM, quant$gene_id)
-  tpm <- setNames(quant$TPM, quant[,2])
+  tpm <- setNames(quant$TPM, quant$gene_id)
+  #tpm <- setNames(quant$TPM, quant[,2])
   return(tpm)
 })
-
 ```
-
+#Read in meta genes
 ```{r}
 #setwd("/Users/david/Library/CloudStorage/OneDrive-Persönlich/Master ETH/Courses/11_Systems Genomics/project local repository/data")
 setwd("C:/Users/nicks/Desktop/Systems_Genomics/GitHub David/SystemsGenomics2023/data")
@@ -329,7 +324,7 @@ files
 txi_aDR <- tximport(files, type = "rsem", tx2gene = tx2gene_aDR)
 
 library(DESeq2)
-dds_aDR <- DESeqDataSetFromTximport(txi_aDR,colData = meta1_aDR, design = ~ treatment) #maybe include + sex?
+dds_aDR <- DESeqDataSetFromTximport(txi_aDR,colData = meta1_aDR, design = ~ treatment) #the output we be in gene_ids!
 summary(dds_aDR)
 rownames(dds_aDR) %>% head() #gene_id_versions
 
@@ -377,9 +372,11 @@ rownames(avg_expr_aDR) <- test$ensembl_gene_id_version
 
 test$ensembl_gene_id_version
 rownames(test) <- test$ensembl_gene_id_version
-max_treatment_DEG <- setNames(colnames(avg_expr_aDR)[apply(test$ensembl_gene_id_version[DEG_aDR,], 1, which.max)],DEG_aDR)
+avg_expr_aDR$ensembl_gene_id_version <- test$ensembl_gene_id_version
 
-max_treatment_DEG <- setNames(colnames(avg_expr_aDR)[apply(avg_expr_aDR[DEG_aDR,], 1, which.max)],DEG_aDR) 
+#max_treatment_DEG <- setNames(colnames(avg_expr_aDR)[apply(test$ensembl_gene_id_version[DEG_aDR,], 1, which.max)],DEG_aDR)
+
+max_treatment_DEG <- setNames(test$ensembl_gene_id_version[apply(test$ensembl_gene_id_version, 1, which.max)],DEG_aDR) 
 #Problem: avg expr aDR has transcripts, DEG aDR has genes -> incompatible. Solution: transform avg expr aDR to genes
 ```
 
