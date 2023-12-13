@@ -100,8 +100,9 @@ listDatasets(useEnsembl(biomart = "ensembl")) %>% filter(dataset == "mmusculus_g
 library(biomaRt)
 listDatasets(ensembl)
 
-
 ensembl <- useEnsembl(biomart = "ensembl", dataset = "mmusculus_gene_ensembl")
+
+
 meta_genes <- getBM(attributes = c("ensembl_gene_id",
                                    "ensembl_gene_id_version",
                                    "ensembl_transcript_id_version",
@@ -116,8 +117,31 @@ meta_genes <- getBM(attributes = c("ensembl_gene_id",
                     mart = ensembl) %>%
 right_join(data.frame(ensembl_transcript_id_version = rownames(expr)), by = "ensembl_transcript_id_version") %>% distinct(ensembl_transcript_id_version, .keep_all = TRUE)
 
-expr_test <- expr[meta_genes$ensembl_transcript_id_version,]
+#expr_test <- expr[meta_genes$ensembl_transcript_id_version,]
 ```
+#Trying to get prtoein ID from ensembl
+```{r}
+setwd("C:/Users/nicks/Desktop/Systems_Genomics/GitHub David/SystemsGenomics2023/data")
+expr_test <- sapply(samples, function(sample){
+  file <- paste0("rsem_trimmed_dedup_nextera/", sample)
+  #print(file)
+  quant <- read.csv(file, sep="\t", header=T)
+  #tpm <- setNames(quant$TPM, quant$gene_id)
+  tpm <- setNames(quant$TPM, quant[,1])
+  return(tpm)
+})
+expr_test %>% rownames() %>% unique() %>% length() #136 424, so only unique row names (protein id's)!
+expr_test %>% nrow()
+
+listAttributes(ensembl)
+meta_genes_test <- getBM(attributes = c("ensembl_peptide_id", "external_gene_name", "description", "uniprotswissprot", "ensembl_gene_id", "ensembl_gene_id_version"),
+                    filters = "uniprotswissprot",
+                    values = rownames(expr_test),
+                    mart = ensembl)
+
+meta_genes_test$uniprotswissprot %>% unique() %>% length() #14374
+```
+
 #Histograms, filter unexpressed genes
 ```{r}
 #print(meta1$Name)
@@ -341,9 +365,22 @@ rowMeans(expr_aDR[,which(meta1_aDR$treatment == treatment)])) #V1: aDR, V2: AL
 head(avg_expr_aDR)
 
 avg_expr_aDR <- data.frame(avg_expr_aDR)
-avg_expr_aDR$transcript_id <- rownames(avg_expr_aDR)
+avg_expr_aDR$ensembl_transcript_id_version <- rownames(avg_expr_aDR)
+avg_expr_aDR$ensembl_transcript_id_version_mod <- sapply(strsplit(avg_expr_aDR$ensembl_transcript_id_version, ","), function(x) x[1])
+#rownames(avg_expr_aDR) <- avg_expr_aDR$ensembl_transcript_id_version_mod
+nrow(test)
+length(unique(test$ensembl_gene_id_version))
+#test <- na.omit(test)
+colnames(transcript_to_gene)[1] <- "ensembl_transcript_id_version_mod"
+left_join(avg_expr_aDR, transcript_to_gene) -> test #test: when 2 transcripts, we only keep one and match this to gene id -> no more NA is gene id
+rownames(avg_expr_aDR) <- test$ensembl_gene_id_version
 
-max_treatment_DEG <- setNames(colnames(avg_expr_aDR)[apply(avg_expr_aDR[DEG_aDR,], 1, which.max)],DEG_aDR) #Problem: avg expr aDR has transcripts, DEG aDR has genes -> incompatible. Solution: transform avg expr aDR to genes
+test$ensembl_gene_id_version
+rownames(test) <- test$ensembl_gene_id_version
+max_treatment_DEG <- setNames(colnames(avg_expr_aDR)[apply(test$ensembl_gene_id_version[DEG_aDR,], 1, which.max)],DEG_aDR)
+
+max_treatment_DEG <- setNames(colnames(avg_expr_aDR)[apply(avg_expr_aDR[DEG_aDR,], 1, which.max)],DEG_aDR) 
+#Problem: avg expr aDR has transcripts, DEG aDR has genes -> incompatible. Solution: transform avg expr aDR to genes
 ```
 
 ```{r}
