@@ -1,0 +1,1543 @@
+---
+title: "Genomics Worksheet"
+author: "Aurimas Greicius"
+date: "`r Sys.Date()`"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Package install
+
+```{r}
+#install.packages(c("tidyverse","ggrepel","BiocManager","pbapply","gplots","msigdbr"))
+#BiocManager::install(c("biomaRt","sva","DESeq2","edgeR"))
+```
+
+## Work
+
+```{r pressure, echo=FALSE}
+
+library(dplyr)
+library(tidyr)
+setwd("C:/Users/aurim/Desktop/Lectures/Genomics/drylab/RSEM_MAPPING")
+samples <-  list.files("C:/Users/aurim/Desktop/Lectures/Genomics/drylab/RSEM_MAPPING/rsem")
+expr <- sapply(samples, function(sample){
+  file <- paste0("rsem/",sample,"/",sample,".genes.results")
+  quant <- read.csv(file, sep="\t", header=T)
+  tpm <- setNames(quant$TPM, quant$gene_id)
+  return(tpm)
+})
+
+library(readxl)
+Supp <- read_excel("C:/Users/aurim/Desktop/Lectures/Genomics/drylab/RSEM_MAPPING/Supp.xls")
+df <- Supp
+df <- df %>%
+  mutate(SampleID = gsub("(\\d+)", "SRR3068\\1", SampleID))
+
+
+df <- df %>%
+  mutate(SampleID = strsplit(SampleID, ",")) %>%
+  unnest(SampleID)
+
+colnames(df)[colnames(df) == "SampleID"] <- "Run"
+
+# For some reason, I have to manually load in SraRunTable, but we dont really need it anyways, so skip!
+#SraRunTable <- read_excel("SraRunTable.xlsx")
+metada <- read_xlsx("C:/Users/aurim/Desktop/Lectures/Genomics/drylab/RSEM_MAPPING/SraRunTable.xlsx") # this doesnt work all of a sudden
+
+#library(readxl)
+#SraRunTable <- read_excel("SraRunTable.xlsx")
+
+#metada <- SraRunTable
+
+metada$Age <- NULL
+metada$sex <- NULL
+metada$Extraction <- NULL
+
+#comb<-left_join(metada, df, by = 'Run') %>% select(c('Run', 'Age','gender', 'Species', 'Tissue')) # Skip this for now, df seems good enough
+meta <- df[,1:5]
+#meta <- comb
+expr <- expr[,meta$Run]
+```
+
+```{r}
+library(biomaRt)
+
+ensembl <- useEnsembl(biomart = "ensembl",
+                      dataset = "hsapiens_gene_ensembl")
+
+library(dplyr)
+meta_genes <- getBM(attributes = c("ensembl_gene_id",
+                                   "ensembl_gene_id_version",
+                                   "hgnc_symbol",
+                                   "description",
+                                   "chromosome_name",
+                                   "start_position",
+                                   "end_position",
+                                   "strand"),
+                    filters = "ensembl_gene_id_version",
+                    values = rownames(expr),
+                    mart = ensembl) %>%
+  right_join(data.frame(ensembl_gene_id_version = rownames(expr)),
+             by = "ensembl_gene_id_version") %>%
+  distinct(ensembl_gene_id_version, .keep_all = TRUE)
+
+expr <- expr[meta_genes$ensembl_gene_id_version,]
+
+dim(expr)
+
+avg_expr <- rowMeans(expr)
+
+
+#jpeg("./plot/Histogram_avg_expr.jpeg", width = 900, height = 600) # height and width can choose as your wish 
+
+layout(matrix(1:2, nrow=1))
+hist(avg_expr)
+hist(log10(avg_expr + 1))
+
+#dev.off()
+```
+
+
+
+```{r}
+meta$organ <- meta$Tissue
+library(stringr)
+library(rmarkdown)
+library(shiny)
+library(ggplot2)
+library(dplyr)
+library(knitr)
+library(tidyverse)
+library(DescTools)
+library(ggpubr)
+library(patchwork)
+library(purrr)
+df2 <- df
+library(ggplot2)
+df2$Tissue <- str_remove(df2$Tissue, "^Brain, ")
+
+capitalize_first <- function(x) {
+  tools::toTitleCase(x)
+}
+ 
+your_data <- df2
+
+your_data$Tissue <- sapply(your_data$Tissue, capitalize_first)
+
+# your_data %>% mutate(Tissue = ifelse(grepl("^Brain", Tissue), "Brain", Tissue))
+Count_plot <- ggplot(your_data) +
+ aes(x = Tissue, fill = Gender) +
+ geom_bar() +
+ scale_fill_manual(values = c(Female = "#ADEFD1FF", 
+Male = "#00203FFF")) +
+ ggthemes::theme_base() + 
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+ggsave("./plot/Count_plot.png", Count_plot, width = 10, height = 6, units = "in")
+
+
+kable <- meta %>% kable
+#save_kable(kable, file = 'kable.png')
+
+result <- meta %>%
+  group_by(Tissue) %>%
+  summarise(Tissue_count = n())
+meta3 <- meta
+meta$organ <- meta$Tissue
+meta <- meta %>% mutate(Tissue = ifelse(grepl("^Brain", Tissue), "Brain", Tissue))%>%
+  mutate(Tissue = ifelse(Tissue == "Cerebellum", "Brain", Tissue))
+
+Count_plot_Brain <- ggplot(meta) +
+ aes(x = Tissue, fill = Gender) +
+ geom_bar() +
+ scale_fill_manual(values = c(Female = "#ADEFD1FF", 
+Male = "#00203FFF")) +
+ ggthemes::theme_base() + 
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+ggsave("./plot/Count_plot_brain.png", Count_plot_Brain, width = 10, height = 6, units = "in")
+
+```
+
+```{r}
+library(ggplot2)
+
+log_avg_expr <- ggplot(data.frame(avg_expr), aes(x=avg_expr)) +
+  geom_histogram(bins = 50) +
+  scale_x_continuous(breaks = c(0,1,10,100,1000,10000,20000), trans="log1p", expand=c(0,0)) +
+  scale_y_continuous(breaks = c(0,1), expand=c(0,0), trans="log1p") +
+  theme_minimal()
+#ggsave("./plot/log_avg_expr.png", log_avg_expr, width = 10, height = 6, units = "in")
+num_det <- rowSums(expr > 0)
+hist(num_det)
+
+```
+
+
+```{r}
+png("./plot/num_det.png") # height and width can choose as your wish 
+hist(num_det)
+dev.off()
+
+expressed <- rowMeans(expr > 0) >= 0.5 | rowMeans(expr) >= 1
+png("./plot/num_det_filtered.png")
+hist(num_det[expressed])
+dev.off()
+expressed_df <- expressed %>% as.data.frame
+#expr <- expr[which(expressed),] # originally [1] 61852    21
+#meta_genes <- meta_genes[which(expressed),]
+
+meta_genes$expressed <- expressed_df # Try to use this now
+
+#hist(meta_genes$expressed) ###
+```
+
+# Here let's continue with the second way.
+
+```{r}
+expressed_by_meta_genes <- meta_genes %>% filter(expressed == TRUE) %>% pull(ensembl_gene_id_version)
+# replace expr[meta_genes$expressed,] with expr[expressed_by_meta_genes,] 
+
+corr_pearson <- cor(log1p(expr[expressed_by_meta_genes,]))
+corr_spearman <- cor(expr[expressed_by_meta_genes,], method = "spearman")
+hcl_pearson <- hclust(as.dist(1 - corr_pearson))
+hcl_spearman <- hclust(as.dist(1 - corr_spearman))
+
+png("./plot/hcl_pearson_spearman.png", width = 900)
+layout(matrix(1:2,nrow=1))
+plot(hcl_pearson)
+plot(hcl_spearman)
+
+dev.off()
+png("./plot/hcl_spearman_Species_Tissue.png")
+layout(matrix(1:1,nrow=1))
+plot(hcl_spearman, labels = meta$Tissue)
+
+dev.off()
+
+expr <- expr[,meta$Run]
+expr_tissue <- expr
+colnames(expr_tissue) <- meta$Tissue
+
+expr_organ <- expr
+colnames(expr_organ) <- meta$organ
+corr_pearson <- cor(log1p(expr_organ[expressed_by_meta_genes,]))
+corr_spearman <- cor(expr_organ[expressed_by_meta_genes,], method = "spearman")
+hcl_pearson <- hclust(as.dist(1 - corr_pearson))
+hcl_spearman <- hclust(as.dist(1 - corr_spearman))
+```
+
+
+```{r}
+png("./plot/hcl_pearson_spearman.png", width = 900)
+layout(matrix(1:2,nrow=1))
+plot(hcl_pearson)
+plot(hcl_spearman)
+
+dev.off()
+png("./plot/hcl_spearman_Species_Tissue.png")
+layout(matrix(1:1,nrow=1))
+plot(hcl_spearman, labels = meta$Tissue)
+
+dev.off()
+```
+
+
+```{r}
+new_meta <- meta %>%
+  mutate(Age = strsplit(Age, " ")) %>%
+  unnest(Age) %>% filter(Age != 'years')
+new_meta$Age <- as.numeric(new_meta$Age)
+```
+
+
+```{r}
+pca <- prcomp(log1p(t(expr[expressed_by_meta_genes,])), center = TRUE, scale. = TRUE)
+eigs <- pca$sdev^2
+layout(matrix(1:2,nrow=1))
+plot(1:length(eigs), eigs)
+eigs_prop <- eigs / sum(eigs)
+plot(1:length(eigs_prop), eigs_prop)
+
+
+pca_pc1_pc2 <- 
+ggplot(data.frame(pca$x, new_meta)) +
+  geom_point(aes(x = PC1, y = PC2, color = Tissue, shape = Gender),size = 5)+ theme_bw()
+pca_pc2_pc3 <-
+  ggplot(data.frame(pca$x, new_meta)) +
+  geom_point(aes(x = PC2, y = PC3, color = Tissue, shape = Gender),size = 5)+ theme_bw()
+
+ggsave("./plot/pca_pc1_pc2_noage.png", pca_pc1_pc2, width = 10, height = 6, units = "in")
+ggsave("./plot/pca_pc2_pc3_noage.png", pca_pc2_pc3, width = 10, height = 6, units = "in")
+
+pca_pc1_pc2
+pca_pc2_pc3
+```
+
+```{r}
+# Checking without log transform, Skip this.
+pca <- prcomp(t(expr[expressed_by_meta_genes,]), center = TRUE, scale. = TRUE)
+eigs <- pca$sdev^2
+plot(1:length(eigs), eigs)
+
+eigs_prop <- eigs / sum(eigs)
+plot(1:length(eigs_prop), eigs_prop)
+layout(matrix(1:2,nrow=1))
+ggplot(data.frame(pca$x, meta)) +
+  geom_point(aes(x = PC1, y = PC2, color = Tissue, shape = Gender), size = 5)
+ggplot(data.frame(pca$x, meta)) +
+  geom_point(aes(x = PC1, y = PC2, color = Species), size = 5)
+```
+
+# Continuation of the code from above. Optional: highly variable genes identification 
+```{r}
+estimate_variability <- function(expr){
+  means <- apply(expr, 1, mean)
+  vars <- apply(expr, 1, var)
+  cv2 <- vars / means^2
+  
+  minMeanForFit <- unname(median(means[which(cv2 > 0.3)]))
+  useForFit <- means >= minMeanForFit
+  fit <- glm.fit(x = cbind(a0 = 1, a1tilde = 1/means[useForFit]),
+                 y = cv2[useForFit],
+                 family = Gamma(link = "identity"))
+  a0 <- unname(fit$coefficients["a0"])
+  a1 <- unname(fit$coefficients["a1tilde"])
+  
+  xg <- exp(seq(min(log(means[means>0])), max(log(means)), length.out=1000))
+  vfit <- a1/xg + a0
+  df <- ncol(expr) - 1
+  afit <- a1/means+a0
+  varFitRatio <- vars/(afit*means^2)
+  pval <- pchisq(varFitRatio*df,df=df,lower.tail=F)
+  
+  res <- data.frame(mean = means,
+                    var = vars,
+                    cv2 = cv2,
+                    useForFit = useForFit,
+                    pval = pval,
+                    padj = p.adjust(pval, method="BH"), #Using  method!
+                    row.names = rownames(expr))
+  return(res)
+}
+# Test for sign. of overdispersion
+# replace expr[meta_genes$expressed,] with expr[expressed_by_meta_genes,] 
+var_genes <- estimate_variability(expr[expressed_by_meta_genes,])
+meta_genes$highvar <- meta_genes$ensembl_gene_id_version %in% rownames(var_genes)[which(var_genes$padj < 0.05)]
+#expr_organ <- expr_tissue 
+#colnames(expr_organ) <- 
+
+corr_spearman_highvar <- cor(expr_tissue[meta_genes$highvar,], method = "spearman")
+hcl_spearman_highvar <- hclust(as.dist(1 - corr_spearman_highvar))
+layout(matrix(1:2,nrow=1))
+plot(hcl_spearman_highvar, labels = meta$Species)
+plot(hcl_spearman_highvar)#, labels = meta$organ)
+
+pca_highvar <- 
+  prcomp(log1p(t(expr[meta_genes$highvar,])), center = TRUE, scale. = TRUE)
+highvarpc1pc2 <-
+  ggplot(data.frame(pca_highvar$x, meta)) +
+  geom_point(aes(x = PC1, y = PC2, color = Tissue, shape = Gender), size = 5)+ theme_bw()
+
+highvarpc2pc3 <-
+  ggplot(data.frame(pca_highvar$x, meta)) +
+  geom_point(aes(x = PC2, y = PC3, color = Tissue, shape = Gender), size = 5)+ theme_bw()
+library(cowplot)
+
+plot_grid(highvarpc1pc2, highvarpc2pc3)
+print(pca_highvar)
+ggsave("./plot/PCA_Species_Gender.png", plot = highvarpc1pc2, width = 9, height = 6, units = "in", dpi = 300)
+ggsave("./plot/PCA_Species_Gender_pc23.png", plot = highvarpc2pc3, width = 9, height = 6, units = "in", dpi = 300)
+
+meta_genes %>% filter(highvar == TRUE) %>% nrow()
+expressed_by_meta_genes_highvar <- meta_genes %>% filter(expressed == TRUE) %>% filter(highvar == TRUE) %>% pull(ensembl_gene_id_version)
+#Maybe we use highvars?
+expressed_by_meta_genes <- meta_genes %>% filter(expressed == TRUE) %>% pull(ensembl_gene_id_version)
+```
+
+```{r}
+png('./plot/hcl_spearman_highvar_organ.png')
+
+plot(hcl_spearman_highvar)#, labels = meta$organ)
+dev.off()
+```
+
+
+#### Use highvars and rerun this shit
+
+
+```{r}
+
+
+library(ggplot2)
+library(cowplot)
+meta<-new_meta
+# Assuming you have data frames named 'pca_highvar' and 'meta'
+
+# Plot for PC1 vs PC2
+highvarpc1pc2 <- ggplot(data.frame(pca_highvar$x, meta)) +
+  geom_point(aes(x = PC1, y = PC2, color = Tissue, shape = Gender), size = 5) +
+  theme_bw() +
+  theme(legend.position = "none")
+
+# Display the plot
+print(highvarpc1pc2)
+
+
+# Plot for PC2 vs PC3
+highvarpc2pc3 <- ggplot(data.frame(pca_highvar$x, meta)) +
+  geom_point(aes(x = PC2, y = PC3, color = Tissue, shape = Gender), size = 5) +
+  theme_bw()
+
+# Facet the plots using plot_grid
+facet_plot <- plot_grid(highvarpc1pc2, highvarpc2pc3, ncol = 2, align = 'h')
+
+# Display the facetted plot
+print(facet_plot)
+png('./plot/highvar_pca_plots_plotgrid.png', width = 900, height = 500)
+print(facet_plot)
+dev.off()
+```
+
+# Optional: batch effect correction
+# We cannot do this because ... Error in ComBat_seq(counts = expr, batch = meta$Species) : ComBat-seq doesn't support 1 sample per batch yet
+
+```{r}
+#library(sva)
+#expr_combat <- ComBat_seq(counts = expr,
+#                          batch = meta$Species)
+# replace expr[meta_genes$expressed,] with expr[expressed_by_meta_genes,] 
+#corr_spearman_combat <- cor(expr_combat[meta_genes$expressed,], method = "spearman")
+#hcl_spearman_combat <- hclust(as.dist(1 - corr_spearman_combat))
+#layout(matrix(1:2,nrow=1))
+#plot(hcl_spearman_combat, labels = meta$Individual)
+#plot(hcl_spearman_combat, labels = meta$Layer)
+
+#pca_combat <- prcomp(log1p(t(expr_combat[meta_genes$expressed,])), center = TRUE, scale. = TRUE)
+#ggplot(data.frame(pca_combat$x, meta)) +
+#  geom_point(aes(x = PC1, y = PC2, color = Layer, shape = Individual), size = 5)
+```
+
+# 3-4 Differential expression analysis
+
+```{r}
+library(pbapply)
+DE_test <- function(expr,
+                    cond,
+                    ctrl = NULL,
+                    covar = NULL,
+                    padj_method = p.adjust.methods){
+  pval_fc <- data.frame(t(pbapply(expr, 1, function(e){
+    dat <- data.frame(y = log1p(e),
+                      cond = cond)
+    if (! is.null(covar))
+      dat <- data.frame(dat, covar)
+    
+    m1 <- lm(y ~ ., data = dat)
+    m0 <- lm(y ~ . - cond, data = dat)
+    test <- anova(m1, m0)
+    pval <- test$Pr[2]
+    
+    avgs <- tapply(log1p(e), cond, mean)
+    if (! is.null(ctrl) && sum(cond %in% ctrl) > 0){
+      fc <- exp(max(avgs[names(avgs) != ctrl]) - avgs[ctrl])
+    } else{
+      fc <- exp(max(avgs) - min(avgs))
+    }
+    
+    return(c(pval = unname(pval), fc = unname(fc)))
+  })), row.names = rownames(expr))
+  padj <- p.adjust(pval_fc$pval, method = 'BH')
+  return(data.frame(pval_fc, "padj" = padj)[,c("pval","padj","fc")])
+}
+# replace expr[meta_genes$expressed,] with expr[expressed_by_meta_genes,] 
+
+res_DE <- DE_test(expr = expr[expressed_by_meta_genes,],
+                  cond = meta$Tissue,
+                  covar = meta %>% as.data.frame %>% dplyr::select(Gender)) %>%
+  tibble::rownames_to_column("gene")
+
+res_DE_highvar <- DE_test(expr = expr[expressed_by_meta_genes_highvar,],
+                  cond = meta$Tissue,
+                  covar = meta %>% as.data.frame %>% dplyr::select(Gender)) %>%
+  tibble::rownames_to_column("gene")
+```
+# Volc plot
+```{r}
+symbols <- meta_genes %>% dplyr::select(ensembl_gene_id_version, hgnc_symbol)
+colnames(symbols) <- c('gene','hgnc_symbol')
+
+res_DE <- left_join(res_DE, symbols)
+
+res_DE_highvar <- left_join(res_DE_highvar, symbols)
+
+res_DE <- res_DE %>%
+  mutate(DE = padj < 0.1 & fc > 2) %>%
+  mutate(DEG = ifelse(DE, hgnc_symbol, NA))
+
+res_DE_highvar <- res_DE_highvar %>%
+  mutate(DE = padj < 0.1 & fc > 2) %>%
+  mutate(DEG = ifelse(DE, hgnc_symbol, NA))
+
+
+res_DE %>% filter(pval != 'NA')
+library(ggrepel) 
+Volc_self_made <- ggplot(res_DE, aes(x = log(fc), y = -log10(padj), col=DE, label=DEG)) +
+  geom_point() +
+  geom_text_repel() +
+  geom_vline(xintercept=c(log(2), 0), col="#303030", linetype="dotted") +
+  geom_hline(yintercept=-log10(0.1), col="#303030", linetype="dotted") +
+  scale_color_manual(values=c("#909090", "red")) +
+  theme_minimal()
+print(Volc_self_made)
+
+Volc_self_made_highvar <- ggplot(res_DE_highvar, aes(x = log(fc), y = -log10(padj), col=DE, label=DEG)) +
+  geom_point() +
+  geom_text_repel() +
+  geom_vline(xintercept=c(log(2), 0), col="#303030", linetype="dotted") +
+  geom_hline(yintercept=-log10(0.1), col="#303030", linetype="dotted") +
+  scale_color_manual(values=c("#909090", "red")) +
+  theme_minimal()
+print(Volc_self_made_highvar)
+
+ggsave("./plot/Volc_self_made.png", plot = Volc_self_made, width = 15, height = 10, units = "in", dpi = 300)
+ggsave("./plot/Volc_self_made_highvar.png", plot = Volc_self_made_highvar, width = 15, height = 10, units = "in", dpi = 300)
+
+res_DE %>% filter(-log10(padj) > 40 )
+
+#ggsave("./plot/Volc_Big.png", plot = Volc, width = 15, height = 10, units = "in", dpi = 300)
+```
+
+
+#tximport
+```{r}
+library(biomaRt)
+ensembl <- useEnsembl("ensembl","hsapiens_gene_ensembl")
+save(ensembl, file = "ensembl.Rdata")
+tx2gene <- getBM(attributes = c("ensembl_transcript_id_version",
+                                "ensembl_gene_id_version"),
+                 filters = "ensembl_gene_id_version",
+                 values = rownames(expr),
+                 mart = ensembl) %>%
+  dplyr::select(ensembl_transcript_id_version, ensembl_gene_id_version)
+```
+
+#import new STAR generated gene counts
+```{r}
+#?
+```
+
+
+
+```{r}
+files <- file.path("C:/Users/aurim/Desktop/Lectures/Genomics/drylab/RSEM_MAPPING/rsem", samples, paste0(samples,".isoforms.results"))
+library(tximport)
+txi <- tximport(files, type = "rsem", tx2gene = tx2gene)
+library(DESeq2)
+```
+
+```{r}
+#meta_ <- meta %>% as.data.frame %>% dplyr::select(Species, Tissue) %>% unique
+#meta_ <- meta %>%
+#  group_by(Species, Tissue) %>%
+#  mutate(run_time = row_number())
+#Supp %>% select(S)
+#troubleshoot
+#meta_df <- meta %>% as.data.frame()
+```
+
+
+```{r}
+#rownames(meta) <- meta$Run
+#colnames(txi$abundance) = meta$Run
+#colnames(txi$length) = meta$Run
+#colnames(txi$counts) = meta$Run
+
+#meta_df<- meta %>% as.data.frame
+
+#meta <- meta_df %>% separate(Age, c('AgeNr', 'years'), ' ')
+```
+
+```{r}
+hist(meta$Age)
+meta <- meta %>%
+  mutate(normAge = (Age - min(Age)) / (max(Age) - min(Age)) * 100)
+
+library(ggplot2)
+
+ggplot(meta) +
+ aes(x = normAge) +
+ geom_histogram(bins = 6L, fill = "#112446") +
+ theme_minimal()
+
+```
+
+
+```{r}
+meta$Gender <- as.factor(meta$Gender)
+meta
+dds <- DESeqDataSetFromTximport(txi,
+                                colData = meta,
+                                design = ~ Tissue + Gender) # First with gender then with age, introduce new column with > 50 or belwo
+
+# replace expr[meta_genes$expressed,] with expr[expressed_by_meta_genes,] 
+dds_filtered <- dds[intersect(rownames(expr[expressed_by_meta_genes,]), rownames(dds)),]
+dds_filtered_highvar <- dds[intersect(rownames(expr[expressed_by_meta_genes_highvar,]), rownames(dds)),]
+
+dds_filtered <- DESeq(dds_filtered, test="LRT", reduced= ~ Gender)
+dds_filtered_highvar <- DESeq(dds_filtered_highvar, test="LRT", reduced= ~ Gender)
+
+res_DESeq2 <- results(dds_filtered)
+res_DESeq2_highvar <- results(dds_filtered_highvar)
+```
+```{r}
+library(pheatmap)
+library(colorspace)
+library(RColorBrewer)
+
+res_DESeq2_df <- res_DESeq2 %>% as.data.frame()
+res_DESeq2_highvar_df <- res_DESeq2_highvar %>% as.data.frame()
+
+top_genes <- res_DESeq2_highvar_df %>% filter(padj < 0.005, baseMean > 500, log2FoldChange > 1) %>% arrange(log2FoldChange) %>% head(, n = 10) %>% rownames()
+heatmap_data <- assay(dds_filtered_highvar)
+
+# Heatmap
+heatmap <- pheatmap(heatmap_data, color = colorRampPalette(rev(brewer.pal(n = 11, name =
+  "RdYlBu")))(100), cluster_rows = FALSE, cluster_cols = FALSE, scale = 'row', show_colnames =FALSE,
+                   main = "Top DE Genes - DESeq2 (dds_filtered_highvar)")
+
+library(gplots)
+
+top_genes <- res_DESeq2_highvar_df %>% filter(padj < 0.05, baseMean > 100, abs(log2FoldChange) > 2) %>% arrange(log2FoldChange) %>% head(, n = 10) %>% rownames()
+heatmap_data <- assay(dds_filtered_highvar)
+
+heatmap.2(heatmap_data,
+          main = "Top DE Genes - DESeq2 (dds_filtered)",
+          Colv = FALSE, Rowv = FALSE,
+          col = colorRampPalette(c("blue", "white", "red"))(100),
+          scale = "row", # "row" for row z-score normalization
+          key = TRUE, key.title = "Z-Score", key.position = "right",
+          density.info = "none",
+          trace = "none")
+#ggplot(res_DESeq2_df) +
+#  geom_point(aes(x = log2FoldChange, y = -log10(padj), color = padj), alpha = 0.5) +
+#  theme_minimal() +
+#  ggtitle("Volcano Plot - DESeq2 Results (dds_filtered)")
+
+#res_DESeq2_df <- res_DESeq2 %>% as.data.frame()
+
+#ggplot(res_DESeq2_df) +
+#  geom_point(aes(x = log2FoldChange, y = -log10(padj), color = ifelse(padj < 0.05, "Significant", "Nonsignificant")), alpha = 0.5) +
+#  theme_bw() +
+#  ggtitle("Volcano Plot - DESeq2 Results")
+```
+
+```{r}
+#prettz heatmap
+# Install and load required packages if not already installed
+if (!requireNamespace("gplots", quietly = TRUE)) {
+  install.packages("gplots")
+}
+library(gplots)
+library(viridis)
+
+
+top_genes <- res_DESeq2_highvar_df %>% filter(padj < 0.05, baseMean > 50, abs(log2FoldChange) > 1) %>% rownames()
+heatmap_data <- assay(dds_filtered_highvar)[rownames(dds_filtered_highvar) %in% top_genes, ]
+colnames(heatmap_data) <- meta$Tissue
+# Create a heatmap using heatmap.2
+png('./plot/Heatmap_baseMean50_padj005_abslog2foldchange1_highvar.png', width = 680, height = 400)
+heatmap.2(heatmap_data,
+          main = "DE Genes - DESeq2 (hi-var)",
+          Colv = FALSE, Rowv = FALSE,
+          col = colorRampPalette(c("blue", "white", "red"))(100),
+          scale = "column", # "row" for row z-score normalization
+          key = TRUE, key.title = "Z-Score",
+          density.info = "histogram",
+          trace = "none")
+dev.off()
+
+png('./plot/Heatmap_baseMean50_padj005_abslog2foldchange1_highvar_scaleROW.png', width = 680, height = 400)
+heatmap.2(heatmap_data,
+          main = "DE Genes - DESeq2 (hi-var)",
+          Colv = FALSE, Rowv = FALSE,
+          col = colorRampPalette(c("blue", "white", "red"))(100),
+          scale = "row", # "row" for row z-score normalization
+          key = TRUE, key.title = "Z-Score",
+          density.info = "histogram",
+          trace = "none")
+dev.off()
+
+top_genes <- res_DESeq2_df %>% filter(padj < 0.05, baseMean > 50, abs(log2FoldChange) > 1) %>% rownames()
+heatmap_data <- assay(dds_filtered)[rownames(dds_filtered) %in% top_genes, ]
+colnames(heatmap_data) <- meta$Tissue
+# Create a heatmap using heatmap.2
+png('./plot/Heatmap_baseMean50_padj005_abslog2foldchange1.png', width = 680, height = 400)
+heatmap.2(heatmap_data,
+          main = "DE Genes - DESeq2",
+          Colv = FALSE, Rowv = FALSE,
+          col = colorRampPalette(c("blue", "white", "red"))(100),
+          scale = "column", # "row" for row z-score normalization
+          key = TRUE, key.title = "Z-Score",
+          density.info = "histogram",
+          trace = "none")
+dev.off()
+
+png('./plot/Heatmap_baseMean50_padj005_abslog2foldchange1_scaleROW.png', width = 680, height = 400)
+heatmap.2(heatmap_data,
+          main = "DE Genes - DESeq2",
+          Colv = FALSE, Rowv = FALSE,
+          col = colorRampPalette(c("blue", "white", "red"))(100),
+          scale = "row", # "row" for row z-score normalization
+          key = TRUE, key.title = "Z-Score",
+          density.info = "histogram",
+          trace = "none")
+dev.off()
+
+
+```
+
+```{r}
+
+```
+
+
+
+MA PLOT
+```{r}
+MAplot_dds_filtered <- plotMA(dds_filtered)
+
+png("MAplot.png", width = 900, height = 480) # height and width can choose as your wish 
+plotMA(dds_filtered)
+dev.off()
+
+library(bigPint)
+BiocManager::install('bigPint')
+library(dplyr)
+library(ggplot2)
+library(plotly)
+install.packages('plotly')
+ret <- plotSM(data=res_DE, saveFile = FALSE)
+```
+
+
+# Lol it worked, we now compare p-values to previous
+```{r}
+cor(res_DESeq2$padj,
+    res_DE %>% filter(gene %in% rownames(res_DESeq2)) %>% pull(padj),
+    method="spearman", use="complete.obs")
+jpeg("DESeq2_vs_DE.jpeg", width = 900, height = 600)
+layout(matrix(1:2, nrow=1))
+plot(-log10(res_DESeq2$pvalue),
+     -log10(res_DE %>% filter(gene %in% rownames(res_DESeq2)) %>% pull(pval)),
+     xlab = "-log10(pval DESeq2)", ylab = "-log10(pval DE)", pch=16)
+smoothScatter(-log10(res_DESeq2$pvalue),
+              -log10(res_DE %>% filter(gene %in% rownames(res_DESeq2)) %>% pull(pval)),
+              xlab = "-log10(pval DESeq2)", ylab = "-log10(pval DE)", pch=16)
+dev.off()
+
+#plot(-log10(res_DESeq$padj), abs(res_DESeq$log2FoldChange))
+
+res_DESeq %>%
+ filter(!is.na(pvalue)) %>%
+ filter(!is.na(padj)) %>%
+  #filter(padj != 0) %>% 
+ ggplot() +
+  aes(x = log2FoldChange, y = -log10(padj), alpha = 0.4) +
+  geom_point(shape = "circle", size = 1.5, colour = "#076DC2") +
+  labs(x = "P-value, adjusted (BH)", y = "Fold change") +
+  theme_minimal()#
+
+BiocGenerics::plotMA(res_DESeq)
+```
+
+# Volc plot
+```{r}
+library(dplyr)
+library(ggrepel)
+Volc <- res_DESeq %>%
+ filter(!is.na(pvalue)) %>%
+ filter(!is.na(padj)) %>% ggplot(aes(x = abs(log(FoldChange)), y = -log10(padj), col=DE, label=DEG)) +
+  geom_point() +
+  geom_text_repel() +
+  geom_vline(xintercept=c(log(2), 0), col="#303030", linetype="dotted") +
+  geom_hline(yintercept=-log10(0.1), col="#303030", linetype="dotted") +
+  scale_color_manual(values=c("#909090", "red")) +
+  theme_minimal()
+print(Volc)
+
+
+
+ggsave("Volc_Big.png", plot = Volc, width = 15, height = 10, units = "in", dpi = 300)
+```
+
+
+
+```{r}
+cor(res_DESeq2$padj,
+    res_DE %>% filter(gene %in% rownames(res_DESeq2)) %>% pull(padj),
+    method="spearman", use="complete.obs")
+
+jpeg("DESeq2_vs_DE.jpeg", width = 900, height = 600) # height and width can choose as your wish 
+layout(matrix(1:2, nrow=1))
+plot(-log10(res_DESeq2$pvalue),
+     -log10(res_DE %>% filter(gene %in% rownames(res_DESeq2)) %>% pull(pval)),
+     xlab = "-log10(pval DESeq2)", ylab = "-log10(pval DE)", pch=16)
+smoothScatter(-log10(res_DESeq2$pvalue),
+              -log10(res_DE %>% filter(gene %in% rownames(res_DESeq2)) %>% pull(pval)),
+              xlab = "-log10(pval DESeq2)", ylab = "-log10(pval DE)", pch=16)
+dev.off()
+```
+```{r}
+layout(matrix(1:2, nrow=1))
+plot(-log10(res_DESeq2$pvalue),
+     -log10(res_DE %>% filter(gene %in% rownames(res_DESeq2)) %>% pull(pval)),
+     xlab = "-log10(pval DESeq2)", ylab = "-log10(pval DE)", pch=16)
+smoothScatter(-log10(res_DESeq2$pvalue),
+              -log10(res_DE %>% filter(gene %in% rownames(res_DESeq2)) %>% pull(pval)),
+              xlab = "-log10(pval DESeq2)", ylab = "-log10(pval DE)", pch=16)
+```
+
+
+```{r}
+table(p.adjust(res_DESeq2$pvalue, method="BH") < 0.1)#,
+      res_DE %>% filter(gene %in% rownames(res_DESeq2)) %>% (pull(padj) < 0.1)
+
+table(p.adjust(res_DESeq2$pvalue, method="bonferroni") < 0.1)#,
+      res_DE %>% filter(gene %in% rownames(res_DESeq2)) %>% (pull(padj) < 0.1)
+```
+```{r}
+avg_expr_save <-avg_expr
+meta2 <- meta
+#Checkpoint
+```
+
+
+#For multi-condition comparisons # Skip this?
+```{r}
+#expr %>% colnames -> colnames_expr
+
+#avg_expr <- avg_expr_save
+#DEG <- res_DE$gene[res_DE$DE]
+#avg_expr <- sapply(sort(unique(meta$Tissue)), function(layer)
+#  rowMeans(expr[,which(meta$Tissue == layer)]))
+#colnames(avg_expr) <- Tissue_u
+#colnames(expr) <- meta$Run
+
+#max_layer_DEG <- setNames(colnames(avg_expr)[apply(avg_expr[DEG,], 1, which.max)], DEG)
+
+
+#table(max_layer_DEG)
+
+#avg_expr_DEG_list <- tapply(names(max_layer_DEG), max_layer_DEG, function(x) avg_expr[x,])
+#scaled_expr_DEG_list <- lapply(avg_expr_DEG_list, function(x) t(scale(t(x))))
+
+#layout(matrix(1:8, nrow = 2, byrow = T))
+#par(mar=c(3,3,3,3))
+##for(Tissue in names(scaled_expr_DEG_list))
+#  boxplot(scaled_expr_DEG_list[[layer]],
+#          main = paste0(layer, " (", nrow(scaled_expr_DEG_list[[layer]]), ")"))
+```
+
+```{r}
+## Checkpoint
+expr2 <- expr
+#colnames(expr) <- meta %>% pull(Tissue)
+```
+
+```{r}
+# Remove temporal lobe and add it later singular
+#avg_expr <- sapply(sort(unique(meta$Tissue)), function(x)
+#  rowMeans(expr[,which(meta$Tissue == x)]))
+#corr_DEG <- cor(avg_expr[res_DE$gene[res_DE$DE],], method = "spearman")
+#hcl_DEG <- hclust(as.dist(1 - corr_DEG), method = "complete")
+#plot(hcl_DEG, labels = FALSE)
+```
+
+#Grouping for multi-condition comparisons
+
+```{r}
+#First:
+
+meta_genes_save <- meta_genes
+#meta_genes <- meta_genes %>% filter(highvar == TRUE)
+```
+
+```{r}
+res_DESeq <- res_DESeq2 %>% as.data.frame()
+res_DESeq <- res_DESeq %>%
+  mutate_all(as.numeric)
+res_DESeq$foldchange <- 2^res_DESeq$log2FoldChange
+res_DESeq <- res_DESeq %>% mutate(DE = padj < 0.05 & foldchange > 1) %>% mutate(DEG = ifelse(DE, rownames(res_DESeq), NA))
+res_DESeq$ensembl_gene_id_version <- rownames(res_DESeq)
+meta_genes %>% as.data.frame()%>%  dplyr::select(hgnc_symbol, ensembl_gene_id_version)
+
+res_DESeq <- left_join(res_DESeq, meta_genes %>% as.data.frame()%>%  dplyr::select(hgnc_symbol, ensembl_gene_id_version))
+
+res_DESeq <- res_DESeq %>%
+  mutate(fold_change = 2^log2FoldChange)
+
+res_DESeq <- res_DESeq %>%
+  mutate(DE = padj < 0.1 & fold_change > 2) %>%
+  mutate(DEG = ifelse(DE, hgnc_symbol, NA))
+
+res_DESeq %>% filter(DE == 'TRUE')
+
+############
+############
+############
+
+
+
+library(dplyr)
+res_DESeq_save <- res_DESeq
+res_DESeq <-
+  res_DESeq %>%
+  filter(ensembl_gene_id_version %in% meta_genes$ensembl_gene_id_version)# %>% filter(pvalue != 'NA')
+res_DESeq %>% filter(DE == 'TRUE')
+res_DESeq_save %>% filter(DE == 'TRUE')
+
+```
+
+# We do volc plot for dds
+```{r}
+#plotCounts(res_DESeq,'ENSG00000000005.6')
+```
+
+
+
+
+```{r}
+
+res_DESeq$gene <- res_DESeq$ensembl_gene_id_version
+
+
+DEG <- res_DESeq$gene[res_DESeq$DE]
+DEGv2 <- DEG
+DEG <- DEG %>% na.omit() 
+
+avg_expr <- sapply(sort(unique(meta$Tissue)), function(layer)
+  rowMeans(expr[,which(meta$Tissue == layer)]))
+max_layer_DEG <- setNames(colnames(avg_expr)[apply(avg_expr[DEG,], 1, which.max)], DEG)
+
+table(max_layer_DEG)
+
+avg_expr_DEG_list <- tapply(names(max_layer_DEG), max_layer_DEG, function(x) avg_expr[x,])
+scaled_expr_DEG_list <- lapply(avg_expr_DEG_list, function(x) t(scale(t(x))))
+
+layout(matrix(1:6, nrow = 2, byrow = T))
+par(mar=c(2,2,2,2))
+for(layer in names(scaled_expr_DEG_list))
+  boxplot(scaled_expr_DEG_list[[layer]],
+          main = paste0(layer, " (", nrow(scaled_expr_DEG_list[[layer]]), ")"))
+
+for(layer in names(scaled_expr_DEG_list)){
+  title <- paste0(layer, '_genes.png')
+  png(title, width = 740, height = 500)
+  heatmap.2(scaled_expr_DEG_list[[layer]],
+          main = paste0('Heatmap for ', layer, ' genes'),
+          Colv = FALSE, Rowv = FALSE,
+          col = viridis(20),
+          scale = "row", # "row" for row z-score normalization
+          key = TRUE, key.title = "Z-Score",
+          density.info = "histogram",
+          trace = "none")
+  dev.off()
+}
+```
+```{r}
+# HEATMAP FOR AVG EXPR
+# 
+# 
+
+
+
+top_genes <- res_DESeq2_highvar_df %>% filter(padj < 0.005, baseMean > 50, abs(log2FoldChange) > 2.5) %>% rownames()
+#heatmap_data <- assay(dds_filtered_highvar)[rownames(dds_filtered_highvar) %in% top_genes, ]
+#colnames(heatmap_data) <- meta$Tissue
+heatmap_dat <- avg_expr[top_genes, ]
+heatmap_dat
+meta_genes$ensembl_gene_id_version %in% rownames(heatmap_dat)
+
+meta_subset <- subset(meta_genes,ensembl_gene_id_version %in% rownames(heatmap_dat), select = c("hgnc_symbol", "ensembl_gene_id_version"))
+
+c<-rownames(heatmap_dat)
+heatmap_dat <- as.data.frame(heatmap_dat)
+heatmap_dat$ensembl_gene_id_version <- c
+heatmap_dat <- left_join(heatmap_dat, meta_subset)
+
+heatmap_dataa <- heatmap_dat %>% dplyr::filter(hgnc_symbol != '')
+
+rownames(heatmap_dataa) <- heatmap_dataa$hgnc_symbol
+
+heatmap_dataa <- heatmap_dataa %>% dplyr::select(-c('ensembl_gene_id_version','hgnc_symbol'))
+heatmap_dataa <- heatmap_dataa %>%
+  mutate_all(as.numeric)
+heatmap_dataa <- heatmap_dataa %>% as.matrix()
+
+```
+
+
+```{r}
+png('./plot/Heatmap_baseMean50_padj005_abslog2foldchange25_HVG.png',width = 900, height = 600)
+heatmap.2(heatmap_dataa,
+          main = "DE Genes - DESeq2, HVG", colsep = c(1,2,3,4,5,6), rowsep = 1:100,
+          Colv = TRUE, Rowv = TRUE, dendrogram = 'none', 
+          col = colorRampPalette(c("blue", "white", "red"))(100),
+          scale = "row", # "row" for row z-score normalization
+          key = TRUE, key.title = "Z-Score",cexRow = .9,
+          density.info = "histogram", margins = c(6, 6),
+          trace = "none")
+dev.off()
+
+```
+
+
+
+```{r}
+#save img
+png('./plot/nothighvar_Boxplots_multiple_comparison.png', width = 800, height = 600)
+layout(matrix(1:6, nrow = 2, byrow = T))
+par(mar=c(2,2,2,2))
+for(layer in names(scaled_expr_DEG_list))
+  boxplot(scaled_expr_DEG_list[[layer]],
+          main = paste0(layer, " (", nrow(scaled_expr_DEG_list[[layer]]), ")"))
+dev.off()
+```
+# Create data for Gene enrichment analysis:
+
+```{r}
+dir.create("./plot/nohighvar", showWarnings = FALSE)
+unique_organs <- unique(max_layer_DEG)
+for (organ in unique_organs) {
+  # Extract genes for the current organ
+  genes_for_organ <- names(max_layer_DEG[max_layer_DEG == organ])
+  
+  # Trim everything after the dot
+  trimmed_genes <- sub("\\..*", "", genes_for_organ)
+  
+  # Create a file name based on the organ
+  file_name <- paste("./plot/nohighvar/", gsub(" ", "_", organ), "_genes.txt", sep = "")
+  
+  # Write the trimmed genes to the file
+  writeLines(trimmed_genes, con = file_name)
+}
+
+meta_genes_df <- meta_genes %>% filter(ensembl_gene_id != 'NA')
+meta_genes_df %>% filter(expressed == TRUE) %>% dplyr::select(ensembl_gene_id)
+write.table(meta_genes_df %>% filter(expressed == TRUE) %>% dplyr::select(ensembl_gene_id),
+            file = "./plot/nohighvar/genes_expressed.txt",
+            quote = F, row.names = F, col.names = F)
+
+write.table(meta_genes %>% dplyr::filter(expressed == TRUE, highvar == TRUE) %>% dplyr::select(ensembl_gene_id) %>% unique,
+            file = "./genes_expressed.txt",
+            quote = F, row.names = F, col.names = F)
+
+write.table(expressed_by_meta_genes,
+            file = "./plot/gene_lists/genes_expressed.txt",
+            quote = F, row.names = F, col.names = F)
+meta_genes %>% dplyr::filter(expressed == TRUE, highvar == TRUE) %>% dplyr::select(ensembl_gene_id)
+```
+
+```{r}
+# Assuming your data is stored in scaled_expr_DEG_list$Testis
+heatmap_data <- scaled_expr_DEG_list$Testis
+
+# Install and load the 'gplots' package if not already installed
+if (!requireNamespace("gplots", quietly = TRUE)) {
+  install.packages("gplots")
+}
+library(gplots)
+
+# Create a heatmap
+heatmap.2(as.matrix(heatmap_data),
+          scale = "row",  # Scale rows (genes)
+          dendrogram = "row",  # Add row dendrogram
+          col = viridis::magma(256),  # Use a heat color palette
+          key = TRUE,  # Add color key
+          key.title = "Expression",
+          trace = "none",  # Turn off trace lines
+          main = "Heatmap of Gene Expression in Testis")
+
+
+png('./plot/Heatmap.png', width = 1080)
+heatmap.2(as.matrix(heatmap_data),
+          scale = "row",  # Scale rows (genes)
+          dendrogram = "row",  # Add row dendrogram
+          col = viridis::magma(256),  # Use a heat color palette
+          key = TRUE,  # Add color key
+          key.title = "Expression",
+          trace = "none",  # Turn off trace lines
+          main = "Heatmap of Gene Expression in Testis")
+dev.off()
+
+```
+
+```{r}
+for (i in seq_along(scaled_expr_DEG_list)) {
+  # Scale the matrix if needed
+  scaled_matrix <- scale(scaled_expr_DEG_list[[i]])
+  
+  # Create a heatmap
+  heatmap(scaled_matrix, col = cm.colors(256), Rowv = NA, Colv = NA, scale = "none", margins = c(5, 5))
+  
+  # Add labels and title
+  title(main = paste("Heatmap of Scaled Expression for DEGs - Sample", i), xlab = "Sample", ylab = "Gene")
+  
+}
+plotMA(res_DESeq2) #intgroup = 'Tissue')
+```
+
+
+```{r}
+BiocManager::available()
+BiocManager::install("fenr")
+library(fenr)
+
+go <- fetch_go(species = 'goa_human')
+go_terms <- prepare_for_enrichment(go$terms, go$mapping, exmpl_all,
+                                   feature_name = "gene_symbol")
+
+exmpl_all <- meta_genes_df %>%pull(hgnc_symbol)
+
+#Mapping_for_DEG<- meta_genes %>% dplyr::select(ensembl_gene_id_version, hgnc_symbol)
+#colnames(Mapping_for_DEG) <- c('.', 'gene_symbol')
+#current_layer_DEG <- max_layer_DEG[max_layer_DEG == organ] %>% names %>% as.data.frame() #%>% left_join(meta_genes %>% #dplyr::select(ensembl_gene_id_version, hgnc_symbol))
+#current_layer_DEG_gene_symbols <- left_join(current_layer_DEG, Mapping_for_DEG) %>% dplyr::select(gene_symbol) %>% #filter(gene_symbol != '')%>% as.vector()
+
+
+
+
+for (organ in unique_organs) {
+Mapping_for_DEG<- meta_genes %>% dplyr::select(ensembl_gene_id_version, hgnc_symbol)
+colnames(Mapping_for_DEG) <- c('.', 'gene_symbol')
+current_layer_DEG <- max_layer_DEG[max_layer_DEG == organ] %>% names %>% as.data.frame() #%>% left_join(meta_genes %>% dplyr::select(ensembl_gene_id_version, hgnc_symbol))
+current_layer_DEG_gene_symbols <- left_join(current_layer_DEG, Mapping_for_DEG) %>% dplyr::select(gene_symbol) %>% filter(gene_symbol != '')%>% as.vector()
+
+#go$mapping %>% as.data.frame() %>% filter(gene_symbol == 'GKAP1')
+
+
+
+enr <- functional_enrichment(exmpl_all, current_layer_DEG_gene_symbols, go_terms)
+print(enr)
+
+}
+```
+
+
+```{r}
+library(dplyr)
+
+# Assuming you have already loaded the necessary libraries, including gprofiler2
+
+# Fetch GO annotations for human genes
+go <- fetch_go(species = 'goa_human')
+
+# Iterate over unique organs
+for (organ in unique_organs) {
+  Mapping_for_DEG <- meta_genes %>%
+    dplyr::select(ensembl_gene_id_version, hgnc_symbol)
+  
+  colnames(Mapping_for_DEG) <- c('.', 'gene_symbol')
+  
+  current_layer_DEG <- max_layer_DEG[max_layer_DEG == organ] %>%
+    names %>%
+    as.data.frame()
+  
+  # Assuming current_layer_DEG is a data frame with one column containing gene symbols
+  current_layer_DEG_gene_symbols <- left_join(current_layer_DEG, Mapping_for_DEG, by = c('.')) %>%
+    dplyr::select(gene_symbol) %>%
+    filter(gene_symbol != '') %>%
+    as.vector()
+  
+  # Check for any duplicated gene symbols
+  if (any(duplicated(current_layer_DEG_gene_symbols))) {
+    warning("Duplicated gene symbols detected in current_layer_DEG_gene_symbols.")
+    # Handle duplicates if needed
+  }
+  # Assuming current_layer_DEG_gene_symbols and go$mapping$gene_symbol are character vectors
+
+# Filter out elements not present in go$mapping$gene_symbol
+current_layer_DEG_gene_symbols <- current_layer_DEG_gene_symbols[
+  current_layer_DEG_gene_symbols %in% go$mapping$gene_symbol
+]
+
+# Now current_layer_DEG_gene_symbols only contains elements present in go$mapping$gene_symbol
+
+  # Prepare data for enrichment analysis
+  go_terms <- prepare_for_enrichment(go$terms, go$mapping, current_layer_DEG_gene_symbols, feature_name = "gene_symbol")
+  
+  # Perform functional enrichment analysis
+  enr <- functional_enrichment(exmpl_all, current_layer_DEG_gene_symbols, go_terms)
+  
+  # Print the results
+  print(enr)
+}
+
+```
+
+
+
+###
+Below here is bullshit.
+
+
+
+
+```{r}
+DEG <- res_DE$gene[res_DE$DE]
+avg_expr <- sapply(sort(unique(meta$Tissue)), function(layer) {
+  selected_columns <- which(meta$Tissue %in% layer)
+  row_means <- rowMeans(expr[, selected_columns, drop = FALSE], na.rm = TRUE)
+  row_means[is.nan(row_means)] <- 0  # Replace NaN with 0
+  return(row_means)
+})
+max_layer_DEG <- setNames(colnames(avg_expr)[apply(avg_expr[DEG,], 1, which.max)], DEG)
+```
+
+
+#### Clustering
+```{r}
+sum(type(expr[,])!= 'double')
+
+avg_expr <- data.frame(
+row.names = rownames(expr),
+Val1 = expr[,1],
+Val2 = expr[,2:5] %>% rowMeans(),
+Val3 = expr[,6],
+Val4 = expr[,7:9] %>% rowMeans(),
+Val5 = expr[,10:13] %>% rowMeans(),
+Val6 = expr[,14:16] %>% rowMeans(),
+Val7 = expr[,17:19] %>% rowMeans(),
+Val8 = expr[,20:21] %>% rowMeans()
+)
+```
+
+
+
+```{r}
+# Will cluster brain together instead:
+meta <- meta2
+meta$organ <- meta$Tissue
+library(stringr)
+meta <- meta %>%
+  mutate(organ = ifelse(str_starts(organ, "Brain,"), "Brain", organ))
+
+meta
+avg_expr <- avg_expr_save
+
+avg_expr <- sapply(sort(unique(meta$organ)), function(layer)
+  rowMeans(expr[,which(meta$organ == layer)]))
+```
+
+
+```{r}
+#colnames(avg_expr) <- meta %>% pull(Tissue) %>% unique
+
+###
+
+#meta2<- meta
+#meta = meta[!grepl('SRR306843', meta$Run),] 
+
+#avg_expr <- sapply(sort(unique(meta$Tissue)), function(tissue)
+#  rowMeans(expr[,which(meta$Tissue == tissue)]))
+
+
+
+corr_DEG <- cor(avg_expr[res_DE$gene[res_DE$DE],], method = "spearman")
+hcl_DEG <- hclust(as.dist(1 - corr_DEG), method = "complete")
+plot(hcl_DEG, labels = FALSE)
+
+
+
+jpeg("hcl_DEG.jpeg", width = 900, height = 600) # height and width can choose as your wish 
+plot(hcl_DEG, labels = FALSE)
+dev.off()
+```
+
+```{r}
+library(gplots)
+
+heatmap.2(corr_DEG, Rowv = as.dendrogram(hcl_DEG), Colv = as.dendrogram(hcl_DEG),
+          trace = "none", scale = "none", labRow = NA, labCol = NA)
+
+#install.packages("viridis")
+library(viridis)
+heatmap.2(corr_DEG, Rowv = as.dendrogram(hcl_DEG), Colv = as.dendrogram(hcl_DEG),
+          trace = "none", scale = "none", labRow = NA, labCol = NA, col = viridis)
+
+cl_DEG <- cutree(hcl_DEG, k = 6)
+heatmap.2(corr_DEG, Rowv = as.dendrogram(hcl_DEG), Colv = as.dendrogram(hcl_DEG),
+          trace = "none", scale = "none", labRow = NA, labCol = NA, col = viridis,
+          ColSideColors = rainbow(6)[cl_DEG])
+
+
+jpeg("heatmap_ugly.jpeg", width = 900, height = 600) # height and width can choose as your wish 
+heatmap.2(corr_DEG, Rowv = as.dendrogram(hcl_DEG), Colv = as.dendrogram(hcl_DEG),
+          trace = "none", scale = "none", labRow = NA, labCol = NA)
+dev.off()
+
+jpeg("heatmap_viridis.jpeg", width = 900, height = 600) # height and width can choose as your wish 
+heatmap.2(corr_DEG, Rowv = as.dendrogram(hcl_DEG), Colv = as.dendrogram(hcl_DEG),
+          trace = "none", scale = "none", labRow = NA, labCol = NA, col = viridis)
+dev.off()
+
+jpeg("heatmap_viridis_plus.jpeg", width = 900, height = 600) # height and width can choose as your wish 
+heatmap.2(corr_DEG, Rowv = as.dendrogram(hcl_DEG), Colv = as.dendrogram(hcl_DEG),
+          trace = "none", scale = "none", labRow = NA, labCol = NA, col = viridis,
+          ColSideColors = rainbow(6)[cl_DEG])
+dev.off()
+```
+TRANSPOSED: # Doesnt work properly
+
+```{r}
+#corr_DEG <- cor(t(avg_expr[res_DE$gene[res_DE$DE],]), method = "spearman")
+#hcl_DEG <- hclust(as.dist(1 - corr_DEG), method = "complete")
+#plot(hcl_DEG, labels = FALSE)
+#png("hcl_DEG_transposed.png", width = 900, height = 600)
+#plot(hcl_DEG, labels = FALSE)
+#dev.off()
+#heatmap.2(corr_DEG, Rowv = as.dendrogram(hcl_DEG), Colv = as.dendrogram(hcl_DEG),
+#          trace = "none", scale = "none", labRow = NA, labCol = NA)
+#jpeg("heatmap_t_ugly.jpeg", width = 900, height = 600) # height and width can choose as your wish 
+#heatmap.2(corr_DEG, Rowv = as.dendrogram(hcl_DEG), Colv = as.dendrogram(hcl_DEG),
+#          trace = "none", scale = "none", labRow = NA, labCol = NA)
+#dev.off()
+#heatmap.2(corr_DEG, Rowv = as.dendrogram(hcl_DEG), Colv = as.dendrogram(hcl_DEG),
+#          trace = "none", scale = "none", labRow = NA, labCol = NA, col = viridis)
+#jpeg("heatmap_t_viridis.jpeg", width = 900, height = 600) # height and width can choose as your wish 
+#heatmap.2(corr_DEG, Rowv = as.dendrogram(hcl_DEG), Colv = as.dendrogram(hcl_DEG),
+#          trace = "none", scale = "none", labRow = NA, labCol = NA, col = viridis)
+#dev.off()
+#heatmap.2(corr_DEG, Rowv = as.dendrogram(hcl_DEG), Colv = as.dendrogram(hcl_DEG),
+#          trace = "none", scale = "none", labRow = NA, labCol = NA, col = viridis,
+#          ColSideColors = rainbow(20)[cl_DEG])
+#jpeg("heatmap_t_viridis_plus.jpeg", width = 900, height = 600) # height and width can choose as your #wish 
+#heatmap.2(corr_DEG, Rowv = as.dendrogram(hcl_DEG), Colv = as.dendrogram(hcl_DEG),
+#          trace = "none", scale = "none", labRow = NA, labCol = NA, col = viridis,
+#          ColSideColors = rainbow(20)[cl_DEG])
+#dev.off()
+```
+
+
+
+```{r}
+### Full stuck here.
+
+#meta2 <- meta
+#meta$Tissue2 <- meta$Tissue
+#meta$Tissue[1:6] <- c(rep('Brain'))
+corr_DEG <- cor(avg_expr[res_DE$gene[res_DE$DE],], method = "spearman")
+hcl_DEG <- hclust(as.dist(1 - corr_DEG), method = "complete")
+#avg_expr <- sapply(sort(unique(meta$organ)), function(layer)
+#  rowMeans(expr[,which(meta$organ == layer)]))
+avg_expr <- sapply(sort(unique(meta$organ)), function(layer) {
+  selected_columns <- which(meta$organ %in% layer)
+  row_means <- rowMeans(expr[, selected_columns, drop = FALSE], na.rm = TRUE)
+  row_means[is.nan(row_means)] <- 0  # Replace NaN with 0
+  return(row_means)
+})
+#avg_expr_DEG_list <- tapply(names(cl_DEG), cl_DEG, function(x) avg_expr[x,])
+#scaled_expr_DEG_list <- lapply(avg_expr_DEG_list, function(x) t(scale(t(x))))
+
+#scaled_expr_DEG_list[is.na(scaled_expr_DEG_list)] <- 0
+DEG <- res_DE$gene[res_DE$DE]
+max_layer_DEG <- setNames(colnames(avg_expr)[apply(avg_expr[DEG,], 1, which.max)], DEG)
+avg_expr_DEG_list <- tapply(names(max_layer_DEG), max_layer_DEG, function(x) avg_expr[x,])
+scaled_expr_DEG_list <- lapply(avg_expr_DEG_list, function(x) t(scale(t(x))))
+png("scaled_expr_DEG_list.png", width = 1200, height = 900) 
+layout(matrix(1:6, nrow = 2, byrow = T))
+par(mar=c(2,2,2,2))
+for(layer in names(scaled_expr_DEG_list))
+boxplot(scaled_expr_DEG_list[[layer]],
+          main = paste0(layer, " (", nrow(scaled_expr_DEG_list[[layer]]), ")"))
+dev.off()
+
+layout(matrix(1:6, nrow = 2, byrow = T))
+par(mar=c(2,2,2,2))
+for(layer in names(scaled_expr_DEG_list))
+boxplot(scaled_expr_DEG_list[[layer]],
+          main = paste0(layer, " (", nrow(scaled_expr_DEG_list[[layer]]), ")"))
+```
+
+Grouped DEGs multi-condition comparisons
+```{r}
+data_frameee <- max_layer_DEG %>% as.data.frame()
+new_data_frame <- data.frame(
+  Gene = rownames(data_frameee),
+  Organ = as.character(data_frameee$'.')
+)
+colnames(new_data_frame) <- c('ensembl_gene_id_version', 'organ')
+#new_data_frame[new_data_frame$organ %in% names(which(cl_DEG == 1)), 1]
+#new_data_frame[names(which(cl_DEG == 2)),]
+#meta_genes[,]
+#write.table(new_data_frame[new_data_frame$organ %in% names(which(cl_DEG == 6)), 1],
+#            file = "genes_C6.txt",
+#            quote = FALSE, row.names = FALSE, col.names = FALSE)
+```
+
+topGO??? rank based
+```{r}
+library('topGO')
+list_data <- list()
+differential_pvals <- res_DESeq2 %>% as.data.frame()
+
+ordered_df <- differential_pvals[order(differential_pvals$padj, -abs(differential_pvals$log2FoldChange), na.last = TRUE),]
+ordered_df <- ordered_df[complete.cases(ordered_df$padj),]
+ordered_df$ensembl_gene_id_version <- rownames(ordered_df)
+ordered_df <- left_join(ordered_df, new_data_frame)
+rownames(ordered_df) <- ordered_df$ensembl_gene_id_version
+
+#filtered_df <- ordered_df[, colnames(ordered_df) != 'ensembl_gene_id_version']
+#ordered_df<-filtered_df
+
+
+###
+joined_df <- left_join(subset_meta_genes, ordered_df)
+joined_df <- joined_df[order(joined_df$padj, -abs(joined_df$log2FoldChange), na.last = TRUE),]
+joined_highvar <- joined_df %>% filter(.$highvar == 'TRUE') 
+
+# SELECT SUBSETS HERE
+for (name in vector) {
+  
+}
+
+#Ordered df done, now we needd subset_meta_genes to be ranked by padj
+
+for (cl_value in unique(cl_DEG)) {
+ subset_df<-  new_data_frame %>% filter(organ == names(which(cl_DEG == cl_value))) %>% pull(ensembl_gene_id_version) 
+ subset_meta_genes <- meta_genes[meta_genes$ensembl_gene_id_version %in% subset_df, ]
+ 
+ list_data[cl_value] <- subset_meta_genes$ensembl_gene_id
+}
+
+```
+
+
+
+```{r}
+
+for (cl_value in unique(cl_DEG)) {
+  # Subset the new data frame based on the current cl_DEG value
+ subset_df<-  new_data_frame %>% filter(organ == names(which(cl_DEG == cl_value))) %>% pull(ensembl_gene_id_version) 
+ 
+ subset_meta_genes <- meta_genes[meta_genes$ensembl_gene_id_version %in% subset_df, ]
+ 
+ #subset_meta_genes_ordered <- subset_meta_genes[order(match(subset_meta_genes$ensembl_gene_id, ordered_gene_ids)), ]
+
+
+  # Generate the file name based on the cl_DEG value
+  file_name <- paste0("v2genes_", names(cl_DEG[cl_value]), ".txt")
+
+  # Write the subset to a text file
+  write.table(subset_meta_genes$ensembl_gene_id,
+              file = file_name,
+              quote = FALSE, row.names = FALSE, col.names = FALSE)
+}
+
+#ENSG00000069345.12 TRUE ENSG00000008118.10 
+#sum(meta_genes[expressed, "ensembl_gene_id"] == 'ENSG00000008118', na.rm = TRUE)
+#extra2 <- meta_genes[expressed, "ensembl_gene_id"]
+write.table(meta_genes[expressed, "ensembl_gene_id"],
+            file = "genes_expressed.txt",
+            quote = FALSE, row.names = FALSE, col.names = FALSE)
+```
+
+
+```{r}
+
+
+library("pheatmap")
+select <- order(rowMeans(counts(dds,normalized=FALSE)),
+                decreasing=TRUE)[1:20]
+#df <- as.data.frame(colData(dds)[,c("Tissue","Gender")])
+
+png("pheatmap.png", width = 800, height = 600) 
+pheatmap(assay(ntd)[select,], cluster_rows=FALSE, show_rownames=FALSE,
+         cluster_cols=FALSE, annotation_col=df)
+#dev.off()
+```
+
+
+```{r}
+res_DESeq2_save <- res_DESeq2
+```
+
+
+ORDERING< DONE BEFORE SAVING DATA ABOVE.
+
+```{r}
+library(DOSE)
+res_DESeq2_filtered <- res_DESeq2[complete.cases(res_DESeq2$padj), ]
+
+# Extract gene IDs without version from res_DESeq2
+gene_ids <- gsub("\\..*", "", rownames(res_DESeq2_filtered))
+
+# Create a new column in res_DESeq2 with the gene IDs
+res_DESeq2_filtered$gene_id <- gene_ids
+res_DESeq2_ordered <- res_DESeq2_filtered %>% as.data.frame()
+res_DESeq2_ordered <- res_DESeq2[order(res_DESeq2$padj), ]
+subset_meta_genes_ordered <- subset_meta_genes_ordered[order(match(subset_meta_genes_ordered$ensembl_gene_id, ordered_gene_ids)), ]
+```
+
+
+PLOT NMORE
+```{r}
+#use this
+#for(layer in names(scaled_expr_DEG_list))
+#scaled_expr_DEG_list[[layer]],
+#geneList <- scaled_expr_DEG_list$Brain
+
+#meta_genes$entrez_gene_id <- #
+#geneList
+#geneList <- scaled_expr_DEG_list$Brain %>% rownames
+#new_data_frame %>% filter(organ == 'Testis') %>% pull(,1)
+
+
+subset_df<-  new_data_frame %>% filter(organ == 'Testis') %>% pull(1)
+
+ subset_meta_genes <- meta_genes[meta_genes$ensembl_gene_id_version %in% subset_df, ]
+ 
+ subset_meta_genes_ordered <- subset_meta_genes[order(match(subset_meta_genes$ensembl_gene_id, ordered_gene_ids)), ]
+
+#write.table(geneList,file = 'Brainlist.txt', quote = FALSE, row.names = FALSE, col.names = FALSE, sep = ",")
+
+#library(biomaRt)
+#ensembl.genes <- meta_genes$ensembl_gene_id
+
+#mart <- useDataset("hsapiens_gene_ensembl", useMart("ensembl"))#
+
+#    genes <- getBM(
+##      filters="ensembl_gene_id",
+#      attributes=c("ensembl_gene_id", "entrezgene_id"),
+#      values=ensembl.genes,
+#      mart=mart)
+roview <- scaled_expr_DEG_list$Testis %>% {.>2} %>% as.data.frame() %>% filter(Testis == TRUE) %>% rownames()
+# Assuming roview is your vector and meta_genes is your data frame
+# Use match to find the corresponding entrez ID for each element in roview
+entrez_ids <- meta_genes$entrezgene_id[match(roview, meta_genes$ensembl_gene_id_version)]
+
+# Replace elements in roview with the corresponding entrez IDs
+roview_entrez <- ifelse(!is.na(entrez_ids), as.character(entrez_ids), NA)
+roview_entrez <- roview_entrez %>% na.omit()
+
+# Print the result
+print(roview_entrez)
+
+d<- subset_meta_genes_ordered %>% pull(entrezgene_id) %>% na.omit
+#ncbi_gene_list<-  left_join(meta_genes, genes)
+#geneList
+d<-as.vector(d)
+library(DOSE)
+de <- roview_entrez
+
+edo <- enrichDGN(roview_entrez %>% as.vector())
+edo2 <- gseNCG(as.vector(d))
+
+barplot(edo)
+```
+

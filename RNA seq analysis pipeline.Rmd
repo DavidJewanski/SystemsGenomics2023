@@ -63,6 +63,7 @@ summary(meta1$treatment)
 
 #expr <- expr[,meta$Name] #to make sure the columns of the expression matrix are in the same order as rows in the metadata
 ```
+
 ```{r}
 #Conversion MUST (transcript) to MUSG (gene)
 
@@ -78,6 +79,8 @@ transcript_to_gene <- getBM(attributes = c("ensembl_transcript_id_version", "ens
                             filters = "ensembl_transcript_id_version",
                             values = transcript_ids,
                             mart = ensembl)
+transcript_to_gene$ensembl_transcript_id_version %>% unique() %>% length() #ca 150 000
+transcript_to_gene$ensembl_gene_id_version %>% unique() %>% length()#ca  50 000
 
 # Extract gene IDs (enmusg)
 gene_ids_enmusg <- unique(transcript_to_gene$ensembl_gene_id_version)
@@ -115,7 +118,7 @@ right_join(data.frame(ensembl_transcript_id_version = rownames(expr)), by = "ens
 
 expr_test <- expr[meta_genes$ensembl_transcript_id_version,]
 ```
-
+#Histograms, filter unexpressed genes
 ```{r}
 #print(meta1$Name)
 #print(meta2$Name)
@@ -139,11 +142,9 @@ num_det <- rowSums(expr > 0) #check in how many samples each gene is detected.
 hist(num_det)
 #head(num_det)
 
-hist(avg_expr)
-hist(log10(avg_expr + 1))
-
 expressed <- rowMeans(expr > 0) >= 0.5 | rowMeans(expr) >= 1
 head(expressed) #expressed is a vector of booleans
+summary(expressed)
 expr <- expr[which(expressed),]
 dim(expr)
 
@@ -152,7 +153,9 @@ avg_expr <- rowMeans(expr) #now after the filtering
 hist(avg_expr)
 hist(log10(avg_expr + 1))
 
+
 meta_genes$expressed <- expressed
+
 
 
 ```
@@ -179,6 +182,7 @@ plot(hcl_spearman)
 ```
 ```{r}
 meta1_filtered <- subset(meta1, select = c("Name", "treatment")) #Compare this to dendrogram
+meta1_filtered
 ```
 
 ```{r}
@@ -259,19 +263,24 @@ library(DESeq2)
 dds <- DESeqDataSetFromTximport(txi,colData = meta1, design = ~ treatment) #maybe include + sex?
 summary(dds)
 rownames(dds) %>% head() #gene_id_versions
+rownames(dds) %>% length() #25095
 
 dds_filtered <- dds[intersect(meta_genes[meta_genes$expressed,2], rownames(dds)),]
-rownames(dds_filtered) %>% length() #gene_id_versions
+rownames(dds_filtered) %>% length() #16809
+
+
 
 dds_filtered <- DESeq(dds_filtered, test="LRT", reduced= ~ 1) #If only one covariate, use ~1
 
 res_DESeq2 <- results(dds_filtered)
 plot(res_DESeq2$log2FoldChange, res_DESeq2$pvalue)
 
+
 table(p.adjust(res_DESeq2$pvalue, method="BH") < 0.05) #Argumentieren wieso BH correction
       
 #res_DE %>% filter(gene %in% rownames(res_DESeq2)) %>% pull(padj)< 0.1) #res_DE ist von der manuellen Analyse
 
+#Plot only the significant log2FoldChanges, how?
 ```
 #DESeq aDR/AL
 ```{r}
@@ -311,11 +320,10 @@ plot(res_DESeq2_aDR$log2FoldChange, res_DESeq2_aDR$pvalue)
 table(p.adjust(res_DESeq2_aDR$pvalue, method="BH") < 0.05) #Argumentieren wieso BH correction
 
 plot(res_DESeq2_aDR$log2FoldChange, p.adjust(res_DESeq2_aDR$pvalue, method = "BH"))
-
 ```
 #DESeq YMP
 
-#Grouping of identified genes
+#Grouping of identified genes (p. 59)
 ```{r}
 sum(is.na(res_DESeq2_aDR$pvalue))
 res_DESeq2_aDR <- data.frame(res_DESeq2_aDR)
@@ -323,14 +331,22 @@ res_DESeq2_aDR$pvalue_BH <- p.adjust(res_DESeq2_aDR$pvalue, method="BH")
 
 DEG_aDR <- res_DESeq2_aDR[res_DESeq2_aDR$pvalue_BH < 0.05,] #filter to only have significant data
 DEG_aDR <- na.omit(DEG_aDR) 
-DEG_aDR <- rownames(DEG_aDR) #extract rownames (names of genes)
+DEG_aDR <- rownames(DEG_aDR) #extract rownames (names of gene id's)
 DEG_aDR %>% head()
 
 meta1_aDR$treatment %>% levels()
+
 avg_expr_aDR <- sapply(sort(unique(meta1_aDR$treatment)), function(treatment)
 rowMeans(expr_aDR[,which(meta1_aDR$treatment == treatment)])) #V1: aDR, V2: AL
+head(avg_expr_aDR)
+
+avg_expr_aDR <- data.frame(avg_expr_aDR)
+avg_expr_aDR$transcript_id <- rownames(avg_expr_aDR)
 
 max_treatment_DEG <- setNames(colnames(avg_expr_aDR)[apply(avg_expr_aDR[DEG_aDR,], 1, which.max)],DEG_aDR) #Problem: avg expr aDR has transcripts, DEG aDR has genes -> incompatible. Solution: transform avg expr aDR to genes
+```
+
+```{r}
 
 table(max_layer_DEG)
 avg_expr_DEG_list <- tapply(names(max_layer_DEG), max_layer_DEG, function(x) avg_expr[x,])
