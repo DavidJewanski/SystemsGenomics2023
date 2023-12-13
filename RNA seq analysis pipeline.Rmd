@@ -11,7 +11,7 @@ title: "Systems Genomics data analysis pipeline"
 
 # load libraries
 ```{r}
-libraries = c("tidyverse","ggrepel","BiocManager","pbapply","gplots","msigdbr", "biomaRt","sva","DESeq2","edgeR", "dplyr", "biomaRt")
+libraries = c("tidyverse","ggrepel","BiocManager","pbapply","gplots","msigdbr", "biomaRt","sva","DESeq2","edgeR", "dplyr", "biomaRt", "tximport")
 lapply(libraries, library, character.only=TRUE)
 library(tximport)
 ```
@@ -19,25 +19,50 @@ library(tximport)
 
 
 ```{r}
-#setwd("/Users/david/Library/CloudStorage/OneDrive-Persönlich/Master ETH/Courses/11_Systems Genomics/project local repository/data")
-setwd("C:/Users/nicks/Desktop/Systems_Genomics/GitHub David/SystemsGenomics2023/data")
+setwd("/Users/david/Library/CloudStorage/OneDrive-Persönlich/Master ETH/Courses/11_Systems Genomics/project local repository/data")
+#setwd("C:/Users/nicks/Desktop/Systems_Genomics/GitHub David/SystemsGenomics2023/data")
 
-samples <- list.files("rsem_trimmed_dedup_nextera")
-samples <- samples[seq(1, length(samples),by=2)] #remove the isoform files
-#samples
+samples <- list.files("rsem_genes_results_trimmed")
+
 expr <- sapply(samples, function(sample){
-  file <- paste0("rsem_trimmed_dedup_nextera/", sample)
+  file <- paste0("rsem_genes_results_trimmed/", sample)
   #print(file)
   quant <- read.csv(file, sep="\t", header=T)
   tpm <- setNames(quant$TPM, quant$gene_id)
   #tpm <- setNames(quant$TPM, quant[,2])
   return(tpm)
 })
+SRR_codes <- colnames(expr)
+
+ensembl <- useEnsembl(biomart = "ensembl", dataset = "mmusculus_gene_ensembl")
+tx2gene <- getBM(attributes = c("ensembl_transcript_id_version","ensembl_gene_id_version"),
+                     filters = "ensembl_gene_id_version",
+                     values = rownames(expr),
+                     mart = ensembl) %>%
+  dplyr::select(ensembl_transcript_id_version, ensembl_gene_id_version)
 ```
+
+
+```{r}
+setwd("/Users/david/Library/CloudStorage/OneDrive-Persönlich/Master ETH/Courses/11_Systems Genomics/project local repository/data")
+#setwd("C:/Users/nicks/Desktop/Systems_Genomics/GitHub David/SystemsGenomics2023/data")
+samples <- list.files("rsem_trimmed_dedup_nextera")
+filtered_samples <- samples[grep("\\.isoforms\\.results$",samples)]# Remove ".genes.results" from all column names
+files_YMP <- file.path(paste0("rsem_trimmed_dedup_nextera/", filtered_samples[1:6]))
+files_aDR <- file.path(paste0("rsem_trimmed_dedup_nextera/", filtered_samples[7:15]))
+txi_YMP <- tximport(files_YMP, type = "rsem", tx2gene = tx2gene)
+txi_aDR <- tximport(files_aDR, type = "rsem", tx2gene = tx2gene)
+
+expr[,15] <- data.frame(txi_aDR)[,9]
+expr_YMP <- expr[,1:6]
+expr_aDR <- expr[,1:15] #only the columns with AL or aDR, 71-79
+```
+
+
 #Read in meta genes
 ```{r}
-#setwd("/Users/david/Library/CloudStorage/OneDrive-Persönlich/Master ETH/Courses/11_Systems Genomics/project local repository/data")
-setwd("C:/Users/nicks/Desktop/Systems_Genomics/GitHub David/SystemsGenomics2023/data")
+setwd("/Users/david/Library/CloudStorage/OneDrive-Persönlich/Master ETH/Courses/11_Systems Genomics/project local repository/data")
+#setwd("C:/Users/nicks/Desktop/Systems_Genomics/GitHub David/SystemsGenomics2023/data")
 
 meta2 <- read.csv("SRR_Acc_List.txt", sep="\t", header=T) %>%
   inner_join(read.csv("PRJNA875066 Metadata.txt", header=T),
@@ -49,6 +74,9 @@ meta1 <- read.csv("SRR_Acc_List.txt", sep="\t", header=T) %>%
     by = c("Name" = "Run"),
     suffix = c("",".y")) 
 
+meta1_aDR <- meta1 %>% filter(treatment == "AL" | treatment == "aDR" )
+meta1_YMP <- meta1 %>% filter(treatment == "YMP" | treatment == "PBS" )
+
 print(setdiff(colnames(meta1),colnames(meta2)))
 
 meta1$sex <- as.factor(meta1$sex)
@@ -59,83 +87,32 @@ summary(meta1$treatment)
 #expr <- expr[,meta$Name] #to make sure the columns of the expression matrix are in the same order as rows in the metadata
 ```
 
-```{r}
-#Conversion MUST (transcript) to MUSG (gene)
-
-# Use the Ensembl dataset for Mus musculus
-ensembl <- useEnsembl(biomart = "ensembl", dataset = "mmusculus_gene_ensembl")
-
-# Specify the transcript IDs (ensm)
-transcript_ids <- rownames(expr)
-
-# Map transcript IDs to gene IDs (enmusg)
-listAttributes(ensembl)
-transcript_to_gene <- getBM(attributes = c("ensembl_transcript_id_version", "ensembl_gene_id_version"),
-                            filters = "ensembl_transcript_id_version",
-                            values = transcript_ids,
-                            mart = ensembl)
-transcript_to_gene$ensembl_transcript_id_version %>% unique() %>% length() #ca 150 000
-transcript_to_gene$ensembl_gene_id_version %>% unique() %>% length()#ca  50 000
-
-# Extract gene IDs (enmusg)
-gene_ids_enmusg <- unique(transcript_to_gene$ensembl_gene_id_version)
-
-# Print the result
-print(gene_ids_enmusg)
-
-```
 
 #More information about genes with biomaRt (p. 42)
 ```{r}
-listDatasets(useEnsembl(biomart = "ensembl")) %>% filter(dataset == "mmusculus_gene_ensembl") #Is this the correct one?
-#str(expr)
-#rownames(expr)
-#head(rownames(expr),10)
-#install.packages("biomaRt", dependencies=TRUE)
+#listDatasets(useEnsembl(biomart = "ensembl")) %>% filter(dataset == "mmusculus_gene_ensembl") #Is this the correct one?
+
 library(biomaRt)
-listDatasets(ensembl)
 
 ensembl <- useEnsembl(biomart = "ensembl", dataset = "mmusculus_gene_ensembl")
-
-
 meta_genes <- getBM(attributes = c("ensembl_gene_id",
                                    "ensembl_gene_id_version",
                                    "ensembl_transcript_id_version",
                                    "hgnc_symbol",
+                                   "mgi_symbol",
                                    "description",
                                    "chromosome_name",
                                    "start_position",
                                    "end_position",
                                    "strand"),
-                    filters = "ensembl_transcript_id_version",
+                    filters = "ensembl_gene_id_version",
                     values = rownames(expr),
                     mart = ensembl) %>%
-right_join(data.frame(ensembl_transcript_id_version = rownames(expr)), by = "ensembl_transcript_id_version") %>% distinct(ensembl_transcript_id_version, .keep_all = TRUE)
+right_join(data.frame(ensembl_gene_id_version = rownames(expr)), by = "ensembl_gene_id_version") %>% distinct(ensembl_gene_id_version, .keep_all = TRUE)
 
 #expr_test <- expr[meta_genes$ensembl_transcript_id_version,]
 ```
-#Trying to get prtoein ID from ensembl
-```{r}
-setwd("C:/Users/nicks/Desktop/Systems_Genomics/GitHub David/SystemsGenomics2023/data")
-expr_test <- sapply(samples, function(sample){
-  file <- paste0("rsem_trimmed_dedup_nextera/", sample)
-  #print(file)
-  quant <- read.csv(file, sep="\t", header=T)
-  #tpm <- setNames(quant$TPM, quant$gene_id)
-  tpm <- setNames(quant$TPM, quant[,1])
-  return(tpm)
-})
-expr_test %>% rownames() %>% unique() %>% length() #136 424, so only unique row names (protein id's)!
-expr_test %>% nrow()
 
-listAttributes(ensembl)
-meta_genes_test <- getBM(attributes = c("ensembl_peptide_id", "external_gene_name", "description", "uniprotswissprot", "ensembl_gene_id", "ensembl_gene_id_version"),
-                    filters = "uniprotswissprot",
-                    values = rownames(expr_test),
-                    mart = ensembl)
-
-meta_genes_test$uniprotswissprot %>% unique() %>% length() #14374
-```
 
 #Histograms, filter unexpressed genes
 ```{r}
@@ -190,6 +167,11 @@ corr_spearman <- cor(expr, method = "spearman")
 head(corr_pearson)
 head(corr_spearman)
 ```
+```{r}
+
+```
+
+
 ```{r}
 #Dendrograms
 hcl_pearson <- hclust(as.dist(1 - corr_pearson))
@@ -251,11 +233,12 @@ estimate_variability <- function(expr){
   return(res)
 }
 ```
+
+
 #DESeq (slide 57)
 ```{r}
 library(tidyverse)
-meta1_aDR <- meta1 %>% filter(treatment == "AL" | treatment == "aDR" )
-meta1_YMP <- meta1 %>% filter(treatment == "YMP" | treatment == "PBS" )
+
 
 library(biomaRt)
 ensembl <- useEnsembl(biomart = "ensembl", dataset = "mmusculus_gene_ensembl")
@@ -301,50 +284,34 @@ table(p.adjust(res_DESeq2$pvalue, method="BH") < 0.05) #Argumentieren wieso BH c
 
 #Plot only the significant log2FoldChanges, how?
 ```
+
+
 #DESeq aDR/AL
 ```{r}
-expr_aDR <- expr[,7:15] #only the columns with AL or aDR, 71-79
-library(biomaRt)
-ensembl <- useEnsembl(biomart = "ensembl", dataset = "mmusculus_gene_ensembl")
-tx2gene_aDR <- getBM(attributes = c("ensembl_transcript_id_version",
-"ensembl_gene_id_version"),
-filters = "ensembl_transcript_id_version",
-values = rownames(expr_aDR),
-mart = ensembl) %>%
-dplyr::select(ensembl_transcript_id_version, ensembl_gene_id_version)
-
-setwd("C:/Users/nicks/Desktop/Systems_Genomics/GitHub David/SystemsGenomics2023/data")
-library(tximport)
-samples <- list.files("rsem_trimmed_dedup_nextera")
-filtered_samples <- samples[grep("\\.isoforms\\.results$",samples)]
-filtered_samples_aDR <- filtered_samples[7:15]
-# Remove ".genes.results" from all column names
-files <- file.path(paste0("rsem_trimmed_dedup_nextera/", filtered_samples_aDR))
-files
-txi_aDR <- tximport(files, type = "rsem", tx2gene = tx2gene_aDR)
-
-library(DESeq2)
-dds_aDR <- DESeqDataSetFromTximport(txi_aDR,colData = meta1_aDR, design = ~ treatment) #the output we be in gene_ids!
+dds_aDR <- DESeqDataSetFromTximport(txi_aDR, colData = meta1_aDR, design = ~ treatment) #the output we be in gene_ids!
 summary(dds_aDR)
-rownames(dds_aDR) %>% head() #gene_id_versions
+rownames(dds_aDR) %>% length() #gene_id_versions
 
-dds_filtered_aDR <- dds[intersect(meta_genes[meta_genes$expressed,2],rownames(dds_aDR)),]
+dds_filtered_aDR <- dds_aDR[intersect(meta_genes[meta_genes$expressed,2],rownames(dds_aDR)),]
 rownames(dds_filtered_aDR) %>% length() #gene_id_versions
 
 dds_filtered_aDR <- DESeq(dds_filtered_aDR, test="LRT", reduced= ~ 1) #If only one covariate, use ~1
 
 res_DESeq2_aDR <- results(dds_filtered_aDR)
-plot(res_DESeq2_aDR$log2FoldChange, res_DESeq2_aDR$pvalue)
+#plot(res_DESeq2_aDR$log2FoldChange, res_DESeq2_aDR$pvalue)
+plot(res_DESeq2_aDR$log2FoldChange, -log10(res_DESeq2_aDR$pvalue))
 
 table(p.adjust(res_DESeq2_aDR$pvalue, method="BH") < 0.05) #Argumentieren wieso BH correction
 
-plot(res_DESeq2_aDR$log2FoldChange, p.adjust(res_DESeq2_aDR$pvalue, method = "BH"))
+#plot(res_DESeq2_aDR$log2FoldChange, p.adjust(res_DESeq2_aDR$pvalue, method = "BH"))
+plot(res_DESeq2_aDR$log2FoldChange, -log10(p.adjust(res_DESeq2_aDR$pvalue)), method = "BH")
 ```
 #DESeq YMP
 
 #Grouping of identified genes (p. 59)
 ```{r}
 sum(is.na(res_DESeq2_aDR$pvalue))
+sum(is.na(res_DESeq2_aDR$log2FoldChange))
 res_DESeq2_aDR <- data.frame(res_DESeq2_aDR)
 res_DESeq2_aDR$pvalue_BH <- p.adjust(res_DESeq2_aDR$pvalue, method="BH")
 
@@ -353,45 +320,46 @@ DEG_aDR <- na.omit(DEG_aDR)
 DEG_aDR <- rownames(DEG_aDR) #extract rownames (names of gene id's)
 DEG_aDR %>% head()
 
-meta1_aDR$treatment %>% levels()
+levels(meta1_aDR$treatment)
 
 avg_expr_aDR <- sapply(sort(unique(meta1_aDR$treatment)), function(treatment)
 rowMeans(expr_aDR[,which(meta1_aDR$treatment == treatment)])) #V1: aDR, V2: AL
 head(avg_expr_aDR)
 
 avg_expr_aDR <- data.frame(avg_expr_aDR)
-avg_expr_aDR$ensembl_transcript_id_version <- rownames(avg_expr_aDR)
-avg_expr_aDR$ensembl_transcript_id_version_mod <- sapply(strsplit(avg_expr_aDR$ensembl_transcript_id_version, ","), function(x) x[1])
-#rownames(avg_expr_aDR) <- avg_expr_aDR$ensembl_transcript_id_version_mod
-nrow(test)
-length(unique(test$ensembl_gene_id_version))
-#test <- na.omit(test)
-colnames(transcript_to_gene)[1] <- "ensembl_transcript_id_version_mod"
-left_join(avg_expr_aDR, transcript_to_gene) -> test #test: when 2 transcripts, we only keep one and match this to gene id -> no more NA is gene id
-rownames(avg_expr_aDR) <- test$ensembl_gene_id_version
 
-test$ensembl_gene_id_version
-rownames(test) <- test$ensembl_gene_id_version
-avg_expr_aDR$ensembl_gene_id_version <- test$ensembl_gene_id_version
 
-#max_treatment_DEG <- setNames(colnames(avg_expr_aDR)[apply(test$ensembl_gene_id_version[DEG_aDR,], 1, which.max)],DEG_aDR)
-
-max_treatment_DEG <- setNames(test$ensembl_gene_id_version[apply(test$ensembl_gene_id_version, 1, which.max)],DEG_aDR) 
-#Problem: avg expr aDR has transcripts, DEG aDR has genes -> incompatible. Solution: transform avg expr aDR to genes
+max_treatment_DEG_aDR <- setNames(colnames(avg_expr_aDR)[apply(avg_expr_aDR[DEG_aDR,], 1, which.max)],DEG_aDR)
+table(max_treatment_DEG)
 ```
 
 ```{r}
+avg_expr_DEG_list_aDR <- tapply(names(max_treatment_DEG_aDR), max_treatment_DEG_aDR, function(x) avg_expr_aDR[x,])
+avg_expr_DEG_list_aDR_df_up <- data.frame(avg_expr_DEG_list_aDR[1])
+avg_expr_DEG_list_aDR_df_up_scale <- scale(avg_expr_DEG_list_aDR_df_up)
+avg_expr_DEG_list_aDR_df_down <- data.frame(avg_expr_DEG_list_aDR[2])
 
-table(max_layer_DEG)
-avg_expr_DEG_list <- tapply(names(max_layer_DEG), max_layer_DEG, function(x) avg_expr[x,])
-scaled_expr_DEG_list <- lapply(avg_expr_DEG_list, function(x) t(scale(t(x))))
-layout(matrix(1:8, nrow = 2, byrow = T))
+avg_expr_DEG_list_aDR_df[2,1]
+scaled_expr_DEG_list_aDR <- lapply(avg_expr_DEG_list_aDR, function(x) t(scale(t(x)))) # scaling converts all of the genes into one value instead of a normalized distribtion
+layout(matrix(1:2, nrow = 1, byrow = T))
 par(mar=c(3,3,3,3))
-for(layer in names(scaled_expr_DEG_list))
-boxplot(scaled_expr_DEG_list[[layer]],
-main = paste0(layer, " (", nrow(scaled_expr_DEG_list[[layer]]),")"))
+for(treatment in names(scaled_expr_DEG_list_aDR))
+boxplot(scaled_expr_DEG_list_aDR[[treatment]],
+main = paste0(treatment, " (", nrow(avg_expr_DEG_list_aDR[[treatment]]),")"))
 
 ```
+
+#hierarchical clustering of aDR
+```{r}
+#avg_expr <- sapply(sort(unique(meta1_aDR$treatment)), function(layer)
+#  rowMeans(expr[,which(meta$Layer == layer)])) # implemented above
+
+corr_DEG <- cor(t(avg_expr_aDR[DEG_aDR,]), method = "pearson") #avg expr aDr seems to have wrong format. rows and columns in the wrong way? we want cor between genes but get corr between treatments groups
+hcl_DEG <- hclust(as.dist(1 - corr_DEG), method = "complete")
+plot(hcl_DEG, labels = FALSE)
+```
+
+
 
 
 
