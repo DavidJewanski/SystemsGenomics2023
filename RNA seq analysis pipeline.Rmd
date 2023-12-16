@@ -6,8 +6,9 @@ title: "Systems Genomics data analysis pipeline"
 ```{r}
 #install.packages(c("tidyverse","ggrepel","BiocManager","pbapply","gplots","msigdbr"))
 #BiocManager::install(c("biomaRt","sva","DESeq2","edgeR","tximport"))
-#install.packages(c("pheatmap","RColorBrewer","devEMF", "plotly"))
-#BiocManager::install("svglite")
+install.packages(c("pheatmap","RColorBrewer","devEMF", "plotly"))
+BiocManager::install(c("svglite", "fgsea"))
+
 ```
 
 # load libraries
@@ -19,8 +20,8 @@ lapply(libraries, library, character.only=TRUE)
 
 
 ```{r, warning=FALSE}
-setwd("/Users/david/Library/CloudStorage/OneDrive-Persönlich/Master ETH/Courses/11_Systems Genomics/project local repository/data")
-#setwd("C:/Users/nicks/Desktop/Systems_Genomics/GitHub David/SystemsGenomics2023/data")
+#setwd("/Users/david/Library/CloudStorage/OneDrive-Persönlich/Master ETH/Courses/11_Systems Genomics/project local repository/data")
+setwd("C:/Users/nicks/Desktop/Systems_Genomics/GitHub David/SystemsGenomics2023/data")
 
 samples <- list.files("rsem_genes_results_trimmed")
 
@@ -49,9 +50,10 @@ tx2gene <- getBM(attributes = c("ensembl_transcript_id_version","ensembl_gene_id
 
 
 ```{r, warning=FALSE}
-setwd("/Users/david/Library/CloudStorage/OneDrive-Persönlich/Master ETH/Courses/11_Systems Genomics/project local repository/data")
-#setwd("C:/Users/nicks/Desktop/Systems_Genomics/GitHub David/SystemsGenomics2023/data")
-samples <- list.files("rsem_trimmed_dedup_nextera")
+#setwd("/Users/david/Library/CloudStorage/OneDrive-Persönlich/Master ETH/Courses/11_Systems Genomics/project local repository/data")
+setwd("C:/Users/nicks/Desktop/Systems_Genomics/GitHub David/SystemsGenomics2023/data")
+
+#samples <- list.files("rsem_trimmed_dedup_nextera") #Hier sollten isoforms sein! nicht dedup nextera!
 filtered_samples <- samples[grep("\\.isoforms\\.results$",samples)]# Remove ".genes.results" from all column names
 files_YMP <- file.path(paste0("rsem_trimmed_dedup_nextera/", filtered_samples[1:6]))
 files_aDR <- file.path(paste0("rsem_trimmed_dedup_nextera/", filtered_samples[7:15]))
@@ -64,8 +66,8 @@ expr[,15] <- data.frame(txi_aDR)[,9] # this code recovers the broken dataset fro
 
 #Read in meta genes
 ```{r, warning=FALSE}
-setwd("/Users/david/Library/CloudStorage/OneDrive-Persönlich/Master ETH/Courses/11_Systems Genomics/project local repository/data")
-#setwd("C:/Users/nicks/Desktop/Systems_Genomics/GitHub David/SystemsGenomics2023/data")
+#setwd("/Users/david/Library/CloudStorage/OneDrive-Persönlich/Master ETH/Courses/11_Systems Genomics/project local repository/data")
+setwd("C:/Users/nicks/Desktop/Systems_Genomics/GitHub David/SystemsGenomics2023/data")
 
 meta2 <- read.csv("SRR_Acc_List.txt", sep="\t", header=T) %>%
   inner_join(read.csv("PRJNA875066 Metadata.txt", header=T),
@@ -359,8 +361,50 @@ hcl_DEG <- hclust(as.dist(1 - corr_DEG), method = "complete")
 plot(hcl_DEG, labels = FALSE)
 ```
 
+#3-6 Making sense of the genes (page 66)
+```{r}
+#Convert list a DEG's into a format that you can upload into DAVID.
+#Think of what cluster of genes we want to analyze!
+write.table(meta_genes[meta_genes$ensembl_gene_id_version %in% names(which(cl_DEG==2)), "ensembl_gene"],
+file = "genes_C2.txt",
+quote = F, row.names = F, col.names = F) #DEG's
+
+write.table(meta_genes[meta_genes$expressed, "ensembl_gene_id"],
+file = "genes_expressed.txt",
+quote = F, row.names = F, col.names = F) #All expressed genes (background gene panel)
+
+```
+#Enrichment analysis (page 70)
+```{r}
+DE_L4 <- DE_test(expr = expr[meta_genes$expressed,],
+cond = meta$Layer == "L4",
+ctrl = "FALSE",
+covar = meta %>% dplyr::select(Individual)) %>%
+tibble::rownames_to_column("gene")
+scores <- setNames(sign(log(DE_L4$fc)) * (-log10(DE_L4$pval)),
+setNames(meta_genes$ensembl_gene_id,
+meta_genes$ensembl_gene_id_version)[DE_L4$gene])
+scores_ordered <- sort(scores, decreasing=T)
+
+library(msigdbr)
+genesets_celltype <- msigdbr(species = "Homo sapiens", category = "C8")
+genesets_celltype_list <- tapply(genesets_celltype$ensembl_gene, genesets_celltype$gs_name, list)
+library(fgsea)
+fgsea_kegg <- fgsea(pathways = genesets_celltype_list,
+stats = scores_ordered,
+minSize = 15,
+maxSize = 500)
+
+fgsea_kegg[order(NES,decreasing=T),][1:10,1:7]
+
+plotEnrichment(genesets_celltype_list[["MANNO_MIDBRAIN_NEUROTYPES_HNBML5"]],
+scores_ordered) + labs(title="hNbML5 GABAergic neurons")
+
+fgsea_kegg[order(NES,decreasing=F),][1:10,1:7]
 
 
 
+```
 
+#3.7 Other analysis (page 72)
 
