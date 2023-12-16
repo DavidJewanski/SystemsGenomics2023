@@ -1,0 +1,834 @@
+---
+title: "systems-genomics-final-DESEQ2"
+author: "Athaliah Fubara"
+date: "2023-12-11"
+output: pdf_document
+---
+
+---
+title: "Systems-Genomics"
+author: "Athaliah Fubara"
+date: "2023-11-10"
+output: pdf_document
+---
+
+
+```{r}
+library(dplyr)
+library(ggplot2)
+library(ggrepel)
+library(dplyr)
+library(biomaRt)
+library(gplots)
+library(pbapply)
+library(tximport)
+library(DESeq2)
+library(plyr)
+```
+
+```{r}
+samples <- list.files("rsem")
+expr <- sapply(samples, function(sample){
+file <- paste0("rsem/",sample)
+quant <- read.csv(file, sep="\t", header=T)
+tpm <- setNames(quant$TPM, quant$gene_id)
+return(tpm)
+})
+```
+
+```{r}
+meta <- read.csv("SraRunTable.txt", header=T)
+```
+
+```{r}
+ensembl <- useEnsembl(biomart="ensembl")
+listDatasets(ensembl)
+```
+
+
+```{r}
+ensembl <- useEnsembl(biomart = "ensembl",
+dataset = "mmusculus_gene_ensembl")
+meta_genes <- getBM(attributes = c("ensembl_gene_id",
+"ensembl_gene_id_version",
+"mgi_symbol",
+"description",
+"chromosome_name",
+"start_position",
+"end_position",
+"strand"),
+filters = "ensembl_gene_id_version",
+values = rownames(expr),
+mart = ensembl) %>%
+right_join(data.frame(ensembl_gene_id_version = rownames(expr)),
+by = "ensembl_gene_id_version") %>%
+distinct(ensembl_gene_id_version, .keep_all = TRUE)
+```
+
+```{r}
+files <- c("rsem/SRR11256283.genes.results", "rsem/SRR11256284.genes.results", "rsem/SRR11256285.genes.results",
+           "rsem/SRR11256318.genes.results", "rsem/SRR11256319.genes.results", "rsem/SRR11256320.genes.results",
+           "rsem/SRR11256336.genes.results", "rsem/SRR11256337.genes.results", "rsem/SRR11256338.genes.results",
+           "rsem/SRR11256352.genes.results", "rsem/SRR11256353.genes.results", "rsem/SRR11256354.genes.results",
+           "rsem/SRR11256370.genes.results", "rsem/SRR11256371.genes.results", "rsem/SRR11256372.genes.results",
+           "rsem/SRR11256388.genes.results", "rsem/SRR11256389.genes.results", "rsem/SRR11256390.genes.results",
+           "rsem/SRR11256440.genes.results", "rsem/SRR11256441.genes.results", "rsem/SRR11256442.genes.results",
+           "rsem/SRR11256458.genes.results", "rsem/SRR11256459.genes.results", "rsem/SRR11256460.genes.results")
+
+# Extract only the SRR11... parts
+sample_ids <- sub("rsem/|\\.genes\\.results", "", basename(files))
+sample_ids
+```
+
+```{r}
+colnames(expr) <- sample_ids #Renaming the column names from SRR1234567.genes.results to SSR1234567
+head(meta_genes) #meta_genes contains the annotation informaiton for 56,884 genes
+dim(expr) #expr contains expression levels of all 56,884 genes in each of the SRR samples
+avg_expr <- rowMeans(expr)
+head(avg_expr) # avg_expr is a numeric vector where each element represents the average (mean) value of the corresponding row in the expr matrix or data frame. 
+```
+
+
+The expression levels of genes follow a long tail distribution. It looks much better after log-transforming the
+expression levels. Indeed, the expression levels of different expressed genes in one sample has been long
+considered as approximately log-normal distributed (normal distributed after being log-transformed).
+
+```{r}
+df_plot<-expr
+df_plot$avg_expr<-rowMeans(df_plot)
+layout(matrix(1:2, nrow =1))
+hist(df_plot$avg_expr, breaks = 40, xlab="Average gene expression", main="Frequency of expressed genes across all samples")
+hist(log10(df_plot$avg_expr+1), breaks = 40,xlab="Log10 average gene expression", main="Frequency of expressed genes across all samples")
+```
+
+
+The histrogram shows, for an average expression, the number or count of genes expressed at that level. As expression level increases, the number of genes in each bin of the histogram decreases
+```{r}
+ggplot(data.frame(avg_expr), aes(x = avg_expr)) +
+  geom_histogram(bins = 50, fill = "grey", color = "black") +
+  scale_x_continuous(breaks = c(0, 1, 10, 100, 1000, 10000, 20000), trans = "log1p", expand = c(0, 0)) +
+  scale_y_continuous(breaks = c(0, 1), expand = c(0, 0), trans = "log1p") +
+  labs(title = "Log-transformed gene expression distribution in all samples",
+       x = "Average gene expression",
+       y = "Frequency") +
+  theme_minimal()
+```
+
+The histogram below shows that only in a few samples (1 sample is 1 organ), all genes were detected to be expressed.
+```{r}
+num_det <- rowSums(expr > 0)
+hist(num_det, xlab="Sample" , ylab="Frequency" , main="Gene expression detection across samples")
+```
+
+### FILTERING OF GENES
+Here we are going to use the threshold of 1) being detected in at least half of the samples, or 2) average TPM>=1, to define whether a gene is expressed or not.
+NB, IN V'S CODE META_GENES_EXPRESSED IS HER FILTERED META_GENES. SHE JUST RENAMED IT TO META_GENES_EXPRESSED. BEFORE FITLEREING, YOUR META_GENES CONTAINED 56K GENES. BUT AFTER FILTERING IT CONTAINED 15K GENES.
+
+
+ #This table, expr, only contains the genes that fulfil the threshold or criteria, ie, genes that are truly, actually expressed IN EACH OF THE SAMPLES
+dim(expr) # There are 15,463 expressed genes in ALL the 24 samples. The data frame has 24 columns and 15,463 rows.
+meta_genes <- meta_genes[which(expressed),] # There are 15,463 genes that are truly expressed. Meta genes contains the gene annotation of the 15,463 genes that are truly expressed.
+meta_genes$expressed <- expressed #We add a column, 'expressed', which can only contain values 'expressed'.
+```{r}
+expressed <- rowMeans(expr > 0) >= 0.5 | rowMeans(expr) >= 1
+expr <- expr[which(expressed),]
+meta_genes <- meta_genes[which(expressed),]
+#meta_genes$expressed <- expressed
+```
+
+```{r}
+num_det2 <- rowSums(expr > 0)
+hist(num_det2, xlab="Sample" , ylab="Frequency" , main="Gene expression detection across samples")
+```
+
+```{r}
+ggplot(data.frame(avg_expr), aes(x = avg_expr)) +
+  geom_histogram(bins = 50, fill = "grey", color = "black") +
+  scale_x_continuous(breaks = c(0, 1, 10, 100, 1000, 10000, 20000), trans = "log1p", expand = c(0, 0)) +
+  scale_y_continuous(breaks = c(0, 1), expand = c(0, 0), trans = "log1p") +
+  labs(title = "Log-transformed gene expression distribution in all samples",
+       x = "Average gene expression",
+       y = "Frequency") +
+  theme_minimal()
+```
+
+
+### CORRELATION
+```{r}
+corr_pearson <- cor(log1p(expr[meta_genes$expressed,]))
+corr_spearman <- cor(expr[meta_genes$expressed,], method = "spearman")
+hcl_pearson <- hclust(as.dist(1 - corr_pearson))
+hcl_spearman <- hclust(as.dist(1 - corr_spearman))
+```
+
+```{r}
+layout(matrix(1:2, nrow =1))
+plot(hcl_pearson,labels=meta$Organ, main = "Pearson Correlation", xlab = "Organ", ylab="Height")
+plot(hcl_spearman,labels=meta$Organ, main = "Spearman Correlation", xlab="Organ", ylab="Height")
+```
+
+
+### PRINCIPAL COMPONENT ANALYSIS
+
+```{r}
+pca <- prcomp(log1p(t(expr[meta_genes$expressed,])), center = TRUE, scale. = TRUE)
+eigs<-pca$sdev^2
+plot(1:length(eigs), eigs)
+prop_var <- eigs / sum(eigs)
+plot(1:length(eigs), prop_var, xlab = "Principal Component", ylab = "Proportion of Variance Explained", main = "PCA Screen Plot") 
+```
+Description of plot:
+- Each dot is a sample, we had 24 samples or different organs.
+- The first PC described 60% of variability in the data. 
+- The first two PCs explain 75% of the data variance. 
+- From PC 5 and later you don't gain much explanation of variation in the data. The first 5 PCs explain most of the variability in the data.
+
+What is PCA?
+PCA is minimising the number of features you have to take into account to get a global view or summary of the data.
+Imagine you have a lot of information about how thousands of genes are expressed in different samples. It's a lot of data to handle. However, by using a technique called Principal Component Analysis (PCA), you can find a way to summarize this information.
+
+The statement is saying that when you look at the first two "summary components" (PCs) that PCA gives you, those two components alone explain 75% of the patterns or differences in the gene data. So, instead of dealing with all the individual genes, you can just focus on these two components and get a pretty good understanding of what's going on.
+
+By visualizing these first two components, you can see similarities between samples more easily. It's like zooming out and looking at the big picture instead of getting lost in all the details of each gene. This makes it simpler to grasp the main trends and relationships in the data.
+
+```{r}
+ggplot(data.frame(pca$x, meta)) +
+  geom_point(aes(x = PC1, y = PC2, color = Organ), size = 5) +
+  scale_shape_manual(values = c(16, 17, 18, 19, 20, 21, 1, 2, 3, 4, 5, 6)) +
+  labs(title = "Samples/Organs in the Steady State across the PC1 and PC2 Space",
+       x = "Principal Component 1",
+       y = "Principal Component 2",
+       color = "Organs")
+```
+Plot Description: 
+- It creates a scatter plot where each point represents a sample. 
+- The x-axis shows the sample's score on the first principal component (PC1), and the y-axis shows its score on the second principal component (PC2). 
+- This plot visualizes sample relationships in a simplified space defined by the top two principal components, revealing potential clusters or patterns in the gene expression data frame.
+- A PC would be shared expression, these samples on the left express the genes in that can be explained by PC2 high, the samples on the far right express the genes that can be explained by PC1, or a certain biological phenomenon.
+- PC can be described back to biological phenomenon, because they can be linked to genes.
+- The closer the dots, ie, organs are - the more similar in the transcriptome.
+e.g. muscle and heart - are they together? are intestine, colon, and digestive organs clustering together? If PC1 can be traced back to digestive-related genes, then it makes sense that digestive organs should cluster together and be 'higher up' the axis of PC1. 
+
+
+### Highly Variable Gene Identification Step
+Purpose: identify genes with significantly more variance than expected. vary the most across the samples.
+
+```{r}
+estimate_variability <- function(expr){
+  means <- apply(expr, 1, mean)
+  vars <- apply(expr, 1, var)
+  cv2 <- vars / means^2
+  minMeanForFit <- unname(median(means[which(cv2 > 0.3)]))
+  useForFit <- means >= minMeanForFit
+  fit <- glm.fit(x = cbind(a0 = 1, a1tilde = 1/means[useForFit]),
+    y = cv2[useForFit],
+    family = Gamma(link = "identity"))
+  a0 <- unname(fit$coefficients["a0"])
+  a1 <- unname(fit$coefficients["a1tilde"])
+  
+  xg <- exp(seq(min(log(means[means>0])), max(log(means)),length.out=1000))
+  vfit <- a1/xg + a0
+  df <- ncol(expr) - 1
+  afit <- a1/means+a0
+  varFitRatio <- vars/(afit*means^2)
+  pval <- pchisq(varFitRatio*df,df=df,lower.tail=F)
+  
+  res <- data.frame(mean = means,
+  var = vars,
+  cv2 = cv2,
+  useForFit = useForFit,
+  pval = pval,
+  padj = p.adjust(pval, method="BH"),
+  row.names = rownames(expr))
+  return(res)
+}
+```
+
+```{r}
+var_genes <- estimate_variability(expr[meta_genes$expressed,])
+meta_genes$highvar <- meta_genes$ensembl_gene_id_version %in% rownames(var_genes)[which(var_genes$padj < 0.01)]
+```
+
+```{r}
+corr_spearman_highvar <- cor(expr[meta_genes$highvar,], method = "spearman")
+hcl_spearman_highvar <- hclust(as.dist(1 - corr_spearman_highvar))
+layout(matrix(1:2,nrow=1))
+plot(hcl_spearman_highvar, labels = meta$Individual)
+plot(hcl_spearman_highvar, labels = meta$Layer)
+
+pca_highvar <- prcomp(log1p(t(expr[meta_genes$highvar,])), center = TRUE, scale. = TRUE)
+ggplot(data.frame(pca_highvar$x, meta)) +
+  geom_point(aes(x = PC1, y = PC2, color = Organ), size = 5)
+```
+
+Summary of Data Frames
+- Expr data frame contains the level of expression of each gene in each sample or SRR file. It makes sense that we have 24 columns because we have 24 samples. We have 15,463 rows because we selected 15,463 genes that are truly expressed.
+- Meta_genes data frame descriptive information about all the 15,463 genes which we selected to be truly expressed.
+- Meta data frame contains information about the samples or organs, ie, the SRR files.
+
+##### ANOVA
+
+```{r}
+DE_test <- function(expr,
+                    cond,
+                    ctrl = NULL,
+                    covar = NULL,
+                    padj_method = p.adjust.methods){
+  pval_fc <- data.frame(t(pbapply(expr, 1, function(e){
+    dat <- data.frame(y = log1p(e),
+                      cond = cond)
+    if (! is.null(covar))
+      dat <- data.frame(dat, covar)
+    m1 <- lm(y ~ ., data = dat)
+    m0 <- lm(y ~ . - cond, data = dat)
+    test <- anova(m1, m0)
+    pval <- test$Pr[2]
+    avgs <- tapply(log1p(e), cond, mean)
+    if (! is.null(ctrl) && sum(cond %in% ctrl) > 0){
+      fc <- exp(max(avgs[names(avgs) != ctrl]) - avgs[ctrl])
+    } else{
+      fc <- exp(max(avgs) - min(avgs))
+    }
+    return(c(pval = unname(pval), fc = unname(fc)))
+  })), row.names = rownames(expr))
+  padj <- p.adjust(pval_fc$pval, method = padj_method)
+  return(data.frame(pval_fc, "padj" = padj)[,c("pval","padj","fc")])
+}
+#Ab hier update on github
+```
+
+```{r}
+install.packages("plyr")
+install.packages("pbapply")
+```
+
+```{r}
+library(dplyr)
+library(knitr)
+library(plyr)
+library(pbapply)
+```
+
+```{r}
+res_DE <- DE_test(expr = expr[meta_genes$expressed,],
+                  cond = meta$Organ,) %>%
+  tibble::rownames_to_column("gene")
+res_DE <- res_DE %>% 
+  mutate(DE = padj < 0.05 & fc > 2) %>%
+  mutate(DEG = ifelse(DE, meta_genes$mgi_symbol, NA)) 
+```
+
+```{r}
+library(ggrepel)
+
+ggplot(res_DE, aes(x = log(fc), y = -log10(padj), col = DE, label = DEG)) +
+  geom_point() +
+  geom_text_repel() +
+  geom_vline(xintercept = c(log(2), 0), col = "#303030", linetype = "dotted") +
+  geom_hline(yintercept = -log10(0.1), col = "#303030", linetype = "dotted") + 
+  scale_color_manual(values = c("#909090", "red")) +
+    theme_minimal() +
+   labs(
+    title = "Visualization of the DE analysis, ANOVA method",
+    x = "log-transformed fold change",
+    y = "log-transformed p-value"
+  ) +
+   xlim(-6, 6)
+```
+
+
+### DE-SEQ2
+```{r}
+library(dplyr)
+library(plyr)
+ensembl <- useEnsembl(biomart = "ensembl",
+                      dataset = "mmusculus_gene_ensembl")
+tx2gene <- getBM(attributes = c("ensembl_transcript_id_version",
+                                "ensembl_gene_id_version"),
+                 filters = "ensembl_gene_id_version",
+                 values = rownames(expr),
+                 mart = ensembl) %>%
+  dplyr::select(ensembl_transcript_id_version, ensembl_gene_id_version)
+```
+
+```{r}
+library(tximport)
+
+samples <-  list.files("rsem") 
+files <- file.path("rsem", samples)
+samples <- sample_ids
+samples
+
+#samples <- list.files("rsem")
+#files <- file.path("rsem", samples, paste0(samples,".isoforms.results"))
+#file <- paste0("rsem/",sample,"/",sample,".genes.results")
+txi <- tximport(files, type = "rsem", tx2gene = tx2gene)
+library(DESeq2)
+```
+```{r}
+idx_excl <- which(rowSums(txi$length==0) > 0)
+txi$abundance <- txi$abundance[-idx_excl,]
+txi$counts <- txi$counts[-idx_excl,]
+txi$length <- txi$length[-idx_excl,]
+```
+
+```{r}
+dds <- DESeqDataSetFromTximport(txi, colData = meta,
+                                 design = ~ Organ)
+dds_filtered <- dds[intersect(rownames(expr)[meta_genes$expressed], rownames(dds)),]
+dds_filtered <- DESeq(dds_filtered, test="LRT", reduced= ~ 1)
+res_DESeq2 <- results(dds_filtered)
+```
+```{r}
+dds2 <- DESeqDataSetFromTximport(txi, colData = meta, design = ~ Organ)
+dds_filtered2 <- dds2[intersect(rownames(expr)[meta_genes$expressed], rownames(dds)),]
+dds_filtered2 <- DESeq(dds_filtered2)
+res_DESeq2_brain_kidney <- results(dds_filtered2, contrast = c("Organ", "brain", "kidney"))
+```
+
+```{r}
+# Calculate the fold-changes with the normalized data from DeSeq
+normalized_counts <- counts(dds_filtered)/normalizationFactors(dds_filtered)
+fc_norm_counts <- pbapply(normalized_counts, 1, function(e){
+avg_age <- tapply(log1p(e), meta$Organ, mean)
+return(exp(max(avg_age) - mean(avg_age)))
+})   
+
+head(fc_norm_counts)
+
+
+#add the manual fold-changes to the ref_DESeq2
+res_DESeq2_df <- as.data.frame(res_DESeq2)
+res_DESeq2_df <- mutate(res_DESeq2_df, fold_change = fc_norm_counts)
+
+mgi_symbol <- rownames(expr)
+```
+
+```{r}
+res_DESeq2_df <- res_DESeq2_df %>%  
+  mutate(DE = padj < 0.05 & fold_change >2) %>%
+  mutate(DEG = ifelse(DE, meta_genes$mgi_symbol, NA))
+```
+
+```{r}
+res_DESeq2_df <- res_DESeq2_df %>%  
+  mutate(DE = padj < 0.05 & fold_change >2) %>%
+  mutate(DEG = ifelse(DE, meta_genes$mgi_symbol, NA))
+
+#vulcano plot deseq2
+
+library(ggrepel)
+ggplot(res_DESeq2_df, aes(x = log(fold_change), y = -log10(padj), col=DE, label=DEG)) +
+  geom_point() +
+  geom_text_repel() +
+  geom_vline(xintercept=c(log(2), 0), col="#303030", linetype="dotted") +
+  geom_hline(yintercept=-log10(0.05), col="#303030", linetype="dotted") +
+  scale_color_manual(values = c("#909090", "red")) +
+  theme_minimal() +
+  labs(
+    title = "Visualization of the DE analysis, DESeq2 method",
+    x = "log-transformed fold change",
+    y = "log-transformed p-value"
+  ) +
+   xlim(-6, 6)
+```
+
+
+WRONG: NOT DOWN-REGULATED AS ITS JUST LOG TRANSFORMED - LOG VALUES ARE NEGATVIE
+
+```{r}
+res_DESeq2_df3 <- res_DESeq2_df %>%  
+  mutate(DE = case_when(
+    padj < 0.05 & log2FoldChange > 2 ~ 'upregulated',
+    padj < 0.05 & log2FoldChange < -2 ~ 'downregulated',
+    TRUE ~ 'non-significant'
+  )) %>%
+  mutate(DEG = ifelse(DE != 'non-significant', meta_genes$mgi_symbol, NA))
+```
+
+```{r}
+library(ggrepel)
+
+ggplot(res_DESeq2_df3, aes(x = log2FoldChange, y = -log10(padj), col = DE, label = DEG)) +
+  geom_point() +
+  geom_text_repel() +
+  geom_vline(xintercept = c(2, 0), col = "#303030", linetype = "dotted") +
+  geom_hline(yintercept = -log10(0.05), col = "#303030", linetype = "dotted") +
+  scale_color_manual(values = c("blue", "grey", "red")) +  # Red for upregulated, blue for downregulated, grey for non-significant
+  theme_minimal() +
+  labs(
+    title = "Visualization of the DE analysis, DESeq2 method",
+    x = "log-transformed fold change",
+    y = "log-transformed p-value"
+  ) +
+  xlim(-9, 9)
+```
+
+
+###COMPARING DESEQ2 TO ANOVA
+
+We can now compare the p-values we got from DESeq2 and the p-values from our previous self-made DE analysis.
+The SCC between the two DE analysis is very low (0.3), suggesting that they provide non-similar estimates how strong a gene changes its expression in different organs in relative to other genes.
+
+Why not similar? - for DESEQ2 we had to modify the txi_df to exclude effective gene lengths of 0. There are 4000 genes of effective length 0.
+
+```{r}
+cor(res_DESeq2_df$padj,
+    res_DE %>% filter(gene %in% rownames(res_DESeq2_df)) %>% pull(padj),
+    method="spearman", use="complete.obs")
+
+layout(matrix(1:2, nrow=1))
+plot(-log10(res_DESeq2_df$pvalue),
+     -log10(res_DE %>% filter(gene %in% rownames(res_DESeq2)) %>% pull(pval)),
+     xlab = "-log10(pval DESeq2)", ylab = "-log10(pval DE)", pch=16)
+smoothScatter(-log10(res_DESeq2_df$pvalue),
+              -log10(res_DE %>% filter(gene %in% rownames(res_DESeq2_df)) %>% pull(pval)),
+              xlab = "-log10(pval DESeq2)", ylab = "-log10(pval DE)", pch=16)
+```
+
+In the table below, 12,165 genes did not pass the test in our self made test and DESEQ2.
+Less than half (256 of the (256+665)) of the DEGs in the self made test are also DEGs in DESEQ2.
+There are 542 DEGs in DESEQ2 which don't pass the the test in the self made test.
+```{r}
+true_count1 <- sum(res_DE$padj < 0.05)
+#true_count2 <- sum(res_DESeq2_df$padj < 0.05)
+true_count2 <- sum(res_DESeq2_df$padj < 0.05)
+
+true_count1; true_count2
+```
+
+```{r}
+table(p.adjust(res_DESeq2$pvalue, method="bonferroni") < 0.05,
+      res_DE %>% filter(gene %in% rownames(res_DESeq2)) %>% pull(padj) < 0.05)
+``` 
+
+
+### NB WE ARE NOW TRYING TO GROUP. THERE ARE TWO WAYS:
+1. DEG GROUPING
+2. CLUSTERING.
+
+### DEG'S GROUPING
+We can choose to group the DEGs based on at which organ that they show the highest average expression level.
+
+```{r}
+# Assuming de_Seq2 is your dataframe
+res_DESeq2_df$gene <- rownames(res_DESeq2_df)
+res_DESeq2_df2 <- res_DESeq2_df
+# Remove row names
+rownames(res_DESeq2_df2) <- NULL
+```
+
+```{r} 
+col_names <- names(res_DESeq2_df2)
+
+# Reorder the columns, moving 'gene' to the first position
+res_DESeq2_df2 <- res_DESeq2_df2[, c("gene", col_names[col_names != "gene"])]
+```
+
+```{r} 
+# Print the modified dataframe
+head(res_DESeq2_df2)
+head(res_DE)
+nrow(res_DESeq2_df2)
+nrow(res_DE)
+```
+
+```{r}
+DEG <- res_DE$gene[res_DE$DE]
+avg_expr <- sapply(sort(unique(meta$Organ)), function(layer)
+  rowMeans(expr[,which(meta$Organ == layer)]))
+max_layer_DEG <- setNames(colnames(avg_expr)[apply(avg_expr[DEG,], 1, which.max)], DEG)
+```
+
+```{r}
+table(max_layer_DEG)
+avg_expr_DEG_list <- tapply(names(max_layer_DEG), max_layer_DEG, function(x) avg_expr[x,])
+scaled_expr_DEG_list <- lapply(avg_expr_DEG_list, function(x) t(scale(t(x))))
+
+layout(matrix(1:8, nrow = 2, byrow = T))
+par(mar=c(1,1,1,1))
+for(layer in names(scaled_expr_DEG_list))
+  boxplot(scaled_expr_DEG_list[[layer]],
+          main = paste0(layer, " (", nrow(scaled_expr_DEG_list[[layer]]), ")"))
+```
+
+
+```{r}
+layout(matrix(1:8, nrow = 2, byrow = TRUE))
+par(mar = c(3, 3, 3, 3))
+custom_gradient <- colorRampPalette(c("red", "orange", "yellow", "green", "blue", "purple"))
+
+for (i in seq_along(scaled_expr_DEG_list)) {
+  layer <- names(scaled_expr_DEG_list)[i]
+  num_boxplots <- ncol(scaled_expr_DEG_list[[layer]])
+  colors <- custom_gradient(num_boxplots)
+
+  boxplot(scaled_expr_DEG_list[[layer]],
+          main = paste0(layer, " (", nrow(scaled_expr_DEG_list[[layer]]), ")"),
+          xaxt = "n", yaxt = "n", col = colors)  # Custom gradient color
+  axis(side = 1, labels = FALSE)
+  axis(side = 2, las = 2, mgp = c(3, 0.75, 0))
+  text(x = 1:num_boxplots, y = par("usr")[3] - 0.225,
+       labels = seq_len(num_boxplots),
+       xpd = NA, srt = 35, adj = 0.8, cex = 0.8)
+}
+
+```
+
+
+```{r}
+# Function to remove version from Ensembl gene IDs
+remove_version <- function(gene_ids_with_version) {
+  return(sub("\\..*$", "", gene_ids_with_version))
+}
+
+# Applying the function to each organ's gene IDs
+brain_gene_ids <- remove_version(rownames(avg_expr_DEG_list$Brain))
+heart_gene_ids <- remove_version(rownames(avg_expr_DEG_list$Heart))
+kidney_gene_ids <- remove_version(rownames(avg_expr_DEG_list$Kidney))
+largeintestine_gene_ids <- remove_version(rownames(avg_expr_DEG_list$LargeIntestine))
+liver_gene_ids <- remove_version(rownames(avg_expr_DEG_list$Liver))
+lung_gene_ids <- remove_version(rownames(avg_expr_DEG_list$Lung))
+smallintestine_gene_ids <- remove_version(rownames(avg_expr_DEG_list$SmallIntestine))
+
+# Write gene IDs to text files without version
+  write.table(brain_gene_ids, file = "brain_gene_ids.txt", quote = FALSE, row.names = FALSE, col.names = FALSE)
+write.table(heart_gene_ids, file = "heart_gene_ids.txt", quote = FALSE, row.names = FALSE, col.names = FALSE)
+write.table(kidney_gene_ids, file = "kidney_gene_ids.txt", quote = FALSE, row.names = FALSE, col.names = FALSE)
+write.table(largeintestine_gene_ids, file = "largeintestine_gene_ids.txt", quote = FALSE, row.names = FALSE, col.names = FALSE)
+write.table(liver_gene_ids, file = "liver_gene_ids.txt", quote = FALSE, row.names = FALSE, col.names = FALSE)
+write.table(lung_gene_ids, file = "lung_gene_ids.txt", quote = FALSE, row.names = FALSE, col.names = FALSE)
+write.table(smallintestine_gene_ids, file = "smallintestine_gene_ids.txt", quote = FALSE, row.names = FALSE, col.names = FALSE)
+
+```
+
+
+### HIERARCHICAL DEG CLUSTERING
+
+Here, we try to do hierarchical clustering on the DEGs identified with our self-made test, using the pairwise Spearman correlation distance across the average expression levels of layers as the distance function and the default complete linkage criteria.
+
+clustering is just a way of grouping genes with similar behavior together
+
+```{r}
+DEG <- res_DE$gene[res_DE$DE]
+avg_expr <- sapply(sort(unique(meta$Organ)), function(layer)
+  rowMeans(expr[,which(meta$Organ == layer)]))
+transposed_avg_expr <- t(avg_expr)
+max_layer_DEG <- setNames(colnames(avg_expr)[apply(avg_expr[DEG,], 1, which.max)], DEG)
+```
+
+```{R}
+corr_DEG <- cor(t(avg_expr[res_DE$gene[res_DE$DE],]), method = "spearman")
+hcl_DEG <- hclust(as.dist(1 - corr_DEG), method = "complete")
+plot(hcl_DEG, labels = FALSE)
+```
+
+To assist making decision, one can visualize the correlation/distance matrix, with rows and columns ordered by the dendrogram from the hierarchical clustering.
+```{r}
+library(gplots)
+
+heatmap.2(corr_DEG, Rowv = as.dendrogram(hcl_DEG), Colv = as.dendrogram(hcl_DEG),
+          trace = "none", scale = "none", labRow = NA, labCol = NA)
+```
+
+Now let's cut the dendrogram to obtain ***8*** clusters of DEGs. We can visualize the clustering results on the heatmap as an additional side bar:
+```{r}
+library(viridis)
+```
+
+the higher the k, the smaller the 'new' clusters become. so it doesnt make much of a difference to have tons of clusters, because there is no interesting/sig 
+difference from when we have 8 clusters.
+```{r}
+cl_DEG <- cutree(hcl_DEG, k = 8)
+heatmap.2(corr_DEG, Rowv = as.dendrogram(hcl_DEG), Colv = as.dendrogram(hcl_DEG), 
+          trace = "none", scale = "none", labRow = NA, labCol = NA, col = viridis,
+          ColSideColors = rainbow(8)[cl_DEG])
+```
+
+We can now check the average expression patterns of those clusters across different organs:
+```{r}
+avg_expr <- sapply(sort(unique(meta$Organ)), function(layer)
+  rowMeans(expr[,which(meta$Organ == layer)]))
+avg_expr_DEG_list <- tapply(names(cl_DEG), cl_DEG, function(x) avg_expr[x,])
+scaled_expr_DEG_list <- lapply(avg_expr_DEG_list, function(x) t(scale(t(x))))
+
+layout(matrix(1:8, nrow = 2, byrow = T))
+par(mar=c(2,2,2,2))
+for(cl in 1:8)
+  boxplot(scaled_expr_DEG_list[[cl]],
+          main = paste0(cl, " (", nrow(scaled_expr_DEG_list[[cl]]), ")"))
+```
+
+```{r}
+# Define a color palette for each organ
+organ_colors <- c("red", "orange", "yellow", "green", "blue", "purple", "pink", "brown")
+
+avg_expr <- sapply(sort(unique(meta$Organ)), function(layer)
+  rowMeans(expr[, which(meta$Organ == layer)]))
+
+avg_expr_DEG_list <- tapply(names(cl_DEG), cl_DEG, function(x) avg_expr[x,])
+scaled_expr_DEG_list <- lapply(avg_expr_DEG_list, function(x) t(scale(t(x))))
+
+layout(matrix(1:8, nrow = 2, byrow = TRUE))
+par(mar = c(2, 2, 2, 2))
+
+# Iterate through clusters and assign colors to boxplots
+for (cl in 1:8) {
+  boxplot(
+    scaled_expr_DEG_list[[cl]],
+    main = paste0(cl, " (", nrow(scaled_expr_DEG_list[[cl]]), ")"),
+    col = organ_colors
+  )
+}
+
+```
+
+
+### K = 10
+```{r}
+cl_DEG <- cutree(hcl_DEG, k = 10)
+heatmap.2(corr_DEG, Rowv = as.dendrogram(hcl_DEG), Colv = as.dendrogram(hcl_DEG), 
+          trace = "none", scale = "none", labRow = NA, labCol = NA, col = viridis,
+          ColSideColors = rainbow(10)[cl_DEG])
+```
+
+
+```{r}
+avg_expr <- sapply(sort(unique(meta$Organ)), function(layer)
+  rowMeans(expr[,which(meta$Organ == layer)]))
+avg_expr_DEG_list <- tapply(names(cl_DEG), cl_DEG, function(x) avg_expr[x,])
+scaled_expr_DEG_list <- lapply(avg_expr_DEG_list, function(x) t(scale(t(x))))
+
+layout(matrix(1:10, nrow = 2, byrow = T))
+par(mar=c(2,2,2,2))
+for(cl in 1:10)
+  boxplot(scaled_expr_DEG_list[[cl]],
+          main = paste0(cl, " (", nrow(scaled_expr_DEG_list[[cl]]), ")"))
+```
+
+
+K=12
+
+```{r}
+cl_DEG <- cutree(hcl_DEG, k = 12)
+heatmap.2(corr_DEG, Rowv = as.dendrogram(hcl_DEG), Colv = as.dendrogram(hcl_DEG), 
+          trace = "none", scale = "none", labRow = NA, labCol = NA, col = viridis,
+          ColSideColors = rainbow(12)[cl_DEG])
+```
+
+```{r}
+avg_expr <- sapply(sort(unique(meta$Organ)), function(layer)
+  rowMeans(expr[,which(meta$Organ == layer)]))
+avg_expr_DEG_list <- tapply(names(cl_DEG), cl_DEG, function(x) avg_expr[x,])
+scaled_expr_DEG_list <- lapply(avg_expr_DEG_list, function(x) t(scale(t(x)))) 
+
+layout(matrix(1:12, nrow = 4, byrow = T))
+par(mar=c(2,2,2,2))
+for(cl in 1:12)
+  boxplot(scaled_expr_DEG_list[[cl]],
+          main = paste0(cl, " (", nrow(scaled_expr_DEG_list[[cl]]), ")"))
+```
+
+
+These are the labels for the clusters:
+```{r}
+unique(cl_DEG[hcl_DEG$order])
+```
+
+cluster 3 has 129 genes that behave in a similar way. cluster 8 has 16 genes that behave in a similar way and so on.
+````{r}
+layout(matrix(1:15, nrow = 3, byrow = T))
+par(mar=c(3,3,3,3))
+for(layer in unique(cl_DEG[hcl_DEG$order]))
+  boxplot(scaled_expr_DEG_list[[layer]],
+          main = paste0(layer, " (", nrow(scaled_expr_DEG_list[[layer]]), ")"))
+```
+
+
+With the above analysis, we have obtained groups of DEGs which show different expression patterns across conditions (cortical layers). Next we need to figure out that those different groups of DEGs mean biologically. 
+Among those methods, DAVID (Database for Annotation, Visualization and Integrated Discovery) is probably the most commonly used tool for biologist to check functional enrichment given a gene list.
+An enrichment of a functional term means higher frequency in the gene list than in the background gene panel. 
+
+cut the dendrogram in the way you can get the blocks of the heat map
+try 5 different options for k
+just make a brave decision - dont over think it, there is not 1 single correct way.
+the 1 is the label for the cluster, 
+```{r}
+write.table(meta_genes[meta_genes$ensembl_gene_id_version %in% names(which(cl_DEG==1)), "ensembl_gene_id"],
+            file = "genes_C1.txt",
+            quote = F, row.names = F, col.names = F)
+write.table(meta_genes[meta_genes$ensembl_gene_id_version %in% names(which(cl_DEG==2)), "ensembl_gene_id"],
+            file = "genes_C2.txt",
+            quote = F, row.names = F, col.names = F)
+write.table(meta_genes[meta_genes$ensembl_gene_id_version %in% names(which(cl_DEG==3)), "ensembl_gene_id"],
+            file = "genes_C3.txt",
+            quote = F, row.names = F, col.names = F)
+write.table(meta_genes[meta_genes$ensembl_gene_id_version %in% names(which(cl_DEG==4)), "ensembl_gene_id"],
+            file = "genes_C4.txt",
+            quote = F, row.names = F, col.names = F)
+write.table(meta_genes[meta_genes$ensembl_gene_id_version %in% names(which(cl_DEG==5)), "ensembl_gene_id"],
+            file = "genes_C5.txt",
+            quote = F, row.names = F, col.names = F)
+write.table(meta_genes[meta_genes$ensembl_gene_id_version %in% names(which(cl_DEG==6)), "ensembl_gene_id"],
+            file = "genes_C6.txt",
+            quote = F, row.names = F, col.names = F)
+write.table(meta_genes[meta_genes$ensembl_gene_id_version %in% names(which(cl_DEG==7)), "ensembl_gene_id"],
+            file = "genes_C7.txt",
+            quote = F, row.names = F, col.names = F)
+write.table(meta_genes[meta_genes$ensembl_gene_id_version %in% names(which(cl_DEG==8)), "ensembl_gene_id"],
+            file = "genes_C8.txt",
+            quote = F, row.names = F, col.names = F)
+
+write.table(meta_genes[meta_genes$expressed, "ensembl_gene_id"],
+            file = "genes_expressed.txt",
+            quote = F, row.names = F, col.names = F)
+```
+
+
+```{r}
+# Assuming 'avg_expr' is your data frame
+write.csv(avg_expr, file = "output_file.csv", row.names = TRUE, col.names = TRUE)
+```
+
+### EXPRESSION OF interesting GENES
+```{r}
+# Create a data frame
+interesting_genes <- data.frame(
+  Gene = c("APOE", "CDX1", "GATA2", "IFNGR"),
+  Br = c(18147.58, 0, 0.143333333, 140.6266667),
+  Hrt = c(1161.753333, 0, 7.193333333, 7.713333333),
+  Kid = c(68.29, 0, 1.69, 0.413333333),
+  LrgI = c(542.4766667, 164.6233333, 0.69, 81.50333333),
+  Liv = c(1927.433333, 0.16, 0.093333333, 8.623333333),
+  Lg = c(97.03666667, 0, 0.103333333, 39.33),
+  SmaI = c(377.5833333, 6.263333333, 0.336666667, 0.856666667),
+  Spl = c(37.71333333, 0, 0.583333333, 2.03)
+)
+
+# Print the data frame
+print(interesting_genes)
+
+```
+
+```{r}
+# Load required library
+library(ggplot2)
+
+# Melt the data frame for easy plotting
+melted_data <- reshape2::melt(interesting_genes, id.vars = "Gene")
+
+# Plot separate barplots for each gene
+ggplot(melted_data, aes(x = variable, y = value, fill = Gene)) +
+  geom_bar(stat = "identity", position = "dodge", color = "black") +
+  labs(title = "Expression Levels of Different genes Across Organs",
+       x = "Organ", y = "Expression Level") +
+  scale_fill_manual(values = c("APOE" = "lightblue", "CDX1" = "lightgreen", "GATA2" = "lightpink", "IFNGR" = "lightyellow")) +
+  facet_wrap(~Gene, scales = "free") +
+  theme_minimal()
+
+```
+
+
+```{r}
+install.packages("ggdist")
+```
