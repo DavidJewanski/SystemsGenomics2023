@@ -1,0 +1,366 @@
+---
+title: "Systems Genomics data analysis pipeline"
+---
+
+# install libraries
+```{r}
+#install.packages(c("tidyverse","ggrepel","BiocManager","pbapply","gplots","msigdbr"))
+#BiocManager::install(c("biomaRt","sva","DESeq2","edgeR"))
+#BiocManager::install("tximport")
+```
+
+# load libraries
+```{r}
+libraries = c("tidyverse","ggrepel","BiocManager","pbapply","gplots","msigdbr", "biomaRt","sva","DESeq2","edgeR", "dplyr", "biomaRt", "tximport")
+lapply(libraries, library, character.only=TRUE)
+library(tximport)
+```
+
+
+
+```{r}
+setwd("/Users/david/Library/CloudStorage/OneDrive-Persönlich/Master ETH/Courses/11_Systems Genomics/project local repository/data")
+#setwd("C:/Users/nicks/Desktop/Systems_Genomics/GitHub David/SystemsGenomics2023/data")
+
+samples <- list.files("rsem_genes_results_trimmed")
+
+expr <- sapply(samples, function(sample){
+  file <- paste0("rsem_genes_results_trimmed/", sample)
+  #print(file)
+  quant <- read.csv(file, sep="\t", header=T)
+  tpm <- setNames(quant$TPM, quant$gene_id)
+  #tpm <- setNames(quant$TPM, quant[,2])
+  return(tpm)
+})
+SRR_codes <- colnames(expr)
+
+ensembl <- useEnsembl(biomart = "ensembl", dataset = "mmusculus_gene_ensembl")
+tx2gene <- getBM(attributes = c("ensembl_transcript_id_version","ensembl_gene_id_version"),
+                     filters = "ensembl_gene_id_version",
+                     values = rownames(expr),
+                     mart = ensembl) %>%
+  dplyr::select(ensembl_transcript_id_version, ensembl_gene_id_version)
+```
+
+
+```{r}
+setwd("/Users/david/Library/CloudStorage/OneDrive-Persönlich/Master ETH/Courses/11_Systems Genomics/project local repository/data")
+#setwd("C:/Users/nicks/Desktop/Systems_Genomics/GitHub David/SystemsGenomics2023/data")
+samples <- list.files("rsem_trimmed_dedup_nextera")
+filtered_samples <- samples[grep("\\.isoforms\\.results$",samples)]# Remove ".genes.results" from all column names
+files_YMP <- file.path(paste0("rsem_trimmed_dedup_nextera/", filtered_samples[1:6]))
+files_aDR <- file.path(paste0("rsem_trimmed_dedup_nextera/", filtered_samples[7:15]))
+txi_YMP <- tximport(files_YMP, type = "rsem", tx2gene = tx2gene)
+txi_aDR <- tximport(files_aDR, type = "rsem", tx2gene = tx2gene)
+
+expr[,15] <- data.frame(txi_aDR)[,9]
+expr_YMP <- expr[,1:6]
+expr_aDR <- expr[,1:15] #only the columns with AL or aDR, 71-79
+```
+
+
+#Read in meta genes
+```{r}
+setwd("/Users/david/Library/CloudStorage/OneDrive-Persönlich/Master ETH/Courses/11_Systems Genomics/project local repository/data")
+#setwd("C:/Users/nicks/Desktop/Systems_Genomics/GitHub David/SystemsGenomics2023/data")
+
+meta2 <- read.csv("SRR_Acc_List.txt", sep="\t", header=T) %>%
+  inner_join(read.csv("PRJNA875066 Metadata.txt", header=T),
+    by = c("Name" = "Run"),
+    suffix = c("",".y"))
+
+meta1 <- read.csv("SRR_Acc_List.txt", sep="\t", header=T) %>%
+  inner_join(read.csv("PRJNA946653 Metadata.txt", header=T),
+    by = c("Name" = "Run"),
+    suffix = c("",".y")) 
+
+meta1_aDR <- meta1 %>% filter(treatment == "AL" | treatment == "aDR" )
+meta1_YMP <- meta1 %>% filter(treatment == "YMP" | treatment == "PBS" )
+
+print(setdiff(colnames(meta1),colnames(meta2)))
+
+meta1$sex <- as.factor(meta1$sex)
+meta1$treatment <- as.factor(meta1$treatment)
+summary(meta1$sex)
+summary(meta1$treatment)
+
+#expr <- expr[,meta$Name] #to make sure the columns of the expression matrix are in the same order as rows in the metadata
+```
+
+
+#More information about genes with biomaRt (p. 42)
+```{r}
+#listDatasets(useEnsembl(biomart = "ensembl")) %>% filter(dataset == "mmusculus_gene_ensembl") #Is this the correct one?
+
+library(biomaRt)
+
+ensembl <- useEnsembl(biomart = "ensembl", dataset = "mmusculus_gene_ensembl")
+meta_genes <- getBM(attributes = c("ensembl_gene_id",
+                                   "ensembl_gene_id_version",
+                                   "ensembl_transcript_id_version",
+                                   "hgnc_symbol",
+                                   "mgi_symbol",
+                                   "description",
+                                   "chromosome_name",
+                                   "start_position",
+                                   "end_position",
+                                   "strand"),
+                    filters = "ensembl_gene_id_version",
+                    values = rownames(expr),
+                    mart = ensembl) %>%
+right_join(data.frame(ensembl_gene_id_version = rownames(expr)), by = "ensembl_gene_id_version") %>% distinct(ensembl_gene_id_version, .keep_all = TRUE)
+
+#expr_test <- expr[meta_genes$ensembl_transcript_id_version,]
+```
+
+
+#Histograms, filter unexpressed genes
+```{r}
+#print(meta1$Name)
+#print(meta2$Name)
+#print(samples)
+
+dim(expr) #meaning 136424 annotated genes and 15 samples
+
+avg_expr <- rowMeans(expr)
+#layout(matrix(1:2, nrow=1))
+hist(avg_expr)
+hist(log10(avg_expr + 1))
+
+library(ggplot2)
+ggplot(data.frame(avg_expr), aes(x=avg_expr)) +
+geom_histogram(bins = 50) +
+scale_x_continuous(breaks = c(0,1,10,100,1000,10000,20000), trans="log1p", expand=c(0,0)) +
+scale_y_continuous(breaks = c(0,1), expand=c(0,0), trans="log1p") +
+theme_minimal() #log transformation of the y axis, visualization purposes
+
+num_det <- rowSums(expr > 0) #check in how many samples each gene is detected.
+hist(num_det)
+#head(num_det)
+
+expressed <- rowMeans(expr > 0) >= 0.5 | rowMeans(expr) >= 1
+head(expressed) #expressed is a vector of booleans
+summary(expressed)
+expr <- expr[which(expressed),]
+dim(expr)
+
+avg_expr <- rowMeans(expr) #now after the filtering
+#layout(matrix(1:2, nrow=1))
+hist(avg_expr)
+hist(log10(avg_expr + 1))
+
+
+meta_genes$expressed <- expressed
+
+
+
+```
+#pairiwse correlation coefficients (p. 46)
+```{r}
+#From here you need meta_genes
+#meta_genes$expressed is expressed
+#meta_genes$expressed
+
+corr_pearson <- cor(log1p(expr))
+corr_spearman <- cor(expr, method = "spearman")
+
+head(corr_pearson)
+head(corr_spearman)
+```
+```{r}
+
+```
+
+
+```{r}
+#Dendrograms
+hcl_pearson <- hclust(as.dist(1 - corr_pearson))
+hcl_spearman <- hclust(as.dist(1 - corr_spearman))
+layout(matrix(1:2,nrow=1))
+plot(hcl_pearson)
+plot(hcl_spearman)
+
+```
+```{r}
+meta1_filtered <- subset(meta1, select = c("Name", "treatment")) #Compare this to dendrogram
+meta1_filtered
+```
+
+```{r}
+#PCA
+pca <- prcomp(log1p(t(expr)), center = TRUE,scale.=TRUE)
+eigs <- pca$sdev^2
+plot(1:length(eigs), eigs)
+
+ggplot(data.frame(pca$x, meta1)) +
+#geom_point(aes(x = PC1, y = PC2, color = Name, shape = treatment),size=5)
+  geom_point(aes(x = PC1, y = PC2, color = treatment),size=5)
+
+```
+
+```{r}
+#Highly variable genes identification (optional). Manual, We don't do it.
+estimate_variability <- function(expr){
+  means <- apply(expr, 1, mean)
+  vars <- apply(expr, 1, var)
+  cv2 <- vars / means^2
+  
+  
+  minMeanForFit <- unname(median(means[which(cv2 > 0.3)]))
+  useForFit <- means >= minMeanForFit
+  fit <- glm.fit(x = cbind(a0 = 1, a1tilde = 1/means[useForFit]),
+    y = cv2[useForFit],
+    family = Gamma(link = "identity"))
+  a0 <- unname(fit$coefficients["a0"])
+  a1 <- unname(fit$coefficients["a1tilde"])
+  
+  
+  xg <- exp(seq(min(log(means[means>0])), max(log(means)), length.out=1000))
+  vfit <- a1/xg + a0
+  df <- ncol(expr) - 1
+  afit <- a1/means+a0
+  varFitRatio <- vars/(afit*means^2)
+  pval <- pchisq(varFitRatio*df,df=df,lower.tail=F)
+  
+  
+  res <- data.frame(mean = means,
+    var = vars,
+    cv2 = cv2,
+    useForFit = useForFit,
+    pval = pval,
+    padj = p.adjust(pval, method="BH"),
+    row.names = rownames(expr))
+  return(res)
+}
+```
+
+
+#DESeq (slide 57)
+```{r}
+library(tidyverse)
+
+
+library(biomaRt)
+ensembl <- useEnsembl(biomart = "ensembl", dataset = "mmusculus_gene_ensembl")
+tx2gene <- getBM(attributes = c("ensembl_transcript_id_version",
+"ensembl_gene_id_version"),
+filters = "ensembl_transcript_id_version",
+values = rownames(expr),
+mart = ensembl) %>%
+dplyr::select(ensembl_transcript_id_version, ensembl_gene_id_version)
+
+unique(tx2gene$ensembl_gene_id_version) %>% length()
+unique(tx2gene$ensembl_transcript_id_version) %>% length()
+
+setwd("C:/Users/nicks/Desktop/Systems_Genomics/GitHub David/SystemsGenomics2023/data")
+library(tximport)
+samples <- list.files("rsem_trimmed_dedup_nextera")
+filtered_samples <- samples[grep("\\.isoforms\\.results$",samples)]
+# Remove ".genes.results" from all column names
+files <- file.path(paste0("rsem_trimmed_dedup_nextera/", filtered_samples))
+files
+txi <- tximport(files, type = "rsem", tx2gene = tx2gene)
+
+library(DESeq2)
+dds <- DESeqDataSetFromTximport(txi,colData = meta1, design = ~ treatment) #maybe include + sex?
+summary(dds)
+rownames(dds) %>% head() #gene_id_versions
+rownames(dds) %>% length() #25095
+
+dds_filtered <- dds[intersect(meta_genes[meta_genes$expressed,2], rownames(dds)),]
+rownames(dds_filtered) %>% length() #16809
+
+
+
+dds_filtered <- DESeq(dds_filtered, test="LRT", reduced= ~ 1) #If only one covariate, use ~1
+
+res_DESeq2 <- results(dds_filtered)
+plot(res_DESeq2$log2FoldChange, res_DESeq2$pvalue)
+
+
+table(p.adjust(res_DESeq2$pvalue, method="BH") < 0.05) #Argumentieren wieso BH correction
+      
+#res_DE %>% filter(gene %in% rownames(res_DESeq2)) %>% pull(padj)< 0.1) #res_DE ist von der manuellen Analyse
+
+#Plot only the significant log2FoldChanges, how?
+```
+
+
+#DESeq aDR/AL
+```{r}
+dds_aDR <- DESeqDataSetFromTximport(txi_aDR, colData = meta1_aDR, design = ~ treatment) #the output we be in gene_ids!
+summary(dds_aDR)
+rownames(dds_aDR) %>% length() #gene_id_versions
+
+dds_filtered_aDR <- dds_aDR[intersect(meta_genes[meta_genes$expressed,2],rownames(dds_aDR)),]
+rownames(dds_filtered_aDR) %>% length() #gene_id_versions
+
+dds_filtered_aDR <- DESeq(dds_filtered_aDR, test="LRT", reduced= ~ 1) #If only one covariate, use ~1
+
+res_DESeq2_aDR <- results(dds_filtered_aDR)
+#plot(res_DESeq2_aDR$log2FoldChange, res_DESeq2_aDR$pvalue)
+plot(res_DESeq2_aDR$log2FoldChange, -log10(res_DESeq2_aDR$pvalue))
+
+table(p.adjust(res_DESeq2_aDR$pvalue, method="BH") < 0.05) #Argumentieren wieso BH correction
+
+#plot(res_DESeq2_aDR$log2FoldChange, p.adjust(res_DESeq2_aDR$pvalue, method = "BH"))
+plot(res_DESeq2_aDR$log2FoldChange, -log10(p.adjust(res_DESeq2_aDR$pvalue)), method = "BH")
+```
+#DESeq YMP
+
+#Grouping of identified genes (p. 59)
+```{r}
+sum(is.na(res_DESeq2_aDR$pvalue))
+sum(is.na(res_DESeq2_aDR$log2FoldChange))
+res_DESeq2_aDR <- data.frame(res_DESeq2_aDR)
+res_DESeq2_aDR$pvalue_BH <- p.adjust(res_DESeq2_aDR$pvalue, method="BH")
+
+DEG_aDR <- res_DESeq2_aDR[res_DESeq2_aDR$pvalue_BH < 0.05,] #filter to only have significant data
+DEG_aDR <- na.omit(DEG_aDR) 
+DEG_aDR <- rownames(DEG_aDR) #extract rownames (names of gene id's)
+DEG_aDR %>% head()
+
+levels(meta1_aDR$treatment)
+
+avg_expr_aDR <- sapply(sort(unique(meta1_aDR$treatment)), function(treatment)
+rowMeans(expr_aDR[,which(meta1_aDR$treatment == treatment)])) #V1: aDR, V2: AL
+head(avg_expr_aDR)
+
+avg_expr_aDR <- data.frame(avg_expr_aDR)
+
+
+max_treatment_DEG_aDR <- setNames(colnames(avg_expr_aDR)[apply(avg_expr_aDR[DEG_aDR,], 1, which.max)],DEG_aDR)
+table(max_treatment_DEG)
+```
+
+```{r}
+avg_expr_DEG_list_aDR <- tapply(names(max_treatment_DEG_aDR), max_treatment_DEG_aDR, function(x) avg_expr_aDR[x,])
+avg_expr_DEG_list_aDR_df_up <- data.frame(avg_expr_DEG_list_aDR[1])
+avg_expr_DEG_list_aDR_df_up_scale <- scale(avg_expr_DEG_list_aDR_df_up)
+avg_expr_DEG_list_aDR_df_down <- data.frame(avg_expr_DEG_list_aDR[2])
+
+avg_expr_DEG_list_aDR_df[2,1]
+scaled_expr_DEG_list_aDR <- lapply(avg_expr_DEG_list_aDR, function(x) t(scale(t(x)))) # scaling converts all of the genes into one value instead of a normalized distribtion
+layout(matrix(1:2, nrow = 1, byrow = T))
+par(mar=c(3,3,3,3))
+for(treatment in names(scaled_expr_DEG_list_aDR))
+boxplot(scaled_expr_DEG_list_aDR[[treatment]],
+main = paste0(treatment, " (", nrow(avg_expr_DEG_list_aDR[[treatment]]),")"))
+
+```
+
+#hierarchical clustering of aDR
+```{r}
+#avg_expr <- sapply(sort(unique(meta1_aDR$treatment)), function(layer)
+#  rowMeans(expr[,which(meta$Layer == layer)])) # implemented above
+
+corr_DEG <- cor(t(avg_expr_aDR[DEG_aDR,]), method = "pearson") #avg expr aDr seems to have wrong format. rows and columns in the wrong way? we want cor between genes but get corr between treatments groups
+hcl_DEG <- hclust(as.dist(1 - corr_DEG), method = "complete")
+plot(hcl_DEG, labels = FALSE)
+```
+
+
+
+
+
+
