@@ -6,8 +6,8 @@ title: "Systems Genomics data analysis pipeline"
 ```{r}
 #install.packages(c("tidyverse","ggrepel","BiocManager","pbapply","gplots","msigdbr"))
 #BiocManager::install(c("biomaRt","sva","DESeq2","edgeR","tximport"))
-install.packages(c("pheatmap","RColorBrewer","devEMF", "plotly"))
-BiocManager::install("svglite")
+#install.packages(c("pheatmap","RColorBrewer","devEMF", "plotly"))
+#BiocManager::install("svglite")
 ```
 
 # load libraries
@@ -210,7 +210,7 @@ plot_ly(
 
 ```
 
-```{r}
+```{r, eval=FALSE}
 #Highly variable genes identification (optional). Manual, We don't do it.
 estimate_variability <- function(expr){
   means <- apply(expr, 1, mean)
@@ -247,33 +247,7 @@ estimate_variability <- function(expr){
 ```
 
 
-#DESeq (slide 57)
-```{r}
-# the YMP and aDR treatments must be separately analysed -> skip this code
-
-library(DESeq2)
-dds <- DESeqDataSetFromTximport(txi,colData = meta1, design = ~ treatment) #maybe include + sex?
-
-#summary(dds)
-#rownames(dds) %>% head() #gene_id_versions
-#rownames(dds) %>% length() #25095
-
-dds_filtered <- dds[intersect(meta_genes[meta_genes$expressed,2], rownames(dds)),]
-#rownames(dds_filtered) %>% length() #16809
-
-dds_filtered <- DESeq(dds_filtered, test="LRT", reduced= ~ 1) #If only one covariate, use ~1
-
-res_DESeq2 <- results(dds_filtered)
-plot(res_DESeq2$log2FoldChange, res_DESeq2$pvalue)
-
-
-table(p.adjust(res_DESeq2$pvalue, method="BH") < 0.05) #Argumentieren wieso BH correction
-      
-#res_DE %>% filter(gene %in% rownames(res_DESeq2)) %>% pull(padj)< 0.1) #res_DE ist von der manuellen Analyse
-```
-
-
-#DESeq aDR/AL
+#DESeq aDR/AL (slide 57)
 ```{r}
 dds_aDR <- DESeqDataSetFromTximport(txi_aDR, colData = meta1_aDR, design = ~ treatment) #the output we be in gene_ids!
 #summary(dds_aDR)
@@ -314,6 +288,7 @@ DEG_aDR <- rownames(res_DESeq2_aDR_DEG)
 
 plot <- EnhancedVolcano(res_DESeq2_aDR_fitered,
                 lab = rownames(res_DESeq2_aDR_fitered),
+                labSize = 2,
                 x = "log2FoldChange",
                 y = "pvalue_BH",
                 title = "DEG of DESeq2 aDR/AL",
@@ -329,7 +304,8 @@ plot <- EnhancedVolcano(res_DESeq2_aDR_fitered,
                 arrowheads = FALSE,
                 boxedLabels = FALSE,
                 legendPosition = "top")
-ggsave("Volcano plot aDR_AL DESeq2.svg",plot = plot, width = 8, height = 8, path = "/Users/david/Library/CloudStorage/OneDrive-Persönlich/Master ETH/Courses/11_Systems Genomics/project local repository/plots")
+plot
+#ggsave("Volcano plot aDR_AL DESeq2.svg",plot = plot, width = 8, height = 8, path = "/Users/david/Library/CloudStorage/OneDrive-Persönlich/Master ETH/Courses/11_Systems Genomics/project local repository/plots")
 ```
 #DESeq YMP
 INSERT
@@ -340,26 +316,30 @@ expr_aDR <- expr[,7:15]
 avg_expr_aDR <- sapply(sort(unique(meta1_aDR$treatment)), function(treatment)
 rowMeans(expr_aDR[,which(meta1_aDR$treatment == treatment)])) #V1: aDR, V2: AL
 head(avg_expr_aDR)
-#rowMeans(expr_aDR[c("ENSMUSG00000000001.5","ENSMUSG00000000028.16"),6+which(meta1_aDR$treatment == "aDR")])
+
+
 
 #test, if this code is doing the right thing:
-
+#rowMeans(expr_aDR[c("ENSMUSG00000000001.5","ENSMUSG00000000028.16"),which(meta1_aDR$treatment == "aDR")])
 
 avg_expr_aDR <- data.frame(avg_expr_aDR)
 
 
-max_treatment_DEG_aDR <- setNames(colnames(avg_expr_aDR)[apply(avg_expr_aDR[DEG_aDR,], 1, which.max)],DEG_aDR)
-table(max_treatment_DEG)
+
+table(max_treatment_DEG_aDR)
 ```
 
 ```{r}
+max_treatment_DEG_aDR <- setNames(colnames(avg_expr_aDR)[apply(avg_expr_aDR[DEG_aDR,], 1, which.max)],DEG_aDR)
 avg_expr_DEG_list_aDR <- tapply(names(max_treatment_DEG_aDR), max_treatment_DEG_aDR, function(x) avg_expr_aDR[x,])
-avg_expr_DEG_list_aDR_df_up <- data.frame(avg_expr_DEG_list_aDR[1])
-avg_expr_DEG_list_aDR_df_up_scale <- scale(avg_expr_DEG_list_aDR_df_up)
-avg_expr_DEG_list_aDR_df_down <- data.frame(avg_expr_DEG_list_aDR[2])
+#avg_expr_DEG_list_aDR_df <- data.frame(avg_expr_DEG_list_aDR)
+#avg_expr_DEG_list_aDR_df_up <- data.frame(avg_expr_DEG_list_aDR[1])
+#avg_expr_DEG_list_aDR_df_up_scale <- scale(avg_expr_DEG_list_aDR_df_up)
+#avg_expr_DEG_list_aDR_df_down <- data.frame(avg_expr_DEG_list_aDR[2])
+test <- t(data.frame(avg_expr_DEG_list_aDR[1]))
+#avg_expr_DEG_list_aDR_df[2,1]
 
-avg_expr_DEG_list_aDR_df[2,1]
-scaled_expr_DEG_list_aDR <- lapply(avg_expr_DEG_list_aDR, function(x) t(scale(t(x)))) # scaling converts all of the genes into one value instead of a normalized distribtion
+scaled_expr_DEG_list_aDR <- lapply(avg_expr_DEG_list_aDR, function(x) t(scale(t(x),scale = FALSE))) # scaling converts all of the genes into one value instead of a normalized distribtion
 layout(matrix(1:2, nrow = 1, byrow = T))
 par(mar=c(3,3,3,3))
 for(treatment in names(scaled_expr_DEG_list_aDR))
@@ -374,6 +354,7 @@ main = paste0(treatment, " (", nrow(avg_expr_DEG_list_aDR[[treatment]]),")"))
 #  rowMeans(expr[,which(meta$Layer == layer)])) # implemented above
 
 corr_DEG <- cor(t(avg_expr_aDR[DEG_aDR,]), method = "pearson") #avg expr aDr seems to have wrong format. rows and columns in the wrong way? we want cor between genes but get corr between treatments groups
+pheatmap(corr_DEG)
 hcl_DEG <- hclust(as.dist(1 - corr_DEG), method = "complete")
 plot(hcl_DEG, labels = FALSE)
 ```
