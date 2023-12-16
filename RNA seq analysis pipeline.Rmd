@@ -59,8 +59,6 @@ txi_YMP <- tximport(files_YMP, type = "rsem", tx2gene = tx2gene)
 txi_aDR <- tximport(files_aDR, type = "rsem", tx2gene = tx2gene)
 
 expr[,15] <- data.frame(txi_aDR)[,9] # this code recovers the broken dataset from mouse 79
-expr_YMP <- expr[,1:6]
-expr_aDR <- expr[,1:15] #only the columns with AL or aDR, 71-79
 ```
 
 
@@ -162,8 +160,6 @@ meta_genes$expressed <- expressed
 corr_pearson <- cor(log1p(expr))
 corr_spearman <- cor(expr, method = "spearman")
 
-#head(corr_pearson)
-#head(corr_spearman)
 #pheatmap(corr_pearson)
 plot <- pheatmap((corr_spearman), color = colorRampPalette(c((brewer.pal(n = 9, name = "YlGnBu"))))(100),  # custom color palette YlGnBu
          display_numbers = T,
@@ -171,6 +167,8 @@ plot <- pheatmap((corr_spearman), color = colorRampPalette(c((brewer.pal(n = 9, 
          number_format = "%.2f")
 plot
 #ggsave("spearman correlation of treated mice.svg",plot = plot, width = 9, height = 6, path = "/Users/david/Library/CloudStorage/OneDrive-Persönlich/Master ETH/Courses/11_Systems Genomics/project local repository/plots")
+
+
 
 #Dendrograms
 #hcl_pearson <- hclust(as.dist(1 - corr_pearson))
@@ -272,8 +270,6 @@ plot(res_DESeq2$log2FoldChange, res_DESeq2$pvalue)
 table(p.adjust(res_DESeq2$pvalue, method="BH") < 0.05) #Argumentieren wieso BH correction
       
 #res_DE %>% filter(gene %in% rownames(res_DESeq2)) %>% pull(padj)< 0.1) #res_DE ist von der manuellen Analyse
-
-#Plot only the significant log2FoldChanges, how?
 ```
 
 
@@ -291,7 +287,7 @@ rownames(dds_filtered_aDR) %>% length() #gene_id_versions
 
 dds_filtered_aDR <- DESeq(dds_filtered_aDR, test="LRT", reduced= ~ 1) #If only one covariate, use ~1
 
-res_DESeq2_aDR <- results(dds_filtered_aDR) # 25649 genes, same amount as
+res_DESeq2_aDR <- results(dds_filtered_aDR) # 25649 genes, same amount
 res_DESeq2_aDR <- data.frame(res_DESeq2_aDR) 
 res_DESeq2_aDR$pvalue_BH <- p.adjust(res_DESeq2_aDR$pvalue, method="BH") #Argumentieren wieso BH correction
 res_DESeq2_aDR$minuslog10_pvalue_BH <- -log10(res_DESeq2_aDR$pvalue_BH)
@@ -340,11 +336,14 @@ INSERT
 
 #Grouping of identified genes (p. 59)
 ```{r}
-
+expr_aDR <- expr[,7:15]
 avg_expr_aDR <- sapply(sort(unique(meta1_aDR$treatment)), function(treatment)
 rowMeans(expr_aDR[,which(meta1_aDR$treatment == treatment)])) #V1: aDR, V2: AL
 head(avg_expr_aDR)
 #rowMeans(expr_aDR[c("ENSMUSG00000000001.5","ENSMUSG00000000028.16"),6+which(meta1_aDR$treatment == "aDR")])
+
+#test, if this code is doing the right thing:
+
 
 avg_expr_aDR <- data.frame(avg_expr_aDR)
 
