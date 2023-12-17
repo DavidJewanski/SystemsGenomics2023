@@ -25,6 +25,9 @@ pwd <- "/Users/valentin/Documents/ETH/Master Biotechnologie/Lectures/Sytems_Geno
 ```
 
 # Nextera trimmed
+
+## Import of data & comparison initial transcriptome analysis
+### Import Gene expression quantification (p. 41)
 ```{r, warning=FALSE}
 #setwd("/Users/david/Library/CloudStorage/OneDrive-Persönlich/Master ETH/Courses/11_Systems Genomics/project local repository/data")
 #setwd("C:/Users/nicks/Desktop/Systems_Genomics/GitHub David/SystemsGenomics2023/data")
@@ -46,7 +49,7 @@ colnames(expr) <- SRR_codes
 
 
 
-#Read in meta genes
+### Import metadata for mandatory (meta1) and optional (meta2) dataset (p. 41)
 ```{r, warning=FALSE}
 setwd(pwd)
 
@@ -75,7 +78,7 @@ summary(meta1_filtered$treatment)
 ```
 
 
-#More information about genes with biomaRt (p. 42)
+### Get more more information about genes with biomaRt (p. 42)
 ```{r}
 #listDatasets(useEnsembl(biomart = "ensembl")) %>% filter(dataset == "mmusculus_gene_ensembl") #Is this the correct one?
 
@@ -101,7 +104,8 @@ right_join(data.frame(ensembl_gene_id_version = rownames(expr)), by = "ensembl_g
 ```
 
 
-#Histograms, filter unexpressed genes
+### Comparison of transcriptome profiles 
+#### Histograms, filtering unexpressed genes (p. 43-45)
 ```{r}
 # dim(expr) # 56884 annotated genes and 15 samples
 avg_expr <- rowMeans(expr)
@@ -136,7 +140,7 @@ hist(log10(avg_expr + 1))
 
 meta_genes$expressed <- expressed
 ```
-#pairiwse correlation coefficients (p. 46)
+#### PCC & SCC (correlation coefficients, cluster dendorgrams, heatmap of samples) (p. 46)
 ```{r, fig.width=9}
 #From here you need meta_genes
 #meta_genes$expressed is expressed
@@ -164,7 +168,7 @@ plot
 
 ```
 
-#PCA
+#### PCA
 ```{r}
 pca <- prcomp(log1p(t(expr)), center = TRUE,scale.=TRUE)
 variances <- pca$sdev^2
@@ -193,7 +197,7 @@ plot_ly(
   )
 
 ```
-# batch effect correction? --> probbaly does not make sense as we do not have different layers
+##### batch effect correction? --> probbaly does not make sense as we do not have different layers
 ```{r}
 library(sva)
 expr_combat <- ComBat_seq(counts = expr,
@@ -209,9 +213,7 @@ ggplot(data.frame(pca_combat$x, meta1)) +
   geom_point(aes(x = PC1, y = PC2, color = Layer, shape = Name), size = 5)
 ```
 
-
-
-
+##### Highly variable genes identification (optional)
 ```{r, eval=FALSE}
 #Highly variable genes identification (optional). Manual, We don't do it.
 estimate_variability <- function(expr){
@@ -248,9 +250,11 @@ estimate_variability <- function(expr){
 }
 ```
 
-#DESeq 2
 
-## Getting isoforms information for DeSeq2
+
+## DESeq 2 (Differential expression Analysis)
+
+### Getting isoforms information for DeSeq2
 ```{r, warning=FALSE}
 ensembl <- useEnsembl(biomart = "ensembl", dataset = "mmusculus_gene_ensembl")
 tx2gene <- getBM(attributes = c("ensembl_transcript_id_version","ensembl_gene_id_version"),
@@ -259,7 +263,6 @@ tx2gene <- getBM(attributes = c("ensembl_transcript_id_version","ensembl_gene_id
                      mart = ensembl) %>%
   dplyr::select(ensembl_transcript_id_version, ensembl_gene_id_version)
 ```
-
 
 ```{r, warning=FALSE}
 setwd(pwd)
@@ -274,7 +277,7 @@ txi_aDR <- tximport(files_aDR, type = "rsem", tx2gene = tx2gene)
 #expr[,15] <- data.frame(txi_aDR)[,9] # this code recovers the broken dataset from mouse 79
 ```
 
-# DESeq aDR/AL (slide 57)
+### DESeq aDR/AL (slide 57)
 ```{r}
 dds_aDR <- DESeqDataSetFromTximport(txi_aDR, colData = meta1_aDR, design = ~ treatment) #the output we be in gene_ids!
 #summary(dds_aDR)
@@ -305,7 +308,7 @@ res_DESeq2_aDR_DEG <- res_DESeq2_aDR_fitered[res_DESeq2_aDR_fitered$pvalue_BH < 
 DEG_aDR <- rownames(res_DESeq2_aDR_DEG)
 ```
 
-## Volcano Plot
+#### Volcano Plot
 ```{r, fig.width=7, fig.height=7}
 #plot(res_DESeq2_aDR$log2FoldChange, p.adjust(res_DESeq2_aDR$pvalue, method = "BH"))
 #plot(res_DESeq2_aDR$log2FoldChange, -log10(p.adjust(res_DESeq2_aDR$pvalue)), method = "BH")
@@ -335,7 +338,7 @@ plot
 #ggsave("Volcano plot aDR_AL DESeq2.svg",plot = plot, width = 8, height = 8, path = "/Users/david/Library/CloudStorage/OneDrive-Persönlich/Master ETH/Courses/11_Systems Genomics/project local repository/plots")
 ```
 
-## Grouping of identified genes (p. 59)
+#### Grouping of identified genes (p. 59)
 ```{r}
 expr_aDR <- expr[,7:15]
 avg_expr_aDR <- sapply(sort(unique(meta1_aDR$treatment)), function(treatment)
@@ -370,7 +373,7 @@ main = paste0(treatment, " (", nrow(avg_expr_DEG_list_aDR[[treatment]]),")"))
 
 ```
 
-## hierarchical clustering of aDR GENES (MICE is below in a new chunk)
+#### hierarchical clustering of aDR GENES (MICE is below in a new chunk)
 ```{r}
 #corr_DEG_mice <- cor(expr_aDR[DEG_aDR,], method = "spearman")
 corr_DEG_genes <- cor(t(expr_aDR[DEG_aDR,]), method = "spearman")
@@ -391,7 +394,7 @@ heatmap.2(corr_DEG_genes, Rowv = as.dendrogram(hcl_DEG_genes), Colv = as.dendrog
 trace = "none", scale = "none", labRow = NA, labCol = NA, col = viridis,
 ColSideColors = rainbow(15)[cl_DEG_genes]) 
 ```
-## hierarchical clustering of aDR MICE (GENES is above)
+#### hierarchical clustering of aDR MICE (GENES is above)
 ```{r}
 corr_DEG_mice <- cor(expr_aDR[DEG_aDR,], method = "spearman")
 #corr_DEG_genes <- cor(t(expr_aDR[DEG_aDR,]), method = "spearman")
@@ -413,7 +416,7 @@ trace = "none", scale = "none", labRow = NA, labCol = NA, col = viridis,
 ColSideColors = rainbow(15)[cl_DEG_mice]) 
 ```
 
-#3-6 Making sense of the genes (page 66)
+#### 3-6 Making sense of the genes (page 66)
 ```{r}
 #aDR
 
@@ -435,7 +438,8 @@ file = "genes_expressed.txt",
 quote = F, row.names = F, col.names = F) #All expressed genes (background gene panel)
 
 ```
-#Enrichment analysis (page 70)
+
+#### Enrichment analysis (page 70)
 ```{r}
 DE_L4 <- DE_test(expr = expr[meta_genes$expressed,],
 cond = meta$Layer == "L4",
@@ -470,7 +474,7 @@ fgsea_kegg[order(NES,decreasing=F),][1:10,1:7]
 
 
 
-# DESeq YMP/PBS (slide 57)
+### DESeq YMP/PBS (slide 57)
 ```{r}
 dds_YMP <- DESeqDataSetFromTximport(txi_YMP, colData = meta1_YMP, design = ~ treatment) #the output we be in gene_ids!
 #summary(dds_aDR)
@@ -501,7 +505,7 @@ res_DESeq2_YMP_DEG <- res_DESeq2_YMP_fitered[res_DESeq2_YMP_fitered$pvalue_BH < 
 DEG_YMP <- rownames(res_DESeq2_YMP_DEG)
 ```
 
-## Volcano Plot
+#### Volcano Plot
 ```{r, fig.width=7, fig.height=7}
 #plot(res_DESeq2_aDR$log2FoldChange, p.adjust(res_DESeq2_aDR$pvalue, method = "BH"))
 #plot(res_DESeq2_aDR$log2FoldChange, -log10(p.adjust(res_DESeq2_aDR$pvalue)), method = "BH")
@@ -532,7 +536,7 @@ plot
 ```
 
 
-##Grouping of identified genes (p. 59)
+#### Grouping of identified genes (p. 59)
 ```{r}
 expr_YMP <- expr[,1:6]
 avg_expr_YMP <- sapply(sort(unique(meta1_YMP$treatment)), function(treatment)
@@ -567,7 +571,7 @@ main = paste0(treatment, " (", nrow(avg_expr_DEG_list_YMP[[treatment]]),")"))
 
 ```
 
-## hierarchical clustering of aDR GENES (MICE is below in a new chunk)
+#### hierarchical clustering of aDR GENES (MICE is below in a new chunk)
 ```{r}
 #corr_DEG_mice <- cor(expr_aDR[DEG_aDR,], method = "spearman")
 corr_DEG_genes <- cor(t(expr_YMP[DEG_YMP,]), method = "spearman")
@@ -588,7 +592,7 @@ heatmap.2(corr_DEG_genes, Rowv = as.dendrogram(hcl_DEG_genes), Colv = as.dendrog
 trace = "none", scale = "none", labRow = NA, labCol = NA, col = viridis,
 ColSideColors = rainbow(15)[cl_DEG_genes]) 
 ```
-## hierarchical clustering of aDR MICE (GENES is above)
+#### hierarchical clustering of aDR MICE (GENES is above)
 ```{r}
 corr_DEG_mice <- cor(expr_YMP[DEG_YMP,], method = "spearman")
 #corr_DEG_genes <- cor(t(expr_aDR[DEG_aDR,]), method = "spearman")
@@ -613,5 +617,5 @@ ColSideColors = rainbow(15)[cl_DEG_mice])
 
 
 
-#3.7 Other analysis (page 72)
+## 3.7 Other analysis (page 72)
 
