@@ -394,6 +394,8 @@ ColSideColors = rainbow(15)[cl_DEG_mice])
 
 #3-6 Making sense of the genes (page 66)
 ```{r}
+#aDR
+
 #Convert list of DEG's into a format that you can upload into DAVID.
 #Think of what cluster of genes we want to analyze!
 #write.table(meta_genes[meta_genes$ensembl_gene_id_version %in% names(which(cl_DEG==2)), "ensembl_gene"], file = "genes_C2.txt",quote = F, row.names = F, col.names = F) #DEG's
@@ -401,7 +403,6 @@ ColSideColors = rainbow(15)[cl_DEG_mice])
 #Convert DEG gene id versions to gene id (this is what DAVID wants)
 # Remove everything after the dot
 DEG_aDR_gene_id <- sub("\\..*", "", DEG_aDR)
-
 
 
 write.table(DEG_aDR_gene_id,
