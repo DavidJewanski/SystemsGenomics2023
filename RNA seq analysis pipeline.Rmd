@@ -6,8 +6,8 @@ title: "Systems Genomics data analysis pipeline"
 ```{r}
 #install.packages(c("tidyverse","ggrepel","BiocManager","pbapply","gplots","msigdbr"))
 #BiocManager::install(c("biomaRt","sva","DESeq2","edgeR","tximport"))
-install.packages(c("pheatmap","RColorBrewer","devEMF", "plotly"))
-BiocManager::install(c("svglite", "fgsea"))
+#install.packages(c("pheatmap","RColorBrewer","devEMF", "plotly"))
+#BiocManager::install(c("svglite", "fgsea"))
 
 ```
 
@@ -53,10 +53,10 @@ tx2gene <- getBM(attributes = c("ensembl_transcript_id_version","ensembl_gene_id
 #setwd("/Users/david/Library/CloudStorage/OneDrive-Persönlich/Master ETH/Courses/11_Systems Genomics/project local repository/data")
 setwd("C:/Users/nicks/Desktop/Systems_Genomics/GitHub David/SystemsGenomics2023/data")
 
-#samples <- list.files("rsem_trimmed_dedup_nextera") #Hier sollten isoforms sein! nicht dedup nextera!
+samples <- list.files("rsem_isoforms_results_trimmed") #Hier sollten isoforms sein! nicht dedup nextera!
 filtered_samples <- samples[grep("\\.isoforms\\.results$",samples)]# Remove ".genes.results" from all column names
-files_YMP <- file.path(paste0("rsem_trimmed_dedup_nextera/", filtered_samples[1:6]))
-files_aDR <- file.path(paste0("rsem_trimmed_dedup_nextera/", filtered_samples[7:15]))
+files_YMP <- file.path(paste0("rsem_isoforms_results_trimmed/", filtered_samples[1:6]))
+files_aDR <- file.path(paste0("rsem_isoforms_results_trimmed/", filtered_samples[7:15]))
 txi_YMP <- tximport(files_YMP, type = "rsem", tx2gene = tx2gene)
 txi_aDR <- tximport(files_aDR, type = "rsem", tx2gene = tx2gene)
 
@@ -181,9 +181,8 @@ plot
 
 ```
 
-
-```{r}
 #PCA
+```{r}
 pca <- prcomp(log1p(t(expr)), center = TRUE,scale.=TRUE)
 variances <- pca$sdev^2
 
@@ -191,9 +190,9 @@ variance_proportion <- variances / sum(variances)
 cumulative_variance <- cumsum(variance_proportion)
 
 
-#ggplot(data.frame(pca$x, meta1)) +
+ggplot(data.frame(pca$x, meta1)) +
 #geom_point(aes(x = PC1, y = PC2, color = Name, shape = treatment),size=5)
-#  geom_point(aes(x = PC1, y = PC2, color = treatment),size=5)
+geom_point(aes(x = PC1, y = PC2, color = treatment),size=5)
 
 plot_ly(
   x = pca$x[,1],
@@ -355,19 +354,57 @@ main = paste0(treatment, " (", nrow(avg_expr_DEG_list_aDR[[treatment]]),")"))
 #avg_expr <- sapply(sort(unique(meta1_aDR$treatment)), function(layer)
 #  rowMeans(expr[,which(meta$Layer == layer)])) # implemented above
 
-corr_DEG <- cor(t(avg_expr_aDR[DEG_aDR,]), method = "pearson") #avg expr aDr seems to have wrong format. rows and columns in the wrong way? we want cor between genes but get corr between treatments groups
-pheatmap(corr_DEG)
+#corr_DEG <- cor(t(avg_expr_aDR[DEG_aDR,]), method = "spearman")
+corr_DEG_mice <- cor(expr_aDR[DEG_aDR,], method = "spearman")
+corr_DEG_genes <- cor(t(expr_aDR[DEG_aDR,]), method = "spearman")
+
+#avg expr aDr seems to have wrong format. rows and columns in the wrong way? we want cor between genes but get corr between treatments groups
+#corr_DEG <- cor(avg_expr_aDR[DEG_aDR,], method = "spearman")
+
+
+
+#corr_pearson <- cor(log1p(expr))
+#corr_spearman <- cor(expr, method = "spearman")
+library(pheatmap)
+
+pheatmap(corr_DEG_mice)
 hcl_DEG <- hclust(as.dist(1 - corr_DEG), method = "complete")
+hcl_DEG_genes <- hclust(as.dist(1 - corr_DEG_genes), method = "complete")
+
 plot(hcl_DEG, labels = FALSE)
+
+#Virdis color palette
+install.packages("viridis")
+library(viridis)
+heatmap.2(corr_DEG, Rowv = as.dendrogram(hcl_DEG), Colv = as.dendrogram(hcl_DEG),
+trace = "none", scale = "none", labRow = NA, labCol = NA, col = viridis)
+
+cl_DEG <- cutree(hcl_DEG, k = 2)
+heatmap.2(corr_DEG, Rowv = as.dendrogram(hcl_DEG), Colv = as.dendrogram(hcl_DEG),
+trace = "none", scale = "none", labRow = NA, labCol = NA, col = viridis,
+ColSideColors = rainbow(15)[cl_DEG])
+
+cl_DEG <- cutree(hcl_DEG_genes, k = 10)
+heatmap.2(corr_DEG_genes, Rowv = as.dendrogram(hcl_DEG_genes), Colv = as.dendrogram(hcl_DEG_genes),
+trace = "none", scale = "none", labRow = NA, labCol = NA, col = viridis,
+ColSideColors = rainbow(15)[cl_DEG])
 ```
 
 #3-6 Making sense of the genes (page 66)
 ```{r}
-#Convert list a DEG's into a format that you can upload into DAVID.
+#Convert list of DEG's into a format that you can upload into DAVID.
 #Think of what cluster of genes we want to analyze!
-write.table(meta_genes[meta_genes$ensembl_gene_id_version %in% names(which(cl_DEG==2)), "ensembl_gene"],
+#write.table(meta_genes[meta_genes$ensembl_gene_id_version %in% names(which(cl_DEG==2)), "ensembl_gene"], file = "genes_C2.txt",quote = F, row.names = F, col.names = F) #DEG's
+
+#Convert DEG gene id versions to gene id (this is what DAVID wants)
+# Remove everything after the dot
+DEG_aDR_gene_id <- sub("\\..*", "", DEG_aDR)
+
+
+
+write.table(DEG_aDR_gene_id,
 file = "genes_C2.txt",
-quote = F, row.names = F, col.names = F) #DEG's
+quote = F, row.names = F, col.names = F) #DEG's, dies ist der Code der meiner Meinung nach Sinn macht.
 
 write.table(meta_genes[meta_genes$expressed, "ensembl_gene_id"],
 file = "genes_expressed.txt",
