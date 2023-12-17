@@ -1,4 +1,4 @@
-Gene Symbol	Gene name\
+Gene_Symbol	Gene_name\
 Aagab	alpha- and gamma-adaptin binding protein\
 Abca8b	ATP-binding cassette, sub-family A (ABC1), member 8b\
 Abca9	ATP-binding cassette, sub-family A (ABC1), member 9\

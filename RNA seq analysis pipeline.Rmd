@@ -15,7 +15,9 @@ title: "Systems Genomics data analysis pipeline"
 ```{r, include=FALSE, }
 libraries = c("tidyverse","ggrepel","BiocManager","pbapply","gplots","msigdbr", "biomaRt","sva","DESeq2","edgeR", "dplyr", "biomaRt", "tximport", "ggplot2", "pheatmap", "RColorBrewer", "svglite","devEMF")
 lapply(libraries, library, character.only=TRUE)
+install.packages("viridis")
 library(stringi)
+library(viridis)
 ```
 
 ```{r}
@@ -30,7 +32,6 @@ pwd <- "/Users/valentin/Documents/ETH/Master Biotechnologie/Lectures/Sytems_Geno
 ### Import Gene expression quantification (p. 41)
 ```{r, warning=FALSE}
 setwd(pwd)
-
 samples <- list.files("rsem_genes_results_trimmed")
 
 expr <- sapply(samples, function(sample){
@@ -86,7 +87,6 @@ ensembl <- useEnsembl(biomart = "ensembl", dataset = "mmusculus_gene_ensembl")
 meta_genes <- getBM(attributes = c("ensembl_gene_id",
                                    "ensembl_gene_id_version",
                                    "ensembl_transcript_id_version",
-                                   "hgnc_symbol",
                                    "mgi_symbol", # appearantly necessary for DEseq
                                    "description",
                                    "chromosome_name",
@@ -100,6 +100,7 @@ right_join(data.frame(ensembl_gene_id_version = rownames(expr)), by = "ensembl_g
 
 #expr_test <- expr[meta_genes$ensembl_transcript_id_version,]
 ```
+
 
 
 ### Comparison of transcriptome profiles 
@@ -340,36 +341,35 @@ plot
 #### Grouping of identified genes (p. 59)
 ```{r}
 expr_aDR <- expr[,7:15]
-avg_expr_aDR <- sapply(sort(unique(meta1_aDR$treatment)), function(treatment)
-rowMeans(expr_aDR[,which(meta1_aDR$treatment == treatment)])) #V1: aDR, V2: AL
-head(avg_expr_aDR)
+treatment_aDR <- sort(unique(meta1_aDR$treatment))
+avg_sc_expr_aDR <- sapply(treatment_aDR, function(treatment)
+  #rowMeans(expr_aDR[,which(meta1_aDR$treatment == treatment)])) #V1: aDR, V2: AL
+  rowMeans(t(scale(t(expr_aDR[,which(meta1_aDR$treatment == treatment)]))))) 
+colnames(avg_sc_expr_aDR) <- treatment_aDR
 
-
-
-#test, if this code is doing the right thing:
-#rowMeans(expr_aDR[c("ENSMUSG00000000001.5","ENSMUSG00000000028.16"),which(meta1_aDR$treatment == "aDR")])
-
-avg_expr_aDR <- data.frame(avg_expr_aDR)
-
+head(avg_sc_expr_aDR)
+avg_sc_expr_aDR <- data.frame(avg_sc_expr_aDR)
 ```
 
 ```{r}
-max_treatment_DEG_aDR <- setNames(colnames(avg_expr_aDR)[apply(avg_expr_aDR[DEG_aDR,], 1, which.max)],DEG_aDR)
-avg_expr_DEG_list_aDR <- tapply(names(max_treatment_DEG_aDR), max_treatment_DEG_aDR, function(x) avg_expr_aDR[x,])
-#avg_expr_DEG_list_aDR_df <- data.frame(avg_expr_DEG_list_aDR)
-#avg_expr_DEG_list_aDR_df_up <- data.frame(avg_expr_DEG_list_aDR[1])
-#avg_expr_DEG_list_aDR_df_up_scale <- scale(avg_expr_DEG_list_aDR_df_up)
-#avg_expr_DEG_list_aDR_df_down <- data.frame(avg_expr_DEG_list_aDR[2])
-test <- t(data.frame(avg_expr_DEG_list_aDR[1]))
-#avg_expr_DEG_list_aDR_df[2,1]
+max_treatment_DEG_aDR <- setNames(colnames(avg_sc_expr_aDR)[apply(avg_sc_expr_aDR[DEG_aDR,], 1, which.max)],DEG_aDR)
+avg_expr_DEG_list_aDR <- tapply(names(max_treatment_DEG_aDR), max_treatment_DEG_aDR, function(x) avg_sc_expr_aDR[x,])
 
-scaled_expr_DEG_list_aDR <- lapply(avg_expr_DEG_list_aDR, function(x) t(scale(t(x),scale = FALSE))) # scaling converts all of the genes into one value instead of a normalized distribtion
+## centered but not scaled
+# scaled_expr_DEG_list_aDR <- lapply(avg_expr_DEG_list_aDR, function(x) t(scale(t(x),scale = FALSE))) # scaling converts all of the genes into one value instead of a normalized distribtion
+# layout(matrix(1:2, nrow = 1, byrow = T))
+# par(mar=c(3,3,3,3))
+# for(treatment in names(scaled_expr_DEG_list_aDR))
+# boxplot(scaled_expr_DEG_list_aDR[[treatment]],
+# main = paste0(treatment, " (", nrow(avg_expr_DEG_list_aDR[[treatment]]),")"))
+
+# centered and scaled
+
 layout(matrix(1:2, nrow = 1, byrow = T))
 par(mar=c(3,3,3,3))
-for(treatment in names(scaled_expr_DEG_list_aDR))
-boxplot(scaled_expr_DEG_list_aDR[[treatment]],
-main = paste0(treatment, " (", nrow(avg_expr_DEG_list_aDR[[treatment]]),")"))
-
+for(treatment in names(avg_expr_DEG_list_aDR))
+  boxplot(avg_expr_DEG_list_aDR[[treatment]],
+          main = paste0(treatment, " (", nrow(avg_expr_DEG_list_aDR[[treatment]]),")"))
 ```
 
 #### hierarchical clustering of aDR GENES (MICE is below in a new chunk)
@@ -425,6 +425,9 @@ ColSideColors = rainbow(15)[cl_DEG_mice])
 
 #Convert DEG gene id versions to gene id (this is what DAVID wants)
 # Remove everything after the dot
+
+setwd(pwd)
+
 DEG_aDR_gene_id <- sub("\\..*", "", DEG_aDR)
 
 
@@ -438,39 +441,141 @@ quote = F, row.names = F, col.names = F) #All expressed genes (background gene p
 
 ```
 
-#### Enrichment analysis (page 70)
+#### Gene Ontology enrichment GORILLA (page 70)
 ```{r}
-DE_L4 <- DE_test(expr = expr[meta_genes$expressed,],
-cond = meta$Layer == "L4",
-ctrl = "FALSE",
-covar = meta %>% dplyr::select(Individual)) %>%
-tibble::rownames_to_column("gene")
-scores <- setNames(sign(log(DE_L4$fc)) * (-log10(DE_L4$pval)),
-setNames(meta_genes$ensembl_gene_id,
-meta_genes$ensembl_gene_id_version)[DE_L4$gene])
-scores_ordered <- sort(scores, decreasing=T)
+# webtool: https://cbl-gorilla.cs.technion.ac.il/
+# using two unranked lists of genes
+setwd("/Users/david/Library/CloudStorage/OneDrive-Persönlich/Master ETH/Courses/11_Systems Genomics/project local repository")
 
+GO_aDR <- read.csv("GOrilla/GO_aDR.csv", header = TRUE, sep = ";")
+GO_aDR <- GO_aDR %>%
+  mutate_at(vars(N, B, n, b, Enrichment), as.numeric)
+GO_aDR$Enrichment <- (GO_aDR$b/GO_aDR$n) / (GO_aDR$B/GO_aDR$N)
+GO_aDR$Genes <- sub("^\\[|\\]$", "", GO_aDR$Genes)
+
+
+myelination <- unlist(str_split(GO_aDR$Genes[1], ","))
+myelination <- gsub("-.*", "", myelination)
+myelination <- gsub(" ", "", myelination)
+myelin_meta <- meta_genes[meta_genes$mgi_symbol %in% myelination ,]
+myelin_expr <- avg_sc_expr_aDR[rownames(expr) %in% myelin_meta$ensembl_gene_id_version,]
+
+pos_cellular_process <- unlist(str_split(GO_aDR$Genes[4], ","))
+pos_cellular_process <- gsub("-.*", "", pos_cellular_process)
+pos_cellular_process <- gsub(" ", "", pos_cellular_process)
+pos_cellular_process <- c(pos_cellular_process, "Prxl2c", "Niban2")
+cell_proc_meta <- meta_genes[meta_genes$mgi_symbol %in% pos_cellular_process ,]
+cell_proc_expr <- avg_sc_expr_aDR[rownames(expr) %in% cell_proc_meta$ensembl_gene_id_version,]
+
+pos_reg_met <- unlist(str_split(GO_aDR$Genes[9], ","))
+pos_reg_met <- gsub("-.*", "", pos_reg_met)
+pos_reg_met <- gsub(" ", "", pos_reg_met)
+reg_met_meta <- meta_genes[meta_genes$mgi_symbol %in% pos_reg_met ,]
+reg_met_expr <- avg_sc_expr_aDR[rownames(expr) %in% reg_met_meta$ensembl_gene_id_version,]
+
+length(intersect(pos_reg_met,pos_cellular_process))# lol, same genes.
+
+meta_genes[!meta_genes$mgi_symbol %in% pos_cellular_process ,]
+pos_cellular_process[!pos_cellular_process %in%  meta_genes$mgi_symbol]
+
+
+meta_genes[meta_genes$ensembl_gene_id == "ENSMUSG00000026796",]
+res_DESeq2_aDR["ENSMUSG00000021482.11",]
+
+max_treatment_DEG_aDR <- setNames(colnames(avg_sc_expr_aDR)[apply(avg_sc_expr_aDR[DEG_aDR,], 1, which.max)],DEG_aDR)
+avg_expr_DEG_list_aDR <- tapply(names(max_treatment_DEG_aDR), max_treatment_DEG_aDR, function(x) avg_sc_expr_aDR[x,])
+
+myelin_list_aDR <- lapply(avg_expr_DEG_list_aDR, function(df) df[rownames(df) %in% myelin_meta$ensembl_gene_id_version,])
+pos_cell_list_aDR <- lapply(avg_expr_DEG_list_aDR, function(df) df[rownames(df) %in% cell_proc_meta$ensembl_gene_id_version,])
+
+layout(matrix(1:1, nrow = 1, byrow = T))
+par(mar=c(3,3,3,3))
+boxplot(myelin_expr,
+        main = paste0("myelination (", nrow(myelin_expr),")"))
+
+layout(matrix(1:2, nrow = 1, byrow = T))
+par(mar=c(3,3,3,3))
+for(treatment in names(pos_cell_list_aDR))
+  boxplot(pos_cell_list_aDR[[treatment]],
+          main = paste0(treatment, " (", nrow(pos_cell_list_aDR[[treatment]]),")"))
+
+
+# layout(matrix(1:4, nrow = 2, byrow = T))
+# par(mar=c(3,3,3,3))
+# for(GOset in c(myelin_list_aDR, pos_cell_list_aDR)) {
+#   for(treatment in names(GOset)) {
+#     boxplot(GOset[[treatment]],
+#             main = paste0(treatment, " (", nrow(GOset[[treatment]]),")"))
+#   }
+# }
+  
+```
+
+
+
+# Gene set Enrichment analysis (page 70)
+```{r, eval=FALSE}
+# sadly no meaningful results
+
+score_aDR <- setNames(sign(res_DESeq2_aDR_DEG$log2FoldChange) * res_DESeq2_aDR_DEG$minuslog10_pvalue_BH, gsub("\\..*","", DEG_aDR))
+score_ordered_aDR <- sort(score_aDR, decreasing=TRUE)
+#BiocManager::install("fgsea")
 library(msigdbr)
-genesets_celltype <- msigdbr(species = "Homo sapiens", category = "C8")
+genesets_celltype <- msigdbr(species = "Mus musculus", category = "H")
+genesets_celltype <- genesets_celltype[!is.na(genesets_celltype$ensembl_gene),] # 32 entries have NA values in ensembl_gene_id
 genesets_celltype_list <- tapply(genesets_celltype$ensembl_gene, genesets_celltype$gs_name, list)
+
+# length(intersect(unique(genesets_celltype$ensembl_gene), names(score_ordered_aDR)))
+
 library(fgsea)
-fgsea_kegg <- fgsea(pathways = genesets_celltype_list,
-stats = scores_ordered,
-minSize = 15,
-maxSize = 500)
-
+fgsea_kegg <- fgsea(pathways = genesets_celltype_list, stats = score_ordered_aDR, minSize = 10, maxSize = 100)
+fgsea_kegg
 fgsea_kegg[order(NES,decreasing=T),][1:10,1:7]
+plotEnrichment(genesets_celltype_list[["MURARO_PANCREAS_DUCTAL_CELL"]],
+score_ordered_aDR) + labs(title="hNbML5 GABAergic neurons")
+#fgsea_kegg[order(NES,decreasing=F),][1:10,1:7]
+```
 
-plotEnrichment(genesets_celltype_list[["MANNO_MIDBRAIN_NEUROTYPES_HNBML5"]],
-scores_ordered) + labs(title="hNbML5 GABAergic neurons")
 
-fgsea_kegg[order(NES,decreasing=F),][1:10,1:7]
+#3.7 Other analysis (page 72)
 
+## Cas genes from paper
+```{r}
+setwd("/Users/david/Library/CloudStorage/OneDrive-Persönlich/Master ETH/Courses/11_Systems Genomics/project local repository")
+CAS_genes_paper <- read.table("data/CAS genes.txt", header = TRUE, sep = "\t")
+#CAS_genes <- meta_genes[meta_genes$mgi_symbol == CAS_genes$Gene_Symbol,]
+
+
+#write.table(CAS_genes$Gene_Symbol, file = "CAS_gene_symbol.txt", quote = F, row.names = F, col.names = F)
+CAS_genes <- read.table("Cas_genes_ensembl.txt", header = TRUE, sep = "\t")
+#CAS_genes <- CAS_genes[ CAS_genes$Symbol %in%  CAS_genes_paper$Gene_Symbol,]
+
+length(unique(CAS_genes$Ensembl.ID))
+#setdiff(CAS_genes$Symbol,CAS_genes_paper$Gene_Symbol))
+
+# how many of the CAS genes are in our DEG?
+common_CAS_DEG_aDR <- intersect(CAS_genes$Ensembl_ID, gsub("\\..*","", DEG_aDR))
+CAS_genes[CAS_genes$Ensembl.ID %in% common_CAS_DEG_aDR,]
 
 
 ```
 
+## Cerebellum Genes
+```{r}
+setwd("/Users/david/Library/CloudStorage/OneDrive-Persönlich/Master ETH/Courses/11_Systems Genomics/project local repository")
+Cereb_paper <- read.table("data/region specific DEG in Cerebellum.txt", header = TRUE, sep = "\t")
 
+#write.table(Cereb_paper$Gene_Symbol, file = "Cereb_paper.txt", quote = F, row.names = F, col.names = F)
+
+Cereb_genes <- read.csv("cereb_genes.csv", header = TRUE, sep = ";")
+
+length(unique(Cereb_genes$Ensembl.ID))
+#setdiff(CAS_genes$Symbol,CAS_genes_paper$Gene_Symbol))
+
+# how many of the CAS genes are in our DEG?
+common_cereb_DEG_aDR <- intersect(Cereb_genes$Ensembl.ID, gsub("\\..*","", DEG_aDR))
+CAS_genes[Cereb_genes$Ensembl.ID %in% common_CAS_DEG_aDR,]
+```
 
 
 ### DESeq YMP/PBS (slide 57)
@@ -1211,4 +1316,9 @@ ColSideColors = rainbow(15)[cl_DEG_mice])
 
 
 ## 3.7 Other analysis (page 72)
+
+
+
+
+
 

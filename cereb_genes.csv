@@ -1,0 +1,396 @@
+Input;Input Type;MGI Gene/Marker ID;Symbol;Name;Feature Type;Ensembl ID
+Aagab;current symbol;MGI:1914189;Aagab;alpha- and gamma-adaptin binding protein;protein coding gene;ENSMUSG00000037257
+Abca8b;current symbol;MGI:1351668;Abca8b;ATP-binding cassette, sub-family A member 8b;protein coding gene;ENSMUSG00000020620
+Abca9;current symbol;MGI:2386796;Abca9;ATP-binding cassette, sub-family A member 9;protein coding gene;ENSMUSG00000041797
+Abcc12;current symbol;MGI:2441679;Abcc12;ATP-binding cassette, sub-family C member 12;protein coding gene;ENSMUSG00000036872
+Abcc8;current symbol;MGI:1352629;Abcc8;ATP-binding cassette, sub-family C member 8;protein coding gene;ENSMUSG00000040136
+Abcf1;current symbol;MGI:1351658;Abcf1;ATP-binding cassette, sub-family F member 1;protein coding gene;ENSMUSG00000038762
+Abhd3;current symbol;MGI:2147183;Abhd3;abhydrolase domain containing 3;protein coding gene;ENSMUSG00000002475
+Acaa2;current symbol;MGI:1098623;Acaa2;acetyl-CoA acyltransferase 2;protein coding gene;ENSMUSG00000036880
+Acbd4;current symbol;MGI:1914381;Acbd4;acyl-Coenzyme A binding domain containing 4;protein coding gene;ENSMUSG00000056938
+Acbd5;current symbol;MGI:1921409;Acbd5;acyl-Coenzyme A binding domain containing 5;protein coding gene;ENSMUSG00000026781
+Acot7;current symbol;MGI:1917275;Acot7;acyl-CoA thioesterase 7;protein coding gene;ENSMUSG00000028937
+Acp5;current symbol;MGI:87883;Acp5;acid phosphatase 5, tartrate resistant;protein coding gene;ENSMUSG00000001348
+Actr10;current symbol;MGI:1891654;Actr10;ARP10 actin-related protein 10;protein coding gene;ENSMUSG00000021076
+Adal;current symbol;MGI:1923144;Adal;adenosine deaminase-like;protein coding gene;ENSMUSG00000027259
+Adamts18;current symbol;MGI:2442600;Adamts18;ADAM metallopeptidase with thrombospondin type 1 motif 18;protein coding gene;ENSMUSG00000053399
+Adamts6;current symbol;MGI:1347348;Adamts6;ADAM metallopeptidase with thrombospondin type 1 motif 6;protein coding gene;ENSMUSG00000046169
+Adgrb2;current symbol;MGI:2451244;Adgrb2;adhesion G protein-coupled receptor B2;protein coding gene;ENSMUSG00000028782
+Adgrl1;current symbol;MGI:1929461;Adgrl1;adhesion G protein-coupled receptor L1;protein coding gene;ENSMUSG00000013033
+Adprhl2;old symbol;MGI:2140364;Adprs;ADP-ribosylserine hydrolase;protein coding gene;ENSMUSG00000042558
+Ahnak2;current symbol;MGI:2144831;Ahnak2;AHNAK nucleoprotein 2;protein coding gene;ENSMUSG00000118667
+Aifm2;current symbol;MGI:1918611;Aifm2;apoptosis-inducing factor, mitochondrion-associated 2;protein coding gene;ENSMUSG00000020085
+Aifm3;current symbol;MGI:1919418;Aifm3;apoptosis-inducing factor, mitochondrion-associated 3;protein coding gene;ENSMUSG00000022763
+Akap17b;current symbol;MGI:2443758;Akap17b;A kinase anchor protein 17B;protein coding gene;ENSMUSG00000059708
+Aldh1l1;current symbol;MGI:1340024;Aldh1l1;aldehyde dehydrogenase 1 family, member L1;protein coding gene;ENSMUSG00000030088
+Aldh2;rat synonym;MGI:1353450;Aldh1a1;aldehyde dehydrogenase family 1, subfamily A1;protein coding gene;ENSMUSG00000053279
+Aldh2;current symbol;MGI:99600;Aldh2;aldehyde dehydrogenase 2, mitochondrial;protein coding gene;ENSMUSG00000029455
+Alg14;current symbol;MGI:1914039;Alg14;asparagine-linked glycosylation 14;protein coding gene;ENSMUSG00000039887
+Amigo2;current symbol;MGI:2145995;Amigo2;adhesion molecule with Ig like domain 2;protein coding gene;ENSMUSG00000048218
+Aox3;current symbol;MGI:1918974;Aox3;aldehyde oxidase 3;protein coding gene;ENSMUSG00000064294
+Apba3;current symbol;MGI:1888527;Apba3;amyloid beta precursor protein binding family A member 3;protein coding gene;ENSMUSG00000004931
+Aph1c;current symbol;MGI:1915568;Aph1c;aph1 homolog C, gamma secretase subunit;protein coding gene;ENSMUSG00000053040
+Api5;current symbol;MGI:1888993;Api5;apoptosis inhibitor 5;protein coding gene;ENSMUSG00000027193
+Apoa1;current symbol;MGI:88049;Apoa1;apolipoprotein A-I;protein coding gene;ENSMUSG00000032083
+Apoc1;current symbol;MGI:88053;Apoc1;apolipoprotein C-I;protein coding gene;ENSMUSG00000040564
+Appl1;current symbol;MGI:1920243;Appl1;adaptor protein, phosphotyrosine interaction, PH domain and leucine zipper containing 1;protein coding gene;ENSMUSG00000040760
+Arhgap15;current symbol;MGI:1923367;Arhgap15;Rho GTPase activating protein 15;protein coding gene;ENSMUSG00000049744
+Arhgap15;rat synonym;MGI:1916903;Arhgap27;Rho GTPase activating protein 27;protein coding gene;ENSMUSG00000034255
+Arhgap27os2;current symbol;MGI:3650160;Arhgap27os2;Rho GTPase activating protein 27, opposite strand 2;antisense lncRNA gene;ENSMUSG00000085360
+Arhgef15;current symbol;MGI:3045246;Arhgef15;Rho guanine nucleotide exchange factor 15;protein coding gene;ENSMUSG00000052921
+Arid4a;current symbol;MGI:2444354;Arid4a;AT-rich interaction domain 4A;protein coding gene;ENSMUSG00000048118
+Arl2;current symbol;MGI:1928393;Arl2;ADP-ribosylation factor-like 2;protein coding gene;ENSMUSG00000024944
+Arl6;current symbol;MGI:1927136;Arl6;ADP-ribosylation factor-like 6;protein coding gene;ENSMUSG00000022722
+Arrdc1;current symbol;MGI:2446136;Arrdc1;arrestin domain containing 1;protein coding gene;ENSMUSG00000026972
+Arsb;current symbol;MGI:88075;Arsb;arylsulfatase B;protein coding gene;ENSMUSG00000042082
+Arsb;human synonym;MGI:1930923;Slurp1;secreted Ly6/Plaur domain containing 1;protein coding gene;ENSMUSG00000022596
+Arxes1;current symbol;MGI:1923469;Arxes1;adipocyte-related X-chromosome expressed sequence 1;protein coding gene;ENSMUSG00000048355
+Arxes1;rat symbol;MGI:1924226;Arxes2;adipocyte-related X-chromosome expressed sequence 2;protein coding gene;ENSMUSG00000048040
+As3mt;current symbol;MGI:1929882;As3mt;arsenite methyltransferase;protein coding gene;ENSMUSG00000003559
+Asb11;rat symbol;MGI:1916549;Asb9;ankyrin repeat and SOCS box-containing 9;protein coding gene;ENSMUSG00000031384
+Asb11;current symbol;MGI:1916104;Asb11;ankyrin repeat and SOCS box-containing 11;protein coding gene;ENSMUSG00000031382
+Asl;human synonym;MGI:103202;Adsl;adenylosuccinate lyase;protein coding gene;ENSMUSG00000022407
+Asl;current symbol;MGI:88084;Asl;argininosuccinate lyase;protein coding gene;ENSMUSG00000025533
+Asnsd1;current symbol;MGI:1917646;Asnsd1;asparagine synthetase domain containing 1;protein coding gene;ENSMUSG00000026095
+Atf1;current symbol;MGI:1298366;Atf1;activating transcription factor 1;protein coding gene;ENSMUSG00000023027
+Atf1;human symbol;MGI:3037720;Atf1-ps;activating transcription factor 1, pseudogene;pseudogene;ENSMUSG00000080968
+Atf1;human synonym;MGI:107430;Gdnf;glial cell line derived neurotrophic factor;protein coding gene;ENSMUSG00000022144
+Atic;current symbol;MGI:1351352;Atic;5-aminoimidazole-4-carboxamide ribonucleotide formyltransferase/IMP cyclohydrolase;protein coding gene;ENSMUSG00000026192
+Atl2;current symbol;MGI:1929492;Atl2;atlastin GTPase 2;protein coding gene;ENSMUSG00000059811
+Atp6v0d2;current symbol;MGI:1924415;Atp6v0d2;ATPase, H+ transporting, lysosomal V0 subunit D2;protein coding gene;ENSMUSG00000028238
+Atp6v1a;current symbol;MGI:1201780;Atp6v1a;ATPase, H+ transporting, lysosomal V1 subunit A;protein coding gene;ENSMUSG00000052459
+Atp8a2;current symbol;MGI:1354710;Atp8a2;ATPase, aminophospholipid transporter-like, class I, type 8A, member 2;protein coding gene;ENSMUSG00000021983
+B3galt1;current symbol;MGI:1349403;B3galt1;UDP-Gal:betaGlcNAc beta 1,3-galactosyltransferase, polypeptide 1;protein coding gene;ENSMUSG00000034780
+Baalc;current symbol;MGI:1928704;Baalc;brain and acute leukemia, cytoplasmic;protein coding gene;ENSMUSG00000022296
+Bbip1;current symbol;MGI:1913610;Bbip1;BBSome interacting protein 1;protein coding gene;ENSMUSG00000084957
+Bbs12;current symbol;MGI:2686651;Bbs12;Bardet-Biedl syndrome 12;protein coding gene;ENSMUSG00000051444
+BC004004;current symbol;MGI:2136782;BC004004;cDNA sequence BC004004;protein coding gene;ENSMUSG00000052712
+BC004004;Genbank;MGI:2136782;BC004004;cDNA sequence BC004004;protein coding gene;ENSMUSG00000052712
+BC005561;old symbol;MGI:3040669;Thoc2l;THO complex subunit 2-like;protein coding gene;ENSMUSG00000097392
+BC005561;Genbank;MGI:3040669;Thoc2l;THO complex subunit 2-like;protein coding gene;ENSMUSG00000097392
+Bdnf;current symbol;MGI:88145;Bdnf;brain derived neurotrophic factor;protein coding gene;ENSMUSG00000048482
+Begain;current symbol;MGI:3044626;Begain;brain-enriched guanylate kinase-associated;protein coding gene;ENSMUSG00000040867
+Bglap;current symbol;MGI:88156;Bglap;bone gamma carboxyglutamate protein;protein coding gene;ENSMUSG00000074483
+Bglap;human symbol;MGI:88157;Bglap2;bone gamma-carboxyglutamate protein 2;protein coding gene;ENSMUSG00000074486
+Bglap;human symbol;MGI:88155;Bglap3;bone gamma-carboxyglutamate protein 3;protein coding gene;ENSMUSG00000074489
+Bivm;current symbol;MGI:2179809;Bivm;basic, immunoglobulin-like variable motif containing;protein coding gene;ENSMUSG00000041684
+Bmp5;current symbol;MGI:88181;Bmp5;bone morphogenetic protein 5;protein coding gene;ENSMUSG00000032179
+Bmpr2;current symbol;MGI:1095407;Bmpr2;bone morphogenetic protein receptor type 2;protein coding gene;ENSMUSG00000067336
+Bri3;current symbol;MGI:1933174;Bri3;brain protein I3;protein coding gene;ENSMUSG00000047843
+Bri3;synonym;MGI:1927594;Itm2c;integral membrane protein 2C;protein coding gene;ENSMUSG00000026223
+Brms1;current symbol;MGI:2388804;Brms1;breast cancer metastasis-suppressor 1;protein coding gene;ENSMUSG00000080268
+Brms1;synonym;MGI:1196337;Brms1l;breast cancer metastasis-suppressor 1-like;protein coding gene;ENSMUSG00000012076
+Btbd11;old symbol;MGI:1921257;Abtb3;ankyrin repeat and BTB domain containing 3;protein coding gene;ENSMUSG00000020042
+Btbd17;current symbol;MGI:1919264;Btbd17;BTB domain containing 17;protein coding gene;ENSMUSG00000000202
+Btbd6;current symbol;MGI:3026623;Btbd6;BTB domain containing 6;protein coding gene;ENSMUSG00000002803
+C2;current symbol;MGI:88226;C2;complement C2;protein coding gene;ENSMUSG00000024371
+C2;human synonym;MGI:107795;Hnrnpc;heterogeneous nuclear ribonucleoprotein C;protein coding gene;ENSMUSG00000060373
+C2;synonym;MGI:1347005;Psma1;proteasome subunit alpha 1;protein coding gene;ENSMUSG00000030751
+Cacna1e;current symbol;MGI:106217;Cacna1e;calcium channel, voltage-dependent, R type, alpha 1E subunit;protein coding gene;ENSMUSG00000004110
+Cacna2d3;current symbol;MGI:1338890;Cacna2d3;calcium channel, voltage-dependent, alpha2/delta subunit 3;protein coding gene;ENSMUSG00000021991
+Cacng4;current symbol;MGI:1859167;Cacng4;calcium channel, voltage-dependent, gamma subunit 4;protein coding gene;ENSMUSG00000020723
+Cast;current symbol;MGI:1098236;Cast;calpastatin;protein coding gene;ENSMUSG00000021585
+Cast;rat synonym;MGI:2151013;Erc1;ELKS/RAB6-interacting/CAST family member 1;protein coding gene;ENSMUSG00000030172
+Cast;synonym;MGI:1098749;Erc2;ELKS/RAB6-interacting/CAST family member 2;protein coding gene;ENSMUSG00000040640
+Cast;human synonym;MGI:1917583;Polr1g;RNA polymerase I subunit G;protein coding gene;ENSMUSG00000047649
+Cav2;current symbol;MGI:107571;Cav2;caveolin 2;protein coding gene;ENSMUSG00000000058
+Cbfb;current symbol;MGI:99851;Cbfb;core binding factor beta;protein coding gene;ENSMUSG00000031885
+Cbfb;rat synonym;MGI:97317;Nfyb;nuclear transcription factor-Y beta;protein coding gene;ENSMUSG00000020248
+Ccdc117;current symbol;MGI:2144383;Ccdc117;coiled-coil domain containing 117;protein coding gene;ENSMUSG00000020482
+Ccdc177;current symbol;MGI:2686414;Ccdc177;coiled-coil domain containing 177;protein coding gene;ENSMUSG00000062961
+Ccdc88c;current symbol;MGI:1915589;Ccdc88c;coiled-coil domain containing 88C;protein coding gene;ENSMUSG00000021182
+Ccdc9b;current symbol;MGI:2685199;Ccdc9b;coiled-coil domain containing 9B;protein coding gene;ENSMUSG00000045838
+Ccl19;current symbol;MGI:1346316;Ccl19;C-C motif chemokine ligand 19;protein coding gene;ENSMUSG00000071005
+Ccl19;human symbol;MGI:1891387;Ccl19-ps1;C-C motif chemokine ligand 19, pseudogene 1;pseudogene;ENSMUSG00000082902
+Ccl19;human symbol;MGI:1891391;Ccl19-ps3;C-C motif chemokine ligand 19, pseudogene 3;pseudogene;ENSMUSG00000094162
+Ccl19;human symbol;MGI:3708691;Ccl19-ps4;C-C motif chemokine ligand 19, pseudogene 4;pseudogene;ENSMUSG00000091938
+Ccl19;human symbol;MGI:3693096;Ccl19-ps5;C-C motif chemokine ligand 19, pseudogene 5;pseudogene;ENSMUSG00000095298
+Ccl19;human symbol;MGI:5434459;Ccl19-ps6;C-C motif chemokine ligand 19, pseudogene 6;pseudogene;ENSMUSG00000118633
+Ccnl1;current symbol;MGI:1922664;Ccnl1;cyclin L1;protein coding gene;ENSMUSG00000027829
+Ccnl1;human synonym;MGI:105380;Mcm2;minichromosome maintenance complex component 2;protein coding gene;ENSMUSG00000002870
+Cd46;current symbol;MGI:1203290;Cd46;CD46 antigen, complement regulatory protein;protein coding gene;ENSMUSG00000016493
+Cd70;current symbol;MGI:1195273;Cd70;CD70 antigen;protein coding gene;ENSMUSG00000019489
+Cda;current symbol;MGI:1919519;Cda;cytidine deaminase;protein coding gene;ENSMUSG00000028755
+Cdc7;current symbol;MGI:1309511;Cdc7;cell division cycle 7;protein coding gene;ENSMUSG00000029283
+Cdh1;current symbol;MGI:88354;Cdh1;cadherin 1;protein coding gene;ENSMUSG00000000303
+Cdh1;zebrafish symbol;MGI:88356;Cdh3;cadherin 3;protein coding gene;ENSMUSG00000061048
+Cdh1;synonym;MGI:1926790;Fzr1;fizzy and cell division cycle 20 related 1;protein coding gene;ENSMUSG00000020235
+Cdk2ap2;current symbol;MGI:1098779;Cdk2ap2;cyclin dependent kinase 2 associated protein 2;protein coding gene;ENSMUSG00000024856
+Cdyl;current symbol;MGI:1339956;Cdyl;chromodomain protein, Y chromosome-like;protein coding gene;ENSMUSG00000059288
+Cemip;current symbol;MGI:2443629;Cemip;cell migration inducing protein, hyaluronan binding;protein coding gene;ENSMUSG00000052353
+Cep95;current symbol;MGI:2443502;Cep95;centrosomal protein 95;protein coding gene;ENSMUSG00000018372
+Cers4;current symbol;MGI:1914510;Cers4;ceramide synthase 4;protein coding gene;ENSMUSG00000008206
+Cfap69;current symbol;MGI:2443778;Cfap69;cilia and flagella associated protein 69;protein coding gene;ENSMUSG00000040473
+Chchd3;current symbol;MGI:1913325;Chchd3;coiled-coil-helix-coiled-coil-helix domain containing 3;protein coding gene;ENSMUSG00000053768
+Chd5;current symbol;MGI:3036258;Chd5;chromodomain helicase DNA binding protein 5;protein coding gene;ENSMUSG00000005045
+Chd5;human synonym;MGI:1918639;Chd6;chromodomain helicase DNA binding protein 6;protein coding gene;ENSMUSG00000057133
+Chd5;synonym;MGI:2136882;Get1;guided entry of tail-anchored proteins factor 1;protein coding gene;ENSMUSG00000023147
+Chd5;human synonym;MGI:2685385;Kalrn;kalirin, RhoGEF kinase;protein coding gene;ENSMUSG00000061751
+Chd9;current symbol;MGI:1924001;Chd9;chromodomain helicase DNA binding protein 9;protein coding gene;ENSMUSG00000056608
+Chmp4c;current symbol;MGI:1913621;Chmp4c;charged multivesicular body protein 4C;protein coding gene;ENSMUSG00000027536
+Chmp5;current symbol;MGI:1924209;Chmp5;charged multivesicular body protein 5;protein coding gene;ENSMUSG00000028419
+Chmp6;current symbol;MGI:3583942;Chmp6;charged multivesicular body protein 6;protein coding gene;ENSMUSG00000025371
+Chst12;current symbol;MGI:1929064;Chst12;carbohydrate sulfotransferase 12;protein coding gene;ENSMUSG00000036599
+Chst5;current symbol;MGI:1931825;Chst5;carbohydrate sulfotransferase 5;protein coding gene;ENSMUSG00000031952
+Chst9;current symbol;MGI:1918617;Chst9;carbohydrate sulfotransferase 9;protein coding gene;ENSMUSG00000047161
+Cisd2;current symbol;MGI:1914256;Cisd2;CDGSH iron sulfur domain 2;protein coding gene;ENSMUSG00000028165
+Clic6;current symbol;MGI:2146607;Clic6;chloride intracellular channel 6;protein coding gene;ENSMUSG00000022949
+Clip1;current symbol;MGI:1928401;Clip1;CAP-GLY domain containing linker protein 1;protein coding gene;ENSMUSG00000049550
+Clk4;current symbol;MGI:1098551;Clk4;CDC like kinase 4;protein coding gene;ENSMUSG00000020385
+Cltb;current symbol;MGI:1921575;Cltb;clathrin light chain B;protein coding gene;ENSMUSG00000047547
+Cmpk2;current symbol;MGI:99830;Cmpk2;cytidine/uridine monophosphate kinase 2;protein coding gene;ENSMUSG00000020638
+Cmtm3;current symbol;MGI:2447162;Cmtm3;CKLF-like MARVEL transmembrane domain containing 3;protein coding gene;ENSMUSG00000031875
+Cnot7;current symbol;MGI:1298230;Cnot7;CCR4-NOT transcription complex, subunit 7;protein coding gene;ENSMUSG00000031601
+Cnpy1;current symbol;MGI:2442451;Cnpy1;canopy FGF signaling regulator 1;protein coding gene;ENSMUSG00000044681
+Cnpy4;current symbol;MGI:1913705;Cnpy4;canopy FGF signaling regulator 4;protein coding gene;ENSMUSG00000036968
+Cntn6;current symbol;MGI:1858223;Cntn6;contactin 6;protein coding gene;ENSMUSG00000030092
+Cobl;current symbol;MGI:105056;Cobl;cordon-bleu WH2 repeat;protein coding gene;ENSMUSG00000020173
+Col13a1;current symbol;MGI:1277201;Col13a1;collagen, type XIII, alpha 1;protein coding gene;ENSMUSG00000058806
+Col23a1;current symbol;MGI:2653243;Col23a1;collagen, type XXIII, alpha 1;protein coding gene;ENSMUSG00000063564
+Col27a1;current symbol;MGI:2672118;Col27a1;collagen, type XXVII, alpha 1;protein coding gene;ENSMUSG00000045672
+Colgalt1;current symbol;MGI:1924348;Colgalt1;collagen beta(1-O)galactosyltransferase 1;protein coding gene;ENSMUSG00000034807
+Cops7a;current symbol;MGI:1349400;Cops7a;COP9 signalosome subunit 7A;protein coding gene;ENSMUSG00000030127
+Cops7a;zebrafish symbol;MGI:1349388;Cops7b;COP9 signalosome subunit 7B;protein coding gene;ENSMUSG00000026240
+Cracr2b;current symbol;MGI:2446129;Cracr2b;calcium release activated channel regulator 2B;protein coding gene;ENSMUSG00000048200
+Cramp1l;old symbol;MGI:1930190;Cramp1;cramped chromatin regulator 1;protein coding gene;ENSMUSG00000038002
+Crocc;current symbol;MGI:3529431;Crocc;ciliary rootlet coiled-coil, rootletin;protein coding gene;ENSMUSG00000040860
+Csmd1;current symbol;MGI:2137383;Csmd1;CUB and Sushi multiple domains 1;protein coding gene;ENSMUSG00000060924
+Csnk1a1;current symbol;MGI:1934950;Csnk1a1;casein kinase 1, alpha 1;protein coding gene;ENSMUSG00000024576
+Csnk1g3;current symbol;MGI:1917675;Csnk1g3;casein kinase 1, gamma 3;protein coding gene;ENSMUSG00000073563
+Ctc1;current symbol;MGI:1916214;Ctc1;CTS telomere maintenance complex component 1;protein coding gene;ENSMUSG00000020898
+Ctnnbl1;current symbol;MGI:1913892;Ctnnbl1;catenin, beta like 1;protein coding gene;ENSMUSG00000027649
+Cxcl12;current symbol;MGI:103556;Cxcl12;C-X-C motif chemokine ligand 12;protein coding gene;ENSMUSG00000061353
+Dbpht2;current symbol;MGI:2679513;Dbpht2;DNA binding protein with his-thr domain;protein coding gene;ENSMUSG00000029878
+Dctn4;current symbol;MGI:1914915;Dctn4;dynactin 4;protein coding gene;ENSMUSG00000024603
+Dcxr;zebrafish symbol;MGI:107200;Cbr2;carbonyl reductase 2;protein coding gene;ENSMUSG00000025150
+Dcxr;current symbol;MGI:1915130;Dcxr;dicarbonyl L-xylulose reductase;protein coding gene;ENSMUSG00000039450
+Ddr2;current symbol;MGI:1345277;Ddr2;discoidin domain receptor family, member 2;protein coding gene;ENSMUSG00000026674
+Ddx39b;current symbol;MGI:99240;Ddx39b;DEAD box helicase 39b;protein coding gene;ENSMUSG00000019432
+Desi2;human synonym;MGI:106313;Desi1;desumoylating isopeptidase 1;protein coding gene;ENSMUSG00000022472
+Desi2;current symbol;MGI:1926075;Desi2;desumoylating isopeptidase 2;protein coding gene;ENSMUSG00000026502
+Dhcr7;current symbol;MGI:1298378;Dhcr7;7-dehydrocholesterol reductase;protein coding gene;ENSMUSG00000058454
+Dhdh;current symbol;MGI:1919005;Dhdh;dihydrodiol dehydrogenase;protein coding gene;ENSMUSG00000011382
+Dhx35;current symbol;MGI:1918965;Dhx35;DEAH-box helicase 35;protein coding gene;ENSMUSG00000027655
+Dipk1c;current symbol;MGI:3041188;Dipk1c;divergent protein kinase domain 1C;protein coding gene;ENSMUSG00000047992
+Dmap1;current symbol;MGI:1913483;Dmap1;DNA methyltransferase 1-associated protein 1;protein coding gene;ENSMUSG00000009640
+Dnajc4;current symbol;MGI:1927346;Dnajc4;DnaJ heat shock protein family (Hsp40) member C4;protein coding gene;ENSMUSG00000024963
+Dnm1l;current symbol;MGI:1921256;Dnm1l;dynamin 1-like;protein coding gene;ENSMUSG00000022789
+Dpf3;current symbol;MGI:1917377;Dpf3;double PHD fingers 3;protein coding gene;ENSMUSG00000021221
+Drosha;current symbol;MGI:1261425;Drosha;drosha, ribonuclease type III;protein coding gene;ENSMUSG00000022191
+Dtna;current symbol;MGI:106039;Dtna;dystrobrevin alpha;protein coding gene;ENSMUSG00000024302
+Ebp;current symbol;MGI:107822;Ebp;EBP cholestenol delta-isomerase;protein coding gene;ENSMUSG00000031168
+Ebp;human synonym;MGI:88151;Glb1;galactosidase, beta 1;protein coding gene;ENSMUSG00000045594
+Ebp;human synonym;MGI:1350923;Sh3d19;SH3 domain protein D19;protein coding gene;ENSMUSG00000028082
+Efhc2;current symbol;MGI:1921655;Efhc2;EF-hand domain (C-terminal) containing 2;protein coding gene;ENSMUSG00000025038
+Egr4;current symbol;MGI:99252;Egr4;early growth response 4;protein coding gene;ENSMUSG00000071341
+Eif3h;current symbol;MGI:1915385;Eif3h;eukaryotic translation initiation factor 3, subunit H;protein coding gene;ENSMUSG00000022312
+Elavl4;current symbol;MGI:107427;Elavl4;ELAV like RNA binding protein 4;protein coding gene;ENSMUSG00000028546
+Elk4;current symbol;MGI:102853;Elk4;ELK4, member of ETS oncogene family;protein coding gene;ENSMUSG00000026436
+Elmo3;current symbol;MGI:2679007;Elmo3;engulfment and cell motility 3;protein coding gene;ENSMUSG00000014791
+Emc1;current symbol;MGI:2443696;Emc1;ER membrane protein complex subunit 1;protein coding gene;ENSMUSG00000078517
+Epha8;current symbol;MGI:109378;Epha8;Eph receptor A8;protein coding gene;ENSMUSG00000028661
+Epor;current symbol;MGI:95408;Epor;erythropoietin receptor;protein coding gene;ENSMUSG00000006235
+Esrrb;current symbol;MGI:1346832;Esrrb;estrogen related receptor, beta;protein coding gene;ENSMUSG00000021255
+Etaa1;current symbol;MGI:1915395;Etaa1;Ewing tumor-associated antigen 1;protein coding gene;ENSMUSG00000016984
+Ets2;current symbol;MGI:95456;Ets2;E26 avian leukemia oncogene 2, 3' domain;protein coding gene;ENSMUSG00000022895
+Prmt9;human synonym;MGI:2147134;Fbxo11;F-box protein 11;protein coding gene;ENSMUSG00000005371
+Prmt9;current symbol;MGI:2142651;Prmt9;protein arginine methyltransferase 9;protein coding gene;ENSMUSG00000037134
+Prr16;current symbol;MGI:1918623;Prr16;proline rich 16;protein coding gene;ENSMUSG00000073565
+Prrt4;current symbol;MGI:2141677;Prrt4;proline-rich transmembrane protein 4;protein coding gene;ENSMUSG00000079654
+Prrx2;current symbol;MGI:98218;Prrx2;paired related homeobox 2;protein coding gene;ENSMUSG00000039476
+Prxl2b;current symbol;MGI:1913719;Prxl2b;peroxiredoxin like 2B;protein coding gene;ENSMUSG00000029059
+Psmb10;current symbol;MGI:1096380;Psmb10;proteasome (prosome, macropain) subunit, beta type 10;protein coding gene;ENSMUSG00000031897
+Ptbp1;current symbol;MGI:97791;Ptbp1;polypyrimidine tract binding protein 1;protein coding gene;ENSMUSG00000006498
+Ptgds;current symbol;MGI:99261;Ptgds;prostaglandin D2 synthase (brain);protein coding gene;ENSMUSG00000015090
+Ptp4a3;current symbol;MGI:1277098;Ptp4a3;protein tyrosine phosphatase 4a3;protein coding gene;ENSMUSG00000059895
+Ptpn4;current symbol;MGI:1099792;Ptpn4;protein tyrosine phosphatase, non-receptor type 4;protein coding gene;ENSMUSG00000026384
+Qprt;current symbol;MGI:1914625;Qprt;quinolinate phosphoribosyltransferase;protein coding gene;ENSMUSG00000030674
+Rab6a;current symbol;MGI:894313;Rab6a;RAB6A, member RAS oncogene family;protein coding gene;ENSMUSG00000030704
+Rad51d;current symbol;MGI:1261809;Rad51d;RAD51 paralog D;protein coding gene;ENSMUSG00000018841
+Radil;current symbol;MGI:2443088;Radil;Ras association and DIL domains;protein coding gene;ENSMUSG00000029576
+Rae1;current symbol;MGI:1913929;Rae1;ribonucleic acid export 1;protein coding gene;ENSMUSG00000027509
+Ramp1;current symbol;MGI:1858418;Ramp1;receptor (calcitonin) activity modifying protein 1;protein coding gene;ENSMUSG00000034353
+Ranbp3l;current symbol;MGI:2444654;Ranbp3l;RAN binding protein 3-like;protein coding gene;ENSMUSG00000048424
+Rap1gap2;current symbol;MGI:3028623;Rap1gap2;RAP1 GTPase activating protein 2;protein coding gene;ENSMUSG00000038807
+Rassf5;human synonym;MGI:2179722;Rassf3;Ras association (RalGDS/AF-6) domain family member 3;protein coding gene;ENSMUSG00000025795
+Rassf5;current symbol;MGI:1926375;Rassf5;Ras association (RalGDS/AF-6) domain family member 5;protein coding gene;ENSMUSG00000026430
+Rassf7;current symbol;MGI:1914235;Rassf7;Ras association (RalGDS/AF-6) domain family (N-terminal) member 7;protein coding gene;ENSMUSG00000038618
+Rbm6;current symbol;MGI:1338037;Rbm6;RNA binding motif protein 6;protein coding gene;ENSMUSG00000032582
+Rcn1;human synonym;MGI:1890564;Rcan1;regulator of calcineurin 1;protein coding gene;ENSMUSG00000022951
+Rcn1;current symbol;MGI:104559;Rcn1;reticulocalbin 1;protein coding gene;ENSMUSG00000005973
+Reep6;current symbol;MGI:1917585;Reep6;receptor accessory protein 6;protein coding gene;ENSMUSG00000035504
+Relt;current symbol;MGI:2443373;Relt;RELT tumor necrosis factor receptor;protein coding gene;ENSMUSG00000008318
+Rgs9;current symbol;MGI:1338824;Rgs9;regulator of G-protein signaling 9;protein coding gene;ENSMUSG00000020599
+Rgs9;human synonym;MGI:2384418;Rgs9bp;regulator of G-protein signalling 9 binding protein;protein coding gene;ENSMUSG00000056043
+Rhof;zebrafish symbol;MGI:108446;Rhod;ras homolog family member D;protein coding gene;ENSMUSG00000041845
+Rhof;current symbol;MGI:1345629;Rhof;ras homolog family member F (in filopodia);protein coding gene;ENSMUSG00000029449
+Rilpl1;current symbol;MGI:1922945;Rilpl1;Rab interacting lysosomal protein-like 1;protein coding gene;ENSMUSG00000029392
+Rin2;current symbol;MGI:1921280;Rin2;Ras and Rab interactor 2;protein coding gene;ENSMUSG00000001768
+Rnasek;current symbol;MGI:106369;Rnasek;ribonuclease, RNase K;protein coding gene;ENSMUSG00000093989
+Rnf182;current symbol;MGI:3045355;Rnf182;ring finger protein 182;protein coding gene;ENSMUSG00000044164
+Rnf19b;current symbol;MGI:1922484;Rnf19b;ring finger protein 19B;protein coding gene;ENSMUSG00000028793
+Rnft1;current symbol;MGI:1924142;Rnft1;ring finger protein, transmembrane 1;protein coding gene;ENSMUSG00000020521
+Rom1;current symbol;MGI:97998;Rom1;rod outer segment membrane protein 1;protein coding gene;ENSMUSG00000071648
+Rorc;current symbol;MGI:104856;Rorc;RAR-related orphan receptor gamma;protein coding gene;ENSMUSG00000028150
+Rpgrip1l;current symbol;MGI:1920563;Rpgrip1l;Rpgrip1-like;protein coding gene;ENSMUSG00000033282
+Rpl22;current symbol;MGI:99262;Rpl22;ribosomal protein L22;protein coding gene;ENSMUSG00000028936
+Rpl32;current symbol;MGI:98038;Rpl32;ribosomal protein L32;protein coding gene;ENSMUSG00000057841
+Rpl32;zebrafish symbol;MGI:98039;Rpl32-ps;ribosomal protein L32, pseudogene;pseudogene;ENSMUSG00000068969
+Rpl32;human symbol;MGI:3644747;Rpl32l;ribosomal protein L32-like;protein coding gene;ENSMUSG00000111356
+Rprml;current symbol;MGI:2144486;Rprml;reprimo-like;protein coding gene;ENSMUSG00000046215
+Rps2;current symbol;MGI:105110;Rps2;ribosomal protein S2;protein coding gene;ENSMUSG00000044533
+Rtel1;current symbol;MGI:2139369;Rtel1;regulator of telomere elongation helicase 1;protein coding gene;ENSMUSG00000038685
+Sacm1l;current symbol;MGI:1933169;Sacm1l;SAC1 suppressor of actin mutations 1-like (yeast);protein coding gene;ENSMUSG00000025240
+Scamp4;current symbol;MGI:1928947;Scamp4;secretory carrier membrane protein 4;protein coding gene;ENSMUSG00000113949
+Scg3;current symbol;MGI:103032;Scg3;secretogranin III;protein coding gene;ENSMUSG00000032181
+Scg3;human synonym;MGI:1346524;Sgcg;sarcoglycan, gamma (dystrophin-associated glycoprotein);protein coding gene;ENSMUSG00000035296
+Sdhaf2;current symbol;MGI:1913322;Sdhaf2;succinate dehydrogenase complex assembly factor 2;protein coding gene;ENSMUSG00000024668
+Sebox;current symbol;MGI:108012;Sebox;SEBOX homeobox;protein coding gene;ENSMUSG00000001103
+Sec62;current symbol;MGI:1916526;Sec62;SEC62 homolog, preprotein translocation;protein coding gene;ENSMUSG00000027706
+Sema7a;current symbol;MGI:1306826;Sema7a;sema domain, immunoglobulin domain (Ig), and GPI membrane anchor, (semaphorin) 7A;protein coding gene;ENSMUSG00000038264
+Serinc1;current symbol;MGI:1926228;Serinc1;serine incorporator 1;protein coding gene;ENSMUSG00000019877
+Serpinb6b;current symbol;MGI:894688;Serpinb6b;serine (or cysteine) peptidase inhibitor, clade B, member 6b;protein coding gene;ENSMUSG00000042842
+Serpinb9;current symbol;MGI:106603;Serpinb9;serine (or cysteine) peptidase inhibitor, clade B, member 9;protein coding gene;ENSMUSG00000045827
+Serpinb9;human symbol;MGI:894668;Serpinb9b;serine (or cysteine) peptidase inhibitor, clade B, member 9b;protein coding gene;ENSMUSG00000021403
+Serpinb9;human symbol;MGI:894669;Serpinb9c;serine (or cysteine) peptidase inhibitor, clade B, member 9c;protein coding gene;ENSMUSG00000021404
+Serpinb9;human symbol;MGI:894667;Serpinb9d;serine (or cysteine) peptidase inhibitor, clade B, member 9d;protein coding gene;ENSMUSG00000054266
+Serpinb9;human symbol;MGI:894672;Serpinb9e;serine (or cysteine) peptidase inhibitor, clade B, member 9e;protein coding gene;ENSMUSG00000062342
+Serpinb9;human symbol;MGI:894671;Serpinb9f;serine (or cysteine) peptidase inhibitor, clade B, member 9f;protein coding gene;ENSMUSG00000038327
+Serpinb9;human symbol;MGI:1919260;Serpinb9g;serine (or cysteine) peptidase inhibitor, clade B, member 9g;protein coding gene;ENSMUSG00000057726
+Serpinb9;human symbol;MGI:3709608;Serpinb9h;serine (or cysteine) peptidase inhibitor, clade B, member 9h;protein coding gene;ENSMUSG00000071452
+Setd7;current symbol;MGI:1920501;Setd7;SET domain containing (lysine methyltransferase) 7;protein coding gene;ENSMUSG00000037111
+Sf3b2;current symbol;MGI:2441856;Sf3b2;splicing factor 3b, subunit 2;protein coding gene;ENSMUSG00000024853
+Sfxn3;current symbol;MGI:2137679;Sfxn3;sideroflexin 3;protein coding gene;ENSMUSG00000025212
+Sh3gl1;current symbol;MGI:700010;Sh3gl1;SH3-domain GRB2-like 1;protein coding gene;ENSMUSG00000003200
+Sh3gl3;current symbol;MGI:700011;Sh3gl3;SH3-domain GRB2-like 3;protein coding gene;ENSMUSG00000030638
+Shisa7;current symbol;MGI:3605641;Shisa7;shisa family member 7;protein coding gene;ENSMUSG00000053550
+Six4;current symbol;MGI:106034;Six4;sine oculis-related homeobox 4;protein coding gene;ENSMUSG00000034460
+Slc13a4;current symbol;MGI:2442367;Slc13a4;solute carrier family 13 (sodium/sulfate symporters), member 4;protein coding gene;ENSMUSG00000029843
+Slc22a6;current symbol;MGI:892001;Slc22a6;solute carrier family 22 (organic anion transporter), member 6;protein coding gene;ENSMUSG00000024650
+Slc25a21;current symbol;MGI:2445059;Slc25a21;solute carrier family 25 (mitochondrial oxodicarboxylate carrier), member 21;protein coding gene;ENSMUSG00000035472
+Slc29a1;current symbol;MGI:1927073;Slc29a1;solute carrier family 29 (nucleoside transporters), member 1;protein coding gene;ENSMUSG00000023942
+Slc35a5;current symbol;MGI:1921352;Slc35a5;solute carrier family 35, member A5;protein coding gene;ENSMUSG00000022664
+Slc35b1;current symbol;MGI:1343133;Slc35b1;solute carrier family 35, member B1;protein coding gene;ENSMUSG00000020873
+Slc35b1;old symbol;MGI:1921086;Slc35b2;solute carrier family 35, member B2;protein coding gene;ENSMUSG00000037089
+Slc38a10;current symbol;MGI:1919305;Slc38a10;solute carrier family 38, member 10;protein coding gene;ENSMUSG00000061306
+Slc4a5;human synonym;MGI:1927555;Slc4a4;solute carrier family 4 (anion exchanger), member 4;protein coding gene;ENSMUSG00000060961
+Slc4a5;current symbol;MGI:2443220;Slc4a5;solute carrier family 4, sodium bicarbonate cotransporter, member 5;protein coding gene;ENSMUSG00000068323
+Slc6a20a;current symbol;MGI:2143217;Slc6a20a;solute carrier family 6 (neurotransmitter transporter), member 20A;protein coding gene;ENSMUSG00000036814
+Slc8a1;current symbol;MGI:107956;Slc8a1;solute carrier family 8 (sodium/calcium exchanger), member 1;protein coding gene;ENSMUSG00000054640
+Slco2a1;current symbol;MGI:1346021;Slco2a1;solute carrier organic anion transporter family, member 2a1;protein coding gene;ENSMUSG00000032548
+Slfn9;current symbol;MGI:2445121;Slfn9;schlafen 9;protein coding gene;ENSMUSG00000069793
+Slit3;human synonym;MGI:1315203;Slit1;slit guidance ligand 1;protein coding gene;ENSMUSG00000025020
+Slit3;current symbol;MGI:1315202;Slit3;slit guidance ligand 3;protein coding gene;ENSMUSG00000056427
+Slitrk1;current symbol;MGI:2679446;Slitrk1;SLIT and NTRK-like family, member 1;protein coding gene;ENSMUSG00000075478
+Slitrk2;current symbol;MGI:2679449;Slitrk2;SLIT and NTRK-like family, member 2;protein coding gene;ENSMUSG00000036790
+Slitrk4;current symbol;MGI:2442509;Slitrk4;SLIT and NTRK-like family, member 4;protein coding gene;ENSMUSG00000046699
+Smad1;human synonym;MGI:2449057;Gars1;glycyl-tRNA synthetase 1;protein coding gene;ENSMUSG00000029777
+Smad1;current symbol;MGI:109452;Smad1;SMAD family member 1;protein coding gene;ENSMUSG00000031681
+Smarcd2;current symbol;MGI:1933621;Smarcd2;SWI/SNF related, matrix associated, actin dependent regulator of chromatin, subfamily d, member 2;protein coding gene;ENSMUSG00000078619
+Smim10l1;current symbol;MGI:1914379;Smim10l1;small integral membrane protein 10 like 1;protein coding gene;ENSMUSG00000072704
+Smyd5;current symbol;MGI:108048;Smyd5;SET and MYND domain containing 5;protein coding gene;ENSMUSG00000033706
+Snhg11;current symbol;MGI:2441845;Snhg11;small nucleolar RNA host gene 11;protein coding gene;ENSMUSG00000044349
+Sox12;current symbol;MGI:98360;Sox12;SRY (sex determining region Y)-box 12;protein coding gene;ENSMUSG00000051817
+Sox5;current symbol;MGI:98367;Sox5;SRY (sex determining region Y)-box 5;protein coding gene;ENSMUSG00000041540
+Sp2;current symbol;MGI:1926162;Sp2;Sp2 transcription factor;protein coding gene;ENSMUSG00000018678
+Sp2;synonym;MGI:98885;Zrsr2-ps1;zinc finger (CCCH type), RNA binding motif and serine/arginine rich 2, pseudogene 1;pseudogene;ENSMUSG00000044068
+Spag1;current symbol;MGI:1349387;Spag1;sperm associated antigen 1;protein coding gene;ENSMUSG00000037617
+Spag17os;current symbol;MGI:2444368;Spag17os;sperm associated antigen 17, opposite strand;antisense lncRNA gene;ENSMUSG00000085244
+Spon1;current symbol;MGI:2385287;Spon1;spondin 1, (f-spondin) extracellular matrix protein;protein coding gene;ENSMUSG00000038156
+Spp2;human synonym;MGI:1859610;Gpkow;G patch domain and KOW motifs;protein coding gene;ENSMUSG00000031148
+Spp2;human synonym;MGI:3589109;Sgpp2;sphingosine-1-phosphate phosphatase 2;protein coding gene;ENSMUSG00000032908
+Spp2;current symbol;MGI:1922646;Spp2;secreted phosphoprotein 2;protein coding gene;ENSMUSG00000026295
+Sptssb;current symbol;MGI:1913433;Sptssb;serine palmitoyltransferase, small subunit B;protein coding gene;ENSMUSG00000043461
+St5;old symbol;MGI:108517;Dennd2b;DENN domain containing 2B;protein coding gene;ENSMUSG00000031024
+Stap2;current symbol;MGI:2147039;Stap2;signal transducing adaptor family member 2;protein coding gene;ENSMUSG00000038781
+Stat5b;zebrafish symbol;MGI:103036;Stat5a;signal transducer and activator of transcription 5A;protein coding gene;ENSMUSG00000004043
+Stat5b;current symbol;MGI:103035;Stat5b;signal transducer and activator of transcription 5B;protein coding gene;ENSMUSG00000020919
+Stk16;current symbol;MGI:1313271;Stk16;serine/threonine kinase 16;protein coding gene;ENSMUSG00000026201
+Stk17b;current symbol;MGI:2138162;Stk17b;serine/threonine kinase 17b (apoptosis-inducing);protein coding gene;ENSMUSG00000026094
+Stx5a;current symbol;MGI:1928483;Stx5a;syntaxin 5A;protein coding gene;ENSMUSG00000010110
+Sv2b;current symbol;MGI:1927338;Sv2b;synaptic vesicle glycoprotein 2b;protein coding gene;ENSMUSG00000053025
+Syde1;current symbol;MGI:1918959;Syde1;synapse defective 1, Rho GTPase, homolog 1 (C. elegans);protein coding gene;ENSMUSG00000032714
+Syn2;current symbol;MGI:103020;Syn2;synapsin II;protein coding gene;ENSMUSG00000009394
+Syt9;current symbol;MGI:1926373;Syt9;synaptotagmin IX;protein coding gene;ENSMUSG00000062542
+Syvn1;current symbol;MGI:1921376;Syvn1;synovial apoptosis inhibitor 1, synoviolin;protein coding gene;ENSMUSG00000024807
+Taok3;current symbol;MGI:3041177;Taok3;TAO kinase 3;protein coding gene;ENSMUSG00000061288
+Tbc1d25;current symbol;MGI:2444862;Tbc1d25;TBC1 domain family, member 25;protein coding gene;ENSMUSG00000039201
+Tceal7;current symbol;MGI:1915746;Tceal7;transcription elongation factor A (SII)-like 7;protein coding gene;ENSMUSG00000079428
+Tdg;current symbol;MGI:108247;Tdg;thymine DNA glycosylase;protein coding gene;ENSMUSG00000034674
+Tdg;human symbol;MGI:3645587;Tdg-ps;thymine DNA glycosylase, pseudogene;pseudogene;ENSMUSG00000047347
+Tdo2;current symbol;MGI:1928486;Tdo2;tryptophan 2,3-dioxygenase;protein coding gene;ENSMUSG00000028011
+Tgfbi;current symbol;MGI:99959;Tgfbi;transforming growth factor, beta induced;protein coding gene;ENSMUSG00000035493
+Them4;current symbol;MGI:1923028;Them4;thioesterase superfamily member 4;protein coding gene;ENSMUSG00000028145
+Them4;zebrafish symbol;MGI:1913448;Them5;thioesterase superfamily member 5;protein coding gene;ENSMUSG00000028148
+Thnsl1;current symbol;MGI:2139347;Thnsl1;threonine synthase-like 1 (bacterial);protein coding gene;ENSMUSG00000048550
+Thsd7b;current symbol;MGI:2443925;Thsd7b;thrombospondin, type I, domain containing 7B;protein coding gene;ENSMUSG00000042581
+Tle3;current symbol;MGI:104634;Tle3;transducin-like enhancer of split 3;protein coding gene;ENSMUSG00000032280
+Tlr4;current symbol;MGI:96824;Tlr4;toll-like receptor 4;protein coding gene;ENSMUSG00000039005
+Tmc7;current symbol;MGI:2443317;Tmc7;transmembrane channel-like gene family 7;protein coding gene;ENSMUSG00000042246
+Tmed3;current symbol;MGI:1913361;Tmed3;transmembrane p24 trafficking protein 3;protein coding gene;ENSMUSG00000032353
+Tmem109;current symbol;MGI:1915789;Tmem109;transmembrane protein 109;protein coding gene;ENSMUSG00000034659
+Tmem120b;current symbol;MGI:3603158;Tmem120b;transmembrane protein 120B;protein coding gene;ENSMUSG00000054434
+Tmem121;current symbol;MGI:1916445;Tmem121;transmembrane protein 121;protein coding gene;ENSMUSG00000049036
+Tmem145;current symbol;MGI:3607779;Tmem145;transmembrane protein 145;protein coding gene;ENSMUSG00000043843
+Tmem14a;current symbol;MGI:1922962;Tmem14a;transmembrane protein 14A;protein coding gene;ENSMUSG00000025933
+Tmem229b;current symbol;MGI:2444389;Tmem229b;transmembrane protein 229B;protein coding gene;ENSMUSG00000046157
+Tmem231;current symbol;MGI:2685024;Tmem231;transmembrane protein 231;protein coding gene;ENSMUSG00000031951
+Tmem30b;current symbol;MGI:2442082;Tmem30b;transmembrane protein 30B;protein coding gene;ENSMUSG00000034435
+Tmem35a;current symbol;MGI:1914814;Tmem35a;transmembrane protein 35A;protein coding gene;ENSMUSG00000033578
+Tmem51os1;current symbol;MGI:3642733;Tmem51os1;Tmem51 opposite strand 1;antisense lncRNA gene;ENSMUSG00000073728
+Tmem94;current symbol;MGI:1919197;Tmem94;transmembrane protein 94;protein coding gene;ENSMUSG00000020747
+Tmie;current symbol;MGI:2159400;Tmie;transmembrane inner ear;protein coding gene;ENSMUSG00000049555
+Tmod3;current symbol;MGI:1355315;Tmod3;tropomodulin 3;protein coding gene;ENSMUSG00000058587
+Tmprss3;current symbol;MGI:2155445;Tmprss3;transmembrane protease, serine 3;protein coding gene;ENSMUSG00000024034
+Tmprss3;human synonym;MGI:2384877;Tmprss4;transmembrane protease, serine 4;protein coding gene;ENSMUSG00000032091
+Tnfrsf11b;current symbol;MGI:109587;Tnfrsf11b;tumor necrosis factor receptor superfamily, member 11b (osteoprotegerin);protein coding gene;ENSMUSG00000063727
+Tnfrsf12a;current symbol;MGI:1351484;Tnfrsf12a;tumor necrosis factor receptor superfamily, member 12a;protein coding gene;ENSMUSG00000023905
+Tnks1bp1;current symbol;MGI:2446193;Tnks1bp1;tankyrase 1 binding protein 1;protein coding gene;ENSMUSG00000033955
+Tns3;current symbol;MGI:2443012;Tns3;tensin 3;protein coding gene;ENSMUSG00000020422
+Tpbgl;zebrafish symbol;MGI:1341264;Tpbg;trophoblast glycoprotein;protein coding gene;ENSMUSG00000035274
+Tpbgl;current symbol;MGI:3646425;Tpbgl;trophoblast glycoprotein-like;protein coding gene;ENSMUSG00000096606
+Tpra1;current symbol;MGI:1345190;Tpra1;transmembrane protein, adipocyte asscociated 1;protein coding gene;ENSMUSG00000002871
+Trim12c;current symbol;MGI:4821183;Trim12c;tripartite motif-containing 12C;protein coding gene;ENSMUSG00000057143
+Trim46;current symbol;MGI:2673000;Trim46;tripartite motif-containing 46;protein coding gene;ENSMUSG00000042766
+Ttc14;current symbol;MGI:1914370;Ttc14;tetratricopeptide repeat domain 14;protein coding gene;ENSMUSG00000027677
+Ttc39a;current symbol;MGI:2444350;Ttc39a;tetratricopeptide repeat domain 39A;protein coding gene;ENSMUSG00000028555
+Tubgcp4;current symbol;MGI:1196293;Tubgcp4;tubulin, gamma complex component 4;protein coding gene;ENSMUSG00000027263
+Tunar;current symbol;MGI:1917202;Tunar;Tcl1 upstream neural differentiation associated RNA;lncRNA gene;ENSMUSG00000097929
+Txlna;current symbol;MGI:105968;Txlna;taxilin alpha;protein coding gene;ENSMUSG00000053841
+Txn1;current symbol;MGI:98874;Txn1;thioredoxin 1;protein coding gene;ENSMUSG00000028367
+Uaca;current symbol;MGI:1919815;Uaca;uveal autoantigen with coiled-coil domains and ankyrin repeats;protein coding gene;ENSMUSG00000034485
+Ube2d1;current symbol;MGI:2384911;Ube2d1;ubiquitin-conjugating enzyme E2D 1;protein coding gene;ENSMUSG00000019927
+Ubox5;current symbol;MGI:2154658;Ubox5;U box domain containing 5;protein coding gene;ENSMUSG00000027300
+Ubqln1;current symbol;MGI:1860276;Ubqln1;ubiquilin 1;protein coding gene;ENSMUSG00000005312
+Upp1;current symbol;MGI:1097668;Upp1;uridine phosphorylase 1;protein coding gene;ENSMUSG00000020407
+Ush1g;current symbol;MGI:2450757;Ush1g;USH1 protein network component sans;protein coding gene;ENSMUSG00000045288
+Usp33;current symbol;MGI:2159711;Usp33;ubiquitin specific peptidase 33;protein coding gene;ENSMUSG00000025437
+Utrn;current symbol;MGI:104631;Utrn;utrophin;protein coding gene;ENSMUSG00000019820
+Vat1;human synonym;MGI:106684;Slc18a1;solute carrier family 18 (vesicular monoamine), member 1;protein coding gene;ENSMUSG00000036330
+Vat1;current symbol;MGI:1349450;Vat1;vesicle amine transport 1;protein coding gene;ENSMUSG00000034993
+Vegfc;current symbol;MGI:109124;Vegfc;vascular endothelial growth factor C;protein coding gene;ENSMUSG00000031520
+Vps37d;current symbol;MGI:2159402;Vps37d;vacuolar protein sorting 37D;protein coding gene;ENSMUSG00000043614
+Vps51;current symbol;MGI:1915755;Vps51;VPS51 GARP complex subunit;protein coding gene;ENSMUSG00000024797
+Wdr3;current symbol;MGI:2443143;Wdr3;WD repeat domain 3;protein coding gene;ENSMUSG00000033285
+Wdsub1;current symbol;MGI:1919387;Wdsub1;WD repeat, SAM and U-box domain containing 1;protein coding gene;ENSMUSG00000026988
+Wfs1;current symbol;MGI:1328355;Wfs1;wolframin ER transmembrane glycoprotein;protein coding gene;ENSMUSG00000039474
+Wif1;current symbol;MGI:1344332;Wif1;Wnt inhibitory factor 1;protein coding gene;ENSMUSG00000020218
+Wnt3;current symbol;MGI:98955;Wnt3;wingless-type MMTV integration site family, member 3;protein coding gene;ENSMUSG00000000125
+Xkr6;current symbol;MGI:2447765;Xkr6;X-linked Kx blood group related 6;protein coding gene;ENSMUSG00000035067
+Zbtb24;current symbol;MGI:3039618;Zbtb24;zinc finger and BTB domain containing 24;protein coding gene;ENSMUSG00000019826
+Zfp101;current symbol;MGI:107547;Zfp101;zinc finger protein 101;protein coding gene;ENSMUSG00000055240
+Zfp105;current symbol;MGI:1277119;Zfp105;zinc finger protein 105;protein coding gene;ENSMUSG00000057895
+Zfp180;current symbol;MGI:1923701;Zfp180;zinc finger protein 180;protein coding gene;ENSMUSG00000057101
+Zfp266;current symbol;MGI:1924769;Zfp266;zinc finger protein 266;protein coding gene;ENSMUSG00000060510
+Zfp266;rat symbol;MGI:1920248;Zfp426;zinc finger protein 426;protein coding gene;ENSMUSG00000059475
+Zfp275;current symbol;MGI:1350985;Zfp275;zinc finger protein 275;protein coding gene;ENSMUSG00000031365
+Zfp281;current symbol;MGI:3029290;Zfp281;zinc finger protein 281;protein coding gene;ENSMUSG00000041483
+Zfp286;current symbol;MGI:2384758;Zfp286;zinc finger protein 286;protein coding gene;ENSMUSG00000047342
+Zfp41;current symbol;MGI:99186;Zfp41;zinc finger protein 41;protein coding gene;ENSMUSG00000047003
+Zfp442;current symbol;MGI:3651999;Zfp442;zinc finger protein 442;protein coding gene;ENSMUSG00000068130
+Zfp612;current symbol;MGI:2443465;Zfp612;zinc finger protein 612;protein coding gene;ENSMUSG00000044676
+Zfp688;current symbol;MGI:1916484;Zfp688;zinc finger protein 688;protein coding gene;ENSMUSG00000045251
+Zfp839;current symbol;MGI:1920055;Zfp839;zinc finger protein 839;protein coding gene;ENSMUSG00000021271
+Zfp879;current symbol;MGI:3053099;Zfp879;zinc finger protein 879;protein coding gene;ENSMUSG00000044296
+Zfp933;current symbol;MGI:1922865;Zfp933;zinc finger protein 933;protein coding gene;ENSMUSG00000059423
+Zscan22;current symbol;MGI:2443312;Zscan22;zinc finger and SCAN domain containing 22;protein coding gene;ENSMUSG00000054715
