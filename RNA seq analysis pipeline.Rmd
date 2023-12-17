@@ -493,10 +493,10 @@ res_DESeq2_YMP$pvalue_BH <- p.adjust(res_DESeq2_YMP$pvalue, method="BH") #Argume
 res_DESeq2_YMP$minuslog10_pvalue_BH <- -log10(res_DESeq2_YMP$pvalue_BH)
 
 sum(is.na(res_DESeq2_YMP$log2FoldChange))
-# the meta_genes dataset contains 5963 ensembl_gene_id_version that are not found in expr,
+# the meta_genes dataset contains 6702 ensembl_gene_id_version that are not found in expr,
 # because we filtered expr based on the criteria rowMeans(expr > 0) >= 0.5 | rowMeans(expr) >= 1
 
-sum(is.na(res_DESeq2_YMP$pvalue)) # 6010
+sum(is.na(res_DESeq2_YMP$pvalue)) # 6704
 temp_mask = is.na(res_DESeq2_YMP$pvalue) & !is.na(res_DESeq2_YMP$log2FoldChange)
 # res_DESeq2_YMP[temp_mask,] # However, for some reason DESeq2 fucks up the pvalue for these 47 genes
 res_DESeq2_YMP_fitered <- res_DESeq2_YMP[!is.na(res_DESeq2_YMP$pvalue_BH),]
@@ -620,18 +620,15 @@ ColSideColors = rainbow(15)[cl_DEG_mice])
 
 
 # Untrimmed data
-
 ## Import of data & comparison initial transcriptome analysis
 ### Import Gene expression quantification (p. 41)
 ```{r, warning=FALSE}
-#setwd("/Users/david/Library/CloudStorage/OneDrive-Persönlich/Master ETH/Courses/11_Systems Genomics/project local repository/data")
-#setwd("C:/Users/nicks/Desktop/Systems_Genomics/GitHub David/SystemsGenomics2023/data")
 setwd(pwd)
 
-samples <- list.files("rsem_genes_results_trimmed")
+samples <- list.files("rsem_genes_results_untrimmed")
 
 expr <- sapply(samples, function(sample){
-  file <- paste0("rsem_genes_results_trimmed/", sample)
+  file <- paste0("rsem_genes_results_untrimmed/", sample)
   #print(file)
   quant <- read.csv(file, sep="\t", header=T)
   tpm <- setNames(quant$TPM, quant$gene_id)
@@ -723,17 +720,19 @@ hist(num_det)
 
 # get rid of genes that are unecpressed or extremely lowly expressed
 expressed <- rowMeans(expr > 0) >= 0.5 | rowMeans(expr) >= 1
-head(expressed) #expressed is a vector of booleans
-summary(expressed)
-expr <- expr[which(expressed),]
-dim(expr) # 25232    15 --> now only 25'232 genes left
 
-avg_expr <- rowMeans(expr) #now after the filtering
+meta_genes$expressed <- expressed
+
+head(expressed[meta_genes$expressed]) #expressed is a vector of booleans
+summary(expressed[meta_genes$expressed])
+
+#expr <- expr[which(expressed),] I want to keep the whole expr
+dim(expr[meta_genes$expressed,]) # 25649    15 --> now only 25'649 genes left
+
+avg_expr <- rowMeans(expr[meta_genes$expressed,]) #now after the filtering
 #layout(matrix(1:2, nrow=1))
 hist(avg_expr)
 hist(log10(avg_expr + 1))
-
-meta_genes$expressed <- expressed
 ```
 #### PCC & SCC (correlation coefficients, cluster dendorgrams, heatmap of samples) (p. 46)
 ```{r, fig.width=9}
@@ -741,8 +740,8 @@ meta_genes$expressed <- expressed
 #meta_genes$expressed is expressed
 #meta_genes$expressed
 
-corr_pearson <- cor(log1p(expr))
-corr_spearman <- cor(expr, method = "spearman")
+corr_pearson <- cor(log1p(expr[meta_genes$expressed,]))
+corr_spearman <- cor(expr[meta_genes$expressed,], method = "spearman")
 
 #pheatmap(corr_pearson)
 plot <- pheatmap((corr_spearman), color = colorRampPalette(c((brewer.pal(n = 9, name = "YlGnBu"))))(100),  # custom color palette YlGnBu
@@ -765,7 +764,7 @@ plot
 
 #### PCA
 ```{r}
-pca <- prcomp(log1p(t(expr)), center = TRUE,scale.=TRUE)
+pca <- prcomp(log1p(t(expr[meta_genes$expressed,])), center = TRUE,scale.=TRUE)
 variances <- pca$sdev^2
 
 variance_proportion <- variances / sum(variances)
@@ -776,20 +775,20 @@ ggplot(data.frame(pca$x, meta1)) +
 #geom_point(aes(x = PC1, y = PC2, color = Name, shape = treatment),size=5)
 geom_point(aes(x = PC1, y = PC2, color = treatment),size=5)
 
-plot_ly(
-  x = pca$x[,1],
-  y = pca$x[,2],
-  type = "scatter",
-  text = colnames(expr), 
-  mode = "markers",
-  symbol = meta1_filtered$treatment,
-  marker = list(size = 10)
-) %>%
-  layout(
-    xaxis = list(title = str_glue("PC1, variance: ", round(variance_proportion[1], 3))),
-    yaxis = list(title = str_glue("PC2, variance: ", round(variance_proportion[2], 3))),
-    hovermode = "closest"
-  )
+# plot_ly(
+#   x = pca$x[,1],
+#   y = pca$x[,2],
+#   type = "scatter",
+#   text = colnames(expr), 
+#   mode = "markers",
+#   symbol = meta1_filtered$treatment,
+#   marker = list(size = 10)
+# ) %>%
+#   layout(
+#     xaxis = list(title = str_glue("PC1, variance: ", round(variance_proportion[1], 3))),
+#     yaxis = list(title = str_glue("PC2, variance: ", round(variance_proportion[2], 3))),
+#     hovermode = "closest"
+#   )
 
 ```
 ##### batch effect correction? --> probbaly does not make sense as we do not have different layers
@@ -861,10 +860,10 @@ tx2gene <- getBM(attributes = c("ensembl_transcript_id_version","ensembl_gene_id
 ```{r, warning=FALSE}
 setwd(pwd)
 
-samples <- list.files("rsem_isoforms_results_trimmed") #Hier sollten isoforms sein! nicht dedup nextera!
+samples <- list.files("rsem_isoforms_results_untrimmed") #Hier sollten isoforms sein! nicht dedup nextera!
 filtered_samples <- samples[grep("\\.isoforms\\.results$",samples)]# Remove ".isoforms.results" from all column names
-files_YMP <- file.path(paste0("rsem_isoforms_results_trimmed/", filtered_samples[1:6]))
-files_aDR <- file.path(paste0("rsem_isoforms_results_trimmed/", filtered_samples[7:15]))
+files_YMP <- file.path(paste0("rsem_isoforms_results_untrimmed/", filtered_samples[1:6]))
+files_aDR <- file.path(paste0("rsem_isoforms_results_untrimmed/", filtered_samples[7:15]))
 txi_YMP <- tximport(files_YMP, type = "rsem", tx2gene = tx2gene)
 txi_aDR <- tximport(files_aDR, type = "rsem", tx2gene = tx2gene)
 
@@ -880,23 +879,23 @@ rownames(dds_aDR) %>% length() #gene_id_versions
 
 dds_filtered_aDR <- dds_aDR[intersect(meta_genes[meta_genes$expressed,2],rownames(dds_aDR)),]
 rownames(dds_filtered_aDR) %>% length() #gene_id_versions
-# sum(meta_genes$expressed): 25232; dds_filtered_aDR: 25649; + 417 genes, intersect broken?
+# sum(meta_genes$expressed): 22521; dds_filtered_aDR: 22521
 
 
 dds_filtered_aDR <- DESeq(dds_filtered_aDR, test="LRT", reduced= ~ 1) #If only one covariate, use ~1
 
-res_DESeq2_aDR <- results(dds_filtered_aDR) # 25649 genes, same amount
+res_DESeq2_aDR <- results(dds_filtered_aDR) # 22521 genes, same amount
 res_DESeq2_aDR <- data.frame(res_DESeq2_aDR) 
 res_DESeq2_aDR$pvalue_BH <- p.adjust(res_DESeq2_aDR$pvalue, method="BH") #Argumentieren wieso BH correction
 res_DESeq2_aDR$minuslog10_pvalue_BH <- -log10(res_DESeq2_aDR$pvalue_BH)
 
 sum(is.na(res_DESeq2_aDR$log2FoldChange))
-# the meta_genes dataset contains 5963 ensembl_gene_id_version that are not found in expr,
+# the meta_genes dataset contains 6011 ensembl_gene_id_version that are not found in expr,
 # because we filtered expr based on the criteria rowMeans(expr > 0) >= 0.5 | rowMeans(expr) >= 1
 
-sum(is.na(res_DESeq2_aDR$pvalue)) # 6010
+sum(is.na(res_DESeq2_aDR$pvalue)) # 6045
 temp_mask = is.na(res_DESeq2_aDR$pvalue) & !is.na(res_DESeq2_aDR$log2FoldChange)
-res_DESeq2_aDR[temp_mask,] # However, for some reason DESeq2 fucks up the pvalue for these 47 genes
+# res_DESeq2_aDR[temp_mask,] # However, for some reason DESeq2 fucks up the pvalue for these 47 genes
 res_DESeq2_aDR_fitered <- res_DESeq2_aDR[!is.na(res_DESeq2_aDR$pvalue_BH),]
 res_DESeq2_aDR_DEG <- res_DESeq2_aDR_fitered[res_DESeq2_aDR_fitered$pvalue_BH < 0.05,]#filter to only have significant data, include FC?
 DEG_aDR <- rownames(res_DESeq2_aDR_DEG)
@@ -1077,23 +1076,23 @@ rownames(dds_YMP) %>% length() #gene_id_versions
 
 dds_filtered_YMP <- dds_YMP[intersect(meta_genes[meta_genes$expressed,2],rownames(dds_YMP)),]
 rownames(dds_filtered_YMP) %>% length() #gene_id_versions
-# sum(meta_genes$expressed): 25232; dds_filtered_aDR: 25649; + 417 genes, intersect broken?
+# sum(meta_genes$expressed): 22521; dds_filtered_aDR: 22521;
 
 
 dds_filtered_YMP <- DESeq(dds_filtered_YMP, test="LRT", reduced= ~ 1) #If only one covariate, use ~1
 
-res_DESeq2_YMP <- results(dds_filtered_YMP) # 25649 genes, same amount
+res_DESeq2_YMP <- results(dds_filtered_YMP) # 22521 genes, same amount
 res_DESeq2_YMP <- data.frame(res_DESeq2_YMP) 
 res_DESeq2_YMP$pvalue_BH <- p.adjust(res_DESeq2_YMP$pvalue, method="BH") #Argumentieren wieso BH correction
 res_DESeq2_YMP$minuslog10_pvalue_BH <- -log10(res_DESeq2_YMP$pvalue_BH)
 
 sum(is.na(res_DESeq2_YMP$log2FoldChange))
-# the meta_genes dataset contains 5963 ensembl_gene_id_version that are not found in expr,
+# the meta_genes dataset contains 6693 ensembl_gene_id_version that are not found in expr,
 # because we filtered expr based on the criteria rowMeans(expr > 0) >= 0.5 | rowMeans(expr) >= 1
 
-sum(is.na(res_DESeq2_YMP$pvalue)) # 6010
+sum(is.na(res_DESeq2_YMP$pvalue)) # 6693
 temp_mask = is.na(res_DESeq2_YMP$pvalue) & !is.na(res_DESeq2_YMP$log2FoldChange)
-res_DESeq2_YMP[temp_mask,] # However, for some reason DESeq2 fucks up the pvalue for these 47 genes
+# res_DESeq2_YMP[temp_mask,] # However, for some reason DESeq2 fucks up the pvalue for these 47 genes
 res_DESeq2_YMP_fitered <- res_DESeq2_YMP[!is.na(res_DESeq2_YMP$pvalue_BH),]
 res_DESeq2_YMP_DEG <- res_DESeq2_YMP_fitered[res_DESeq2_YMP_fitered$pvalue_BH < 0.05,]#filter to only have significant data, include FC?
 DEG_YMP <- rownames(res_DESeq2_YMP_DEG)
@@ -1212,3 +1211,4 @@ ColSideColors = rainbow(15)[cl_DEG_mice])
 
 
 ## 3.7 Other analysis (page 72)
+
