@@ -349,45 +349,47 @@ main = paste0(treatment, " (", nrow(avg_expr_DEG_list_aDR[[treatment]]),")"))
 
 ```
 
-#hierarchical clustering of aDR
+#hierarchical clustering of aDR GENES (MICE is below in a new chunk)
 ```{r}
-#avg_expr <- sapply(sort(unique(meta1_aDR$treatment)), function(layer)
-#  rowMeans(expr[,which(meta$Layer == layer)])) # implemented above
-
-#corr_DEG <- cor(t(avg_expr_aDR[DEG_aDR,]), method = "spearman")
-corr_DEG_mice <- cor(expr_aDR[DEG_aDR,], method = "spearman")
+#corr_DEG_mice <- cor(expr_aDR[DEG_aDR,], method = "spearman")
 corr_DEG_genes <- cor(t(expr_aDR[DEG_aDR,]), method = "spearman")
 
-#avg expr aDr seems to have wrong format. rows and columns in the wrong way? we want cor between genes but get corr between treatments groups
-#corr_DEG <- cor(avg_expr_aDR[DEG_aDR,], method = "spearman")
-
-
-
-#corr_pearson <- cor(log1p(expr))
-#corr_spearman <- cor(expr, method = "spearman")
 library(pheatmap)
-
-pheatmap(corr_DEG_mice)
-hcl_DEG <- hclust(as.dist(1 - corr_DEG), method = "complete")
+pheatmap(corr_DEG_genes)
 hcl_DEG_genes <- hclust(as.dist(1 - corr_DEG_genes), method = "complete")
-
-plot(hcl_DEG, labels = FALSE)
+plot(hcl_DEG_genes, labels = FALSE)
 
 #Virdis color palette
-install.packages("viridis")
+#install.packages("viridis")
 library(viridis)
-heatmap.2(corr_DEG, Rowv = as.dendrogram(hcl_DEG), Colv = as.dendrogram(hcl_DEG),
+heatmap.2(corr_DEG_genes, Rowv = as.dendrogram(hcl_DEG_genes), Colv = as.dendrogram(hcl_DEG_genes),
 trace = "none", scale = "none", labRow = NA, labCol = NA, col = viridis)
 
-cl_DEG <- cutree(hcl_DEG, k = 2)
-heatmap.2(corr_DEG, Rowv = as.dendrogram(hcl_DEG), Colv = as.dendrogram(hcl_DEG),
-trace = "none", scale = "none", labRow = NA, labCol = NA, col = viridis,
-ColSideColors = rainbow(15)[cl_DEG])
-
-cl_DEG <- cutree(hcl_DEG_genes, k = 10)
+cl_DEG_genes <- cutree(hcl_DEG_genes, k = 3) #k can be adjusted
 heatmap.2(corr_DEG_genes, Rowv = as.dendrogram(hcl_DEG_genes), Colv = as.dendrogram(hcl_DEG_genes),
 trace = "none", scale = "none", labRow = NA, labCol = NA, col = viridis,
-ColSideColors = rainbow(15)[cl_DEG])
+ColSideColors = rainbow(15)[cl_DEG_genes]) 
+```
+#hierarchical clustering of aDR MICE (GENES is above)
+```{r}
+corr_DEG_mice <- cor(expr_aDR[DEG_aDR,], method = "spearman")
+#corr_DEG_genes <- cor(t(expr_aDR[DEG_aDR,]), method = "spearman")
+
+library(pheatmap)
+pheatmap(corr_DEG_mice)
+hcl_DEG_mice <- hclust(as.dist(1 - corr_DEG_mice), method = "complete")
+plot(hcl_DEG_mice, labels = FALSE)
+
+#Virdis color palette
+#install.packages("viridis")
+library(viridis)
+heatmap.2(corr_DEG_mice, Rowv = as.dendrogram(hcl_DEG_mice), Colv = as.dendrogram(hcl_DEG_mice),
+trace = "none", scale = "none", labRow = NA, labCol = NA, col = viridis)
+
+cl_DEG_mice <- cutree(hcl_DEG_mice, k = 3) #k can be adjusted
+heatmap.2(corr_DEG_mice, Rowv = as.dendrogram(hcl_DEG_mice), Colv = as.dendrogram(hcl_DEG_mice),
+trace = "none", scale = "none", labRow = NA, labCol = NA, col = viridis,
+ColSideColors = rainbow(15)[cl_DEG_mice]) 
 ```
 
 #3-6 Making sense of the genes (page 66)
