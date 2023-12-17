@@ -20,8 +20,8 @@ library(stringi)
 
 ```{r}
 # pwd <- "/Users/david/Library/CloudStorage/OneDrive-Persönlich/Master ETH/Courses/11_Systems Genomics/project local repository/data"
-# pwd <- "C:/Users/nicks/Desktop/Systems_Genomics/GitHub David/SystemsGenomics2023/data"
-pwd <- "/Users/valentin/Documents/ETH/Master Biotechnologie/Lectures/Sytems_Genomics/Local_git_hub_repository/data"
+pwd <- "C:/Users/nicks/Desktop/Systems_Genomics/GitHub 2.0/SystemsGenomics2023/data"
+#pwd <- "/Users/valentin/Documents/ETH/Master Biotechnologie/Lectures/Sytems_Genomics/Local_git_hub_repository/data"
 ```
 
 # Nextera trimmed
@@ -108,9 +108,8 @@ right_join(data.frame(ensembl_gene_id_version = rownames(expr)), by = "ensembl_g
 # dim(expr) # 56884 annotated genes and 15 samples
 avg_expr <- rowMeans(expr)
 #layout(matrix(1:2, nrow=1))
-#hist(avg_expr)
-
-hist(log10(avg_expr + 1))
+hist(avg_expr)
+hist(log10(avg_expr + 0.01), main = "Average gene expression (before filtering)", xlab = "log10(Average gene expression [TPM])", ylab = "Number of genes")
 
 
 ggplot(data.frame(avg_expr), aes(x=avg_expr)) +
@@ -124,7 +123,7 @@ hist(num_det)
 #head(num_det)
 
 
-# get rid of genes that are unecpressed or extremely lowly expressed
+# get rid of genes that are unexpressed or extremely lowly expressed
 expressed <- rowMeans(expr > 0) >= 0.5 | rowMeans(expr) >= 1
 
 meta_genes$expressed <- expressed
@@ -132,13 +131,13 @@ meta_genes$expressed <- expressed
 head(expressed[meta_genes$expressed]) #expressed is a vector of booleans
 summary(expressed[meta_genes$expressed])
 
-#expr <- expr[which(expressed),] I want to keep the whole expr
-dim(expr[meta_genes$expressed,]) # 25649    15 --> now only 25'649 genes left
+#expr <- expr[which(expressed),] #I want to keep the whole expr
+#dim(expr[meta_genes$expressed,]) # 25649    15 --> now only 25'649 genes left
 
 avg_expr <- rowMeans(expr[meta_genes$expressed,]) #now after the filtering
 #layout(matrix(1:2, nrow=1))
 hist(avg_expr)
-hist(log10(avg_expr + 1))
+hist(log10(avg_expr + 0.01), main = "Average gene expression (after filtering)", xlab = "log10(Average gene expression [TPM])", ylab = "Number of genes")
 ```
 #### PCC & SCC (correlation coefficients, cluster dendorgrams, heatmap of samples) (p. 46)
 ```{r, fig.width=9}
