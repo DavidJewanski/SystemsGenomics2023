@@ -22,10 +22,10 @@ library(viridis)
 ```
 
 ```{r}
-pwd <- "/Users/david/Library/CloudStorage/OneDrive-Persönlich/Master ETH/Courses/11_Systems Genomics/project local repository/data"
-pwd2 <- "/Users/david/Library/CloudStorage/OneDrive-Persönlich/Master ETH/Courses/11_Systems Genomics/project local repository"
+#pwd <- "/Users/david/Library/CloudStorage/OneDrive-Persönlich/Master ETH/Courses/11_Systems Genomics/project local repository/data"
+#pwd2 <- "/Users/david/Library/CloudStorage/OneDrive-Persönlich/Master ETH/Courses/11_Systems Genomics/project local repository"
 # pwd <- "C:/Users/nicks/Desktop/Systems_Genomics/GitHub David/SystemsGenomics2023/data"
-# pwd <- "/Users/valentin/Documents/ETH/Master Biotechnologie/Lectures/Sytems_Genomics/Local_git_hub_repository/data"
+ pwd <- "/Users/valentin/Documents/ETH/Master Biotechnologie/Lectures/Sytems_Genomics/Local_git_hub_repository/data"
 ```
 
 # Nextera trimmed
@@ -308,6 +308,9 @@ temp_mask = is.na(res_DESeq2_aDR$pvalue) & !is.na(res_DESeq2_aDR$log2FoldChange)
 res_DESeq2_aDR_fitered <- res_DESeq2_aDR[!is.na(res_DESeq2_aDR$pvalue_BH),]
 res_DESeq2_aDR_DEG <- res_DESeq2_aDR_fitered[res_DESeq2_aDR_fitered$pvalue_BH < 0.05,]#filter to only have significant data, include FC?
 DEG_aDR <- rownames(res_DESeq2_aDR_DEG)
+
+
+DEG_comaprison <-  data_frame("trim status" ="trimmed", "Rejuvenation approach"="aDR",DEGs = length(DEG_aDR))
 ```
 
 #### Volcano Plot
@@ -519,7 +522,7 @@ for(treatment in names(pos_cell_list_aDR))
 
 
 
-# Gene set Enrichment analysis (page 70)
+#### Gene set Enrichment analysis (page 70)
 ```{r, eval=FALSE}
 # sadly no meaningful results
 
@@ -543,9 +546,9 @@ score_ordered_aDR) + labs(title="hNbML5 GABAergic neurons")
 ```
 
 
-#3.7 Other analysis (page 72)
+### 3.7 Other analysis (page 72)
 
-## Cas genes from paper
+### Cas genes from paper
 ```{r}
 setwd("/Users/david/Library/CloudStorage/OneDrive-Persönlich/Master ETH/Courses/11_Systems Genomics/project local repository")
 CAS_genes_paper <- read.table("data/CAS genes.txt", header = TRUE, sep = "\t")
@@ -566,7 +569,7 @@ CAS_genes[CAS_genes$Ensembl.ID %in% common_CAS_DEG_aDR,]
 
 ```
 
-## Cerebellum Genes
+### Cerebellum Genes
 ```{r}
 setwd("/Users/david/Library/CloudStorage/OneDrive-Persönlich/Master ETH/Courses/11_Systems Genomics/project local repository")
 Cereb_paper <- read.table("data/region specific DEG in Cerebellum.txt", header = TRUE, sep = "\t")
@@ -613,6 +616,9 @@ temp_mask = is.na(res_DESeq2_YMP$pvalue) & !is.na(res_DESeq2_YMP$log2FoldChange)
 res_DESeq2_YMP_fitered <- res_DESeq2_YMP[!is.na(res_DESeq2_YMP$pvalue_BH),]
 res_DESeq2_YMP_DEG <- res_DESeq2_YMP_fitered[res_DESeq2_YMP_fitered$pvalue_BH < 0.05,]#filter to only have significant data, include FC?
 DEG_YMP <- rownames(res_DESeq2_YMP_DEG)
+
+new_row <- c("trimmed", "YMP", length(DEG_YMP))
+DEG_comaprison <- rbind(DEG_comaprison, new_row)
 ```
 
 #### Volcano Plot
@@ -714,7 +720,7 @@ trace = "none", scale = "none", labRow = NA, labCol = NA, col = viridis,
 ColSideColors = rainbow(15)[cl_DEG_mice]) 
 ```
 
-#### 3-6 Making sense of the genes (page 66)
+### 3-6 Making sense of the genes (page 66)
 ```{r}
 #YMP
 
@@ -737,7 +743,7 @@ write.table(DEG_YMP_gene_id, file = "DEG_genes_YMP.txt", quote = F, row.names = 
 # quote = F, row.names = F, col.names = F) #All expressed genes (background gene panel)
 ```
 
-#### Gene Ontology enrichment GORILLA (page 70)
+### Gene Ontology enrichment GORILLA (page 70)
 ```{r}
 # webtool: https://cbl-gorilla.cs.technion.ac.il/
 # using two unranked lists of genes
@@ -770,7 +776,9 @@ lineplot(neurofilament_expr_YMP, main = paste0(treatment, " (", nrow(neurofilame
 ```
 
 
-## 3.7 Other analysis (page 72)
+
+
+
 
 
 # Untrimmed data
@@ -1053,6 +1061,9 @@ temp_mask = is.na(res_DESeq2_aDR$pvalue) & !is.na(res_DESeq2_aDR$log2FoldChange)
 res_DESeq2_aDR_fitered <- res_DESeq2_aDR[!is.na(res_DESeq2_aDR$pvalue_BH),]
 res_DESeq2_aDR_DEG <- res_DESeq2_aDR_fitered[res_DESeq2_aDR_fitered$pvalue_BH < 0.05,]#filter to only have significant data, include FC?
 DEG_aDR <- rownames(res_DESeq2_aDR_DEG)
+
+new_row <- c("untrimmed", "aDR", length(DEG_aDR))
+DEG_comaprison <- rbind(DEG_comaprison, new_row)
 ```
 
 #### Volcano Plot
@@ -1250,6 +1261,9 @@ temp_mask = is.na(res_DESeq2_YMP$pvalue) & !is.na(res_DESeq2_YMP$log2FoldChange)
 res_DESeq2_YMP_fitered <- res_DESeq2_YMP[!is.na(res_DESeq2_YMP$pvalue_BH),]
 res_DESeq2_YMP_DEG <- res_DESeq2_YMP_fitered[res_DESeq2_YMP_fitered$pvalue_BH < 0.05,]#filter to only have significant data, include FC?
 DEG_YMP <- rownames(res_DESeq2_YMP_DEG)
+
+new_row <- c("untrimmed", "YMP", length(DEG_YMP))
+DEG_comaprison <- rbind(DEG_comaprison, new_row)
 ```
 
 #### Volcano Plot
@@ -1370,4 +1384,24 @@ ColSideColors = rainbow(15)[cl_DEG_mice])
 
 
 
+
+
+
+
+
+# Additional plots
+```{r}
+plot <- ggplot(DEG_comaprison, aes(x = `Rejuvenation approach`, y = DEGs, fill = `trim status`)) +
+  geom_bar(stat = "identity", position = "dodge", colour="black", width = 0.7) +
+  labs(title = "DEGs comparison untrimmed vs. trimmed", y = "Obtained DEGs") +
+  theme_minimal() +
+  scale_fill_manual(values = c("darkorchid","darkgreen")) +
+  theme(legend.position = "bottom",
+    legend.title = element_blank(),
+    plot.title = element_text(hjust = 0.5),
+    legend.text = element_text(size = 12)
+    ) 
+
+ggsave("DEGs_trimming_comparison.png",plot = plot, width = 9, height = 4, path = "/Users/valentin/Documents/ETH/Master Biotechnologie/Lectures/Sytems_Genomics/Local_git_hub_repository/plots")
+```
 
