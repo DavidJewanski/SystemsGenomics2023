@@ -493,13 +493,15 @@ layout(matrix(1:2, nrow = 1, byrow = T))
 par(mar=c(3,3,3,3))
 for(treatment in names(myelin_list_aDR))
   boxplot(myelin_list_aDR[[treatment]],
-          main = paste0(treatment, " (", nrow(myelin_list_aDR[[treatment]]),")"))
+          main = paste0(treatment, " (", nrow(myelin_list_aDR[[treatment]]),")"),
+          ylim = c(-6e-16, 6e-16))
 
 layout(matrix(1:2, nrow = 1, byrow = T))
 par(mar=c(3,3,3,3))
 for(treatment in names(pos_cell_list_aDR))
   boxplot(pos_cell_list_aDR[[treatment]],
-          main = paste0(treatment, " (", nrow(pos_cell_list_aDR[[treatment]]),")"))
+          main = paste0(treatment, " (", nrow(pos_cell_list_aDR[[treatment]]),")"),
+          ylim = c(-6e-15, 6e-15))
 
 
 # layout(matrix(1:4, nrow = 2, byrow = T))
