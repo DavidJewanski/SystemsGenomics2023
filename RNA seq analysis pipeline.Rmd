@@ -778,7 +778,7 @@ neurofilament_list_YMP <- lapply(avg_expr_DEG_list_YMP, function(df) df[rownames
 
 layout(matrix(1:2, nrow = 1, byrow = T))
 par(mar=c(3,3,3,3))
-lineplot(neurofilament_expr_YMP, main = paste0(treatment, " (", nrow(neurofilament_expr_YMP),")")) # wie stelle ich das gut dar?
+boxplot(neurofilament_expr_YMP, main = paste0(treatment, " (", nrow(neurofilament_expr_YMP),")")) # wie stelle ich das gut dar?
 #          ylim = c(-6e-16, 6e-16))
 
 
