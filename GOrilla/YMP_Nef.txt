@@ -1,0 +1,4 @@
+Input	Input Type	MGI Gene/Marker ID	Symbol	Name	Feature Type	Ensembl ID
+Nefh	current symbol	MGI:97309	Nefh	neurofilament, heavy polypeptide	protein coding gene	ENSMUSG00000020396
+Nefl	current symbol	MGI:97313	Nefl	neurofilament, light polypeptide	protein coding gene	ENSMUSG00000022055
+Nefm	current symbol	MGI:97314	Nefm	neurofilament, medium polypeptide	protein coding gene	ENSMUSG00000022054
