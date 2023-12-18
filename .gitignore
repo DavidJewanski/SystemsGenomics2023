@@ -1,0 +1,6 @@
+.DS_Store
+data/GeneCounts_untrimmed_optional/.DS_Store
+plots/.DS_Store
+data/rsem_genes_resutls_trimmed/.DS_Store
+.Rhistory
+.RData
