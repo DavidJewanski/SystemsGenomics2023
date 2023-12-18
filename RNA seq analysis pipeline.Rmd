@@ -9,19 +9,23 @@ title: "Systems Genomics data analysis pipeline"
 #install.packages(c("pheatmap","RColorBrewer","devEMF", "plotly"))
 #BiocManager::install(c("svglite", "fgsea"))
 #install.packages("stringi", dependencies=TRUE)
+#install.packages("viridis")
 ```
 
 # load libraries
 ```{r, include=FALSE, }
 libraries = c("tidyverse","ggrepel","BiocManager","pbapply","gplots","msigdbr", "biomaRt","sva","DESeq2","edgeR", "dplyr", "biomaRt", "tximport", "ggplot2", "pheatmap", "RColorBrewer", "svglite","devEMF")
 lapply(libraries, library, character.only=TRUE)
+
 library(stringi)
+library(viridis)
 ```
 
 ```{r}
-# pwd <- "/Users/david/Library/CloudStorage/OneDrive-Persönlich/Master ETH/Courses/11_Systems Genomics/project local repository/data"
+pwd <- "/Users/david/Library/CloudStorage/OneDrive-Persönlich/Master ETH/Courses/11_Systems Genomics/project local repository/data"
+pwd2 <- "/Users/david/Library/CloudStorage/OneDrive-Persönlich/Master ETH/Courses/11_Systems Genomics/project local repository"
 # pwd <- "C:/Users/nicks/Desktop/Systems_Genomics/GitHub David/SystemsGenomics2023/data"
-pwd <- "/Users/valentin/Documents/ETH/Master Biotechnologie/Lectures/Sytems_Genomics/Local_git_hub_repository/data"
+# pwd <- "/Users/valentin/Documents/ETH/Master Biotechnologie/Lectures/Sytems_Genomics/Local_git_hub_repository/data"
 ```
 
 # Nextera trimmed
@@ -30,7 +34,6 @@ pwd <- "/Users/valentin/Documents/ETH/Master Biotechnologie/Lectures/Sytems_Geno
 ### Import Gene expression quantification (p. 41)
 ```{r, warning=FALSE}
 setwd(pwd)
-
 samples <- list.files("rsem_genes_results_trimmed")
 
 expr <- sapply(samples, function(sample){
@@ -86,7 +89,6 @@ ensembl <- useEnsembl(biomart = "ensembl", dataset = "mmusculus_gene_ensembl")
 meta_genes <- getBM(attributes = c("ensembl_gene_id",
                                    "ensembl_gene_id_version",
                                    "ensembl_transcript_id_version",
-                                   "hgnc_symbol",
                                    "mgi_symbol", # appearantly necessary for DEseq
                                    "description",
                                    "chromosome_name",
@@ -102,15 +104,15 @@ right_join(data.frame(ensembl_gene_id_version = rownames(expr)), by = "ensembl_g
 ```
 
 
+
 ### Comparison of transcriptome profiles 
 #### Histograms, filtering unexpressed genes (p. 43-45)
 ```{r}
 # dim(expr) # 56884 annotated genes and 15 samples
 avg_expr <- rowMeans(expr)
 #layout(matrix(1:2, nrow=1))
-#hist(avg_expr)
-
-hist(log10(avg_expr + 1))
+hist(avg_expr)
+hist(log10(avg_expr + 0.01), main = "Average gene expression (before filtering)", xlab = "log10(Average gene expression [TPM])", ylab = "Number of genes")
 
 
 ggplot(data.frame(avg_expr), aes(x=avg_expr)) +
@@ -124,7 +126,7 @@ hist(num_det)
 #head(num_det)
 
 
-# get rid of genes that are unecpressed or extremely lowly expressed
+# get rid of genes that are unexpressed or extremely lowly expressed
 expressed <- rowMeans(expr > 0) >= 0.5 | rowMeans(expr) >= 1
 
 meta_genes$expressed <- expressed
@@ -132,13 +134,13 @@ meta_genes$expressed <- expressed
 head(expressed[meta_genes$expressed]) #expressed is a vector of booleans
 summary(expressed[meta_genes$expressed])
 
-#expr <- expr[which(expressed),] I want to keep the whole expr
-dim(expr[meta_genes$expressed,]) # 25649    15 --> now only 25'649 genes left
+#expr <- expr[which(expressed),] #I want to keep the whole expr
+#dim(expr[meta_genes$expressed,]) # 25649    15 --> now only 25'649 genes left
 
 avg_expr <- rowMeans(expr[meta_genes$expressed,]) #now after the filtering
 #layout(matrix(1:2, nrow=1))
 hist(avg_expr)
-hist(log10(avg_expr + 1))
+hist(log10(avg_expr + 0.01), main = "Average gene expression (after filtering)", xlab = "log10(Average gene expression [TPM])", ylab = "Number of genes")
 ```
 #### PCC & SCC (correlation coefficients, cluster dendorgrams, heatmap of samples) (p. 46)
 ```{r, fig.width=9}
@@ -179,7 +181,8 @@ cumulative_variance <- cumsum(variance_proportion)
 
 ggplot(data.frame(pca$x, meta1)) +
 #geom_point(aes(x = PC1, y = PC2, color = Name, shape = treatment),size=5)
-geom_point(aes(x = PC1, y = PC2, color = treatment),size=5)
+geom_point(aes(x = PC1, y = PC2, shape = treatment, color = treatment),size=5) +
+ggtitle("PCA of mice cerebellum samples") #+ theme_minimal() + xlab(str_glue("PC1, variance: ", round(variance_proportion[1], 3))
 
 # plot_ly(
 #   x = pca$x[,1],
@@ -198,7 +201,7 @@ geom_point(aes(x = PC1, y = PC2, color = treatment),size=5)
 
 ```
 ##### batch effect correction? --> probbaly does not make sense as we do not have different layers
-```{r}
+```{r, eval=FALSE}
 library(sva)
 expr_combat <- ComBat_seq(counts = expr,
                           batch = meta1$Name)
@@ -313,7 +316,7 @@ DEG_aDR <- rownames(res_DESeq2_aDR_DEG)
 #plot(res_DESeq2_aDR$log2FoldChange, -log10(p.adjust(res_DESeq2_aDR$pvalue)), method = "BH")
 
 #BiocManager::install("EnhancedVolcano")
-#library(EnhancedVolcano)
+library(EnhancedVolcano)
 
 plot <- EnhancedVolcano(res_DESeq2_aDR_fitered,
                 lab = rownames(res_DESeq2_aDR_fitered),
@@ -340,36 +343,36 @@ plot
 #### Grouping of identified genes (p. 59)
 ```{r}
 expr_aDR <- expr[,7:15]
-avg_expr_aDR <- sapply(sort(unique(meta1_aDR$treatment)), function(treatment)
-rowMeans(expr_aDR[,which(meta1_aDR$treatment == treatment)])) #V1: aDR, V2: AL
-head(avg_expr_aDR)
+treatment_aDR <- unique(meta1_aDR$treatment)
+avg_sc_expr_aDR <- sapply(treatment_aDR, function(treatment)
+  #rowMeans(expr_aDR[,which(meta1_aDR$treatment == treatment)])) #V1: aDR, V2: AL
+  rowMeans(t(scale(t(expr_aDR[,which(meta1_aDR$treatment == treatment)]))))) 
+colnames(avg_sc_expr_aDR) <- treatment_aDR
 
-
-
-#test, if this code is doing the right thing:
-#rowMeans(expr_aDR[c("ENSMUSG00000000001.5","ENSMUSG00000000028.16"),which(meta1_aDR$treatment == "aDR")])
-
-avg_expr_aDR <- data.frame(avg_expr_aDR)
-
+head(avg_sc_expr_aDR)
+avg_sc_expr_aDR <- data.frame(avg_sc_expr_aDR)
 ```
 
 ```{r}
-max_treatment_DEG_aDR <- setNames(colnames(avg_expr_aDR)[apply(avg_expr_aDR[DEG_aDR,], 1, which.max)],DEG_aDR)
-avg_expr_DEG_list_aDR <- tapply(names(max_treatment_DEG_aDR), max_treatment_DEG_aDR, function(x) avg_expr_aDR[x,])
-#avg_expr_DEG_list_aDR_df <- data.frame(avg_expr_DEG_list_aDR)
-#avg_expr_DEG_list_aDR_df_up <- data.frame(avg_expr_DEG_list_aDR[1])
-#avg_expr_DEG_list_aDR_df_up_scale <- scale(avg_expr_DEG_list_aDR_df_up)
-#avg_expr_DEG_list_aDR_df_down <- data.frame(avg_expr_DEG_list_aDR[2])
-test <- t(data.frame(avg_expr_DEG_list_aDR[1]))
-#avg_expr_DEG_list_aDR_df[2,1]
+max_treatment_DEG_aDR <- setNames(colnames(avg_sc_expr_aDR)[apply(avg_sc_expr_aDR[DEG_aDR,], 1, which.max)],DEG_aDR)
+avg_expr_DEG_list_aDR <- tapply(names(max_treatment_DEG_aDR), max_treatment_DEG_aDR, function(x) avg_sc_expr_aDR[x,])
 
-scaled_expr_DEG_list_aDR <- lapply(avg_expr_DEG_list_aDR, function(x) t(scale(t(x),scale = FALSE))) # scaling converts all of the genes into one value instead of a normalized distribtion
+## centered but not scaled
+# scaled_expr_DEG_list_aDR <- lapply(avg_expr_DEG_list_aDR, function(x) t(scale(t(x),scale = FALSE))) # scaling converts all of the genes into one value instead of a normalized distribtion
+# layout(matrix(1:2, nrow = 1, byrow = T))
+# par(mar=c(3,3,3,3))
+# for(treatment in names(scaled_expr_DEG_list_aDR))
+# boxplot(scaled_expr_DEG_list_aDR[[treatment]],
+# main = paste0(treatment, " (", nrow(avg_expr_DEG_list_aDR[[treatment]]),")"))
+
+# centered and scaled
+
 layout(matrix(1:2, nrow = 1, byrow = T))
 par(mar=c(3,3,3,3))
-for(treatment in names(scaled_expr_DEG_list_aDR))
-boxplot(scaled_expr_DEG_list_aDR[[treatment]],
-main = paste0(treatment, " (", nrow(avg_expr_DEG_list_aDR[[treatment]]),")"))
-
+for(treatment in names(avg_expr_DEG_list_aDR))
+  boxplot(avg_expr_DEG_list_aDR[[treatment]],
+          main = paste0(treatment, " (", nrow(avg_expr_DEG_list_aDR[[treatment]]),")"),
+          ylim = c(-3.5e-15, 3.5e-15))
 ```
 
 #### hierarchical clustering of aDR GENES (MICE is below in a new chunk)
@@ -388,7 +391,7 @@ library(viridis)
 heatmap.2(corr_DEG_genes, Rowv = as.dendrogram(hcl_DEG_genes), Colv = as.dendrogram(hcl_DEG_genes),
 trace = "none", scale = "none", labRow = NA, labCol = NA, col = viridis)
 
-cl_DEG_genes <- cutree(hcl_DEG_genes, k = 3) #k can be adjusted
+cl_DEG_genes <- cutree(hcl_DEG_genes, k = 4) #k can be adjusted
 heatmap.2(corr_DEG_genes, Rowv = as.dendrogram(hcl_DEG_genes), Colv = as.dendrogram(hcl_DEG_genes),
 trace = "none", scale = "none", labRow = NA, labCol = NA, col = viridis,
 ColSideColors = rainbow(15)[cl_DEG_genes]) 
@@ -409,7 +412,7 @@ library(viridis)
 heatmap.2(corr_DEG_mice, Rowv = as.dendrogram(hcl_DEG_mice), Colv = as.dendrogram(hcl_DEG_mice),
 trace = "none", scale = "none", labRow = NA, labCol = NA, col = viridis)
 
-cl_DEG_mice <- cutree(hcl_DEG_mice, k = 3) #k can be adjusted
+cl_DEG_mice <- cutree(hcl_DEG_mice, k = 4) #k can be adjusted
 heatmap.2(corr_DEG_mice, Rowv = as.dendrogram(hcl_DEG_mice), Colv = as.dendrogram(hcl_DEG_mice),
 trace = "none", scale = "none", labRow = NA, labCol = NA, col = viridis,
 ColSideColors = rainbow(15)[cl_DEG_mice]) 
@@ -425,6 +428,9 @@ ColSideColors = rainbow(15)[cl_DEG_mice])
 
 #Convert DEG gene id versions to gene id (this is what DAVID wants)
 # Remove everything after the dot
+
+setwd(pwd)
+
 DEG_aDR_gene_id <- sub("\\..*", "", DEG_aDR)
 
 
@@ -435,42 +441,147 @@ quote = F, row.names = F, col.names = F) #DEG's, dies ist der Code der meiner Me
 write.table(meta_genes[meta_genes$expressed, "ensembl_gene_id"],
 file = "genes_expressed.txt",
 quote = F, row.names = F, col.names = F) #All expressed genes (background gene panel)
-
 ```
 
-#### Enrichment analysis (page 70)
+#### Gene Ontology enrichment GORILLA (page 70)
 ```{r}
-DE_L4 <- DE_test(expr = expr[meta_genes$expressed,],
-cond = meta$Layer == "L4",
-ctrl = "FALSE",
-covar = meta %>% dplyr::select(Individual)) %>%
-tibble::rownames_to_column("gene")
-scores <- setNames(sign(log(DE_L4$fc)) * (-log10(DE_L4$pval)),
-setNames(meta_genes$ensembl_gene_id,
-meta_genes$ensembl_gene_id_version)[DE_L4$gene])
-scores_ordered <- sort(scores, decreasing=T)
+# webtool: https://cbl-gorilla.cs.technion.ac.il/
+# using two unranked lists of genes
+# Results: https://cbl-gorilla.cs.technion.ac.il/GOrilla/q5z11jdw/GOResults.html#genes_info
+setwd("/Users/david/Library/CloudStorage/OneDrive-Persönlich/Master ETH/Courses/11_Systems Genomics/project local repository")
 
+GO_aDR <- read.csv("GOrilla/GO_aDR.csv", header = TRUE, sep = ";")
+GO_aDR <- GO_aDR %>%
+  mutate_at(vars(N, B, n, b, Enrichment), as.numeric)
+GO_aDR$Enrichment <- (GO_aDR$b/GO_aDR$n) / (GO_aDR$B/GO_aDR$N)
+GO_aDR$Genes <- sub("^\\[|\\]$", "", GO_aDR$Genes)
+
+
+myelination <- unlist(str_split(GO_aDR$Genes[1], ","))
+myelination <- gsub("-.*", "", myelination)
+myelination <- gsub(" ", "", myelination)
+myelin_meta <- meta_genes[meta_genes$mgi_symbol %in% myelination ,]
+myelin_expr <- avg_sc_expr_aDR[rownames(expr) %in% myelin_meta$ensembl_gene_id_version,]
+
+pos_cellular_process <- unlist(str_split(GO_aDR$Genes[4], ","))
+pos_cellular_process <- gsub("-.*", "", pos_cellular_process)
+pos_cellular_process <- gsub(" ", "", pos_cellular_process)
+pos_cellular_process <- c(pos_cellular_process, "Prxl2c", "Niban2")
+cell_proc_meta <- meta_genes[meta_genes$mgi_symbol %in% pos_cellular_process ,]
+cell_proc_expr <- avg_sc_expr_aDR[rownames(expr) %in% cell_proc_meta$ensembl_gene_id_version,]
+
+pos_reg_met <- unlist(str_split(GO_aDR$Genes[9], ","))
+pos_reg_met <- gsub("-.*", "", pos_reg_met)
+pos_reg_met <- gsub(" ", "", pos_reg_met)
+reg_met_meta <- meta_genes[meta_genes$mgi_symbol %in% pos_reg_met ,]
+reg_met_expr <- avg_sc_expr_aDR[rownames(expr) %in% reg_met_meta$ensembl_gene_id_version,]
+
+length(intersect(pos_reg_met,pos_cellular_process))# lol, same genes.
+
+#meta_genes[!meta_genes$mgi_symbol %in% pos_cellular_process ,]
+#pos_cellular_process[!pos_cellular_process %in%  meta_genes$mgi_symbol]
+
+
+#meta_genes[meta_genes$ensembl_gene_id == "ENSMUSG00000026796",]
+#res_DESeq2_aDR["ENSMUSG00000021482.11",]
+
+max_treatment_DEG_aDR <- setNames(colnames(avg_sc_expr_aDR)[apply(avg_sc_expr_aDR[DEG_aDR,], 1, which.max)],DEG_aDR)
+avg_expr_DEG_list_aDR <- tapply(names(max_treatment_DEG_aDR), max_treatment_DEG_aDR, function(x) avg_sc_expr_aDR[x,])
+
+myelin_list_aDR <- lapply(avg_expr_DEG_list_aDR, function(df) df[rownames(df) %in% myelin_meta$ensembl_gene_id_version,])
+pos_cell_list_aDR <- lapply(avg_expr_DEG_list_aDR, function(df) df[rownames(df) %in% cell_proc_meta$ensembl_gene_id_version,])
+
+layout(matrix(1:2, nrow = 1, byrow = T))
+par(mar=c(3,3,3,3))
+for(treatment in names(myelin_list_aDR))
+  boxplot(myelin_list_aDR[[treatment]],
+          main = paste0(treatment, " (", nrow(myelin_list_aDR[[treatment]]),")"),
+          ylim = c(-6e-16, 6e-16))
+
+layout(matrix(1:2, nrow = 1, byrow = T))
+par(mar=c(3,3,3,3))
+for(treatment in names(pos_cell_list_aDR))
+  boxplot(pos_cell_list_aDR[[treatment]],
+          main = paste0(treatment, " (", nrow(pos_cell_list_aDR[[treatment]]),")"),
+          ylim = c(-6e-15, 6e-15))
+
+
+# layout(matrix(1:4, nrow = 2, byrow = T))
+# par(mar=c(3,3,3,3))
+# for(GOset in c(myelin_list_aDR, pos_cell_list_aDR)) {
+#   for(treatment in names(GOset)) {
+#     boxplot(GOset[[treatment]],
+#             main = paste0(treatment, " (", nrow(GOset[[treatment]]),")"))
+#   }
+# }
+  
+```
+
+
+
+# Gene set Enrichment analysis (page 70)
+```{r, eval=FALSE}
+# sadly no meaningful results
+
+score_aDR <- setNames(sign(res_DESeq2_aDR_DEG$log2FoldChange) * res_DESeq2_aDR_DEG$minuslog10_pvalue_BH, gsub("\\..*","", DEG_aDR))
+score_ordered_aDR <- sort(score_aDR, decreasing=TRUE)
+#BiocManager::install("fgsea")
 library(msigdbr)
-genesets_celltype <- msigdbr(species = "Homo sapiens", category = "C8")
+genesets_celltype <- msigdbr(species = "Mus musculus", category = "H")
+genesets_celltype <- genesets_celltype[!is.na(genesets_celltype$ensembl_gene),] # 32 entries have NA values in ensembl_gene_id
 genesets_celltype_list <- tapply(genesets_celltype$ensembl_gene, genesets_celltype$gs_name, list)
+
+# length(intersect(unique(genesets_celltype$ensembl_gene), names(score_ordered_aDR)))
+
 library(fgsea)
-fgsea_kegg <- fgsea(pathways = genesets_celltype_list,
-stats = scores_ordered,
-minSize = 15,
-maxSize = 500)
-
+fgsea_kegg <- fgsea(pathways = genesets_celltype_list, stats = score_ordered_aDR, minSize = 10, maxSize = 100)
+fgsea_kegg
 fgsea_kegg[order(NES,decreasing=T),][1:10,1:7]
+plotEnrichment(genesets_celltype_list[["MURARO_PANCREAS_DUCTAL_CELL"]],
+score_ordered_aDR) + labs(title="hNbML5 GABAergic neurons")
+#fgsea_kegg[order(NES,decreasing=F),][1:10,1:7]
+```
 
-plotEnrichment(genesets_celltype_list[["MANNO_MIDBRAIN_NEUROTYPES_HNBML5"]],
-scores_ordered) + labs(title="hNbML5 GABAergic neurons")
 
-fgsea_kegg[order(NES,decreasing=F),][1:10,1:7]
+#3.7 Other analysis (page 72)
 
+## Cas genes from paper
+```{r}
+setwd("/Users/david/Library/CloudStorage/OneDrive-Persönlich/Master ETH/Courses/11_Systems Genomics/project local repository")
+CAS_genes_paper <- read.table("data/CAS genes.txt", header = TRUE, sep = "\t")
+#CAS_genes <- meta_genes[meta_genes$mgi_symbol == CAS_genes$Gene_Symbol,]
+
+
+#write.table(CAS_genes$Gene_Symbol, file = "CAS_gene_symbol.txt", quote = F, row.names = F, col.names = F)
+CAS_genes <- read.table("Cas_genes_ensembl.txt", header = TRUE, sep = "\t")
+#CAS_genes <- CAS_genes[ CAS_genes$Symbol %in%  CAS_genes_paper$Gene_Symbol,]
+
+length(unique(CAS_genes$Ensembl.ID))
+#setdiff(CAS_genes$Symbol,CAS_genes_paper$Gene_Symbol))
+
+# how many of the CAS genes are in our DEG?
+common_CAS_DEG_aDR <- intersect(CAS_genes$Ensembl_ID, gsub("\\..*","", DEG_aDR))
+CAS_genes[CAS_genes$Ensembl.ID %in% common_CAS_DEG_aDR,]
 
 
 ```
 
+## Cerebellum Genes
+```{r}
+setwd("/Users/david/Library/CloudStorage/OneDrive-Persönlich/Master ETH/Courses/11_Systems Genomics/project local repository")
+Cereb_paper <- read.table("data/region specific DEG in Cerebellum.txt", header = TRUE, sep = "\t")
 
+#write.table(Cereb_paper$Gene_Symbol, file = "Cereb_paper.txt", quote = F, row.names = F, col.names = F)
+
+Cereb_genes <- read.csv("cereb_genes.csv", header = TRUE, sep = ";")
+
+length(unique(Cereb_genes$Ensembl.ID))
+#setdiff(CAS_genes$Symbol,CAS_genes_paper$Gene_Symbol))
+
+# how many of the CAS genes are in our DEG?
+common_cereb_DEG_aDR <- intersect(Cereb_genes$Ensembl.ID, gsub("\\..*","", DEG_aDR))
+CAS_genes[Cereb_genes$Ensembl.ID %in% common_CAS_DEG_aDR,]
+```
 
 
 ### DESeq YMP/PBS (slide 57)
@@ -538,39 +649,29 @@ plot
 #### Grouping of identified genes (p. 59)
 ```{r}
 expr_YMP <- expr[,1:6]
-avg_expr_YMP <- sapply(sort(unique(meta1_YMP$treatment)), function(treatment)
-rowMeans(expr_YMP[,which(meta1_YMP$treatment == treatment)])) #V1: YMP, V2: PBS
-head(avg_expr_YMP)
+treatment_YMP <- unique(meta1_YMP$treatment)
+avg_sc_expr_YMP <- sapply(treatment_YMP, function(treatment)
+rowMeans(t(scale(t(expr_YMP[,which(meta1_YMP$treatment == treatment)]))))) #V1: YMP, V2: PBS
+colnames(avg_sc_expr_YMP) <- treatment_YMP
+head(avg_sc_expr_YMP)
 
-
-
-#test, if this code is doing the right thing:
-#rowMeans(expr_aDR[c("ENSMUSG00000000001.5","ENSMUSG00000000028.16"),which(meta1_aDR$treatment == "aDR")])
-
-avg_expr_YMP <- data.frame(avg_expr_YMP)
-
+avg_sc_expr_YMP <- data.frame(avg_sc_expr_YMP)
 ```
 
 ```{r}
-max_treatment_DEG_YMP <- setNames(colnames(avg_expr_YMP)[apply(avg_expr_YMP[DEG_YMP,], 1, which.max)],DEG_YMP)
-avg_expr_DEG_list_YMP <- tapply(names(max_treatment_DEG_YMP), max_treatment_DEG_YMP, function(x) avg_expr_YMP[x,])
-#avg_expr_DEG_list_aDR_df <- data.frame(avg_expr_DEG_list_aDR)
-#avg_expr_DEG_list_aDR_df_up <- data.frame(avg_expr_DEG_list_aDR[1])
-#avg_expr_DEG_list_aDR_df_up_scale <- scale(avg_expr_DEG_list_aDR_df_up)
-#avg_expr_DEG_list_aDR_df_down <- data.frame(avg_expr_DEG_list_aDR[2])
-test <- t(data.frame(avg_expr_DEG_list_YMP[1]))
-#avg_expr_DEG_list_aDR_df[2,1]
+max_treatment_DEG_YMP <- setNames(colnames(avg_sc_expr_YMP)[apply(avg_sc_expr_YMP[DEG_YMP,], 1, which.max)],DEG_YMP)
+avg_expr_DEG_list_YMP <- tapply(names(max_treatment_DEG_YMP), max_treatment_DEG_YMP, function(x) avg_sc_expr_YMP[x,])
 
-scaled_expr_DEG_list_YMP <- lapply(avg_expr_DEG_list_YMP, function(x) t(scale(t(x),scale = FALSE))) # scaling converts all of the genes into one value instead of a normalized distribtion
 layout(matrix(1:2, nrow = 1, byrow = T))
 par(mar=c(3,3,3,3))
-for(treatment in names(scaled_expr_DEG_list_YMP))
-boxplot(scaled_expr_DEG_list_YMP[[treatment]],
-main = paste0(treatment, " (", nrow(avg_expr_DEG_list_YMP[[treatment]]),")"))
+for(treatment in names(avg_expr_DEG_list_YMP))
+boxplot(avg_expr_DEG_list_YMP[[treatment]],
+main = paste0(treatment, " (", nrow(avg_expr_DEG_list_YMP[[treatment]]),")"),
+ylim = c(-2.5e-15, 2.5e-15))
 
 ```
 
-#### hierarchical clustering of aDR GENES (MICE is below in a new chunk)
+#### hierarchical clustering of YMP GENES (MICE is below in a new chunk)
 ```{r}
 #corr_DEG_mice <- cor(expr_aDR[DEG_aDR,], method = "spearman")
 corr_DEG_genes <- cor(t(expr_YMP[DEG_YMP,]), method = "spearman")
@@ -586,12 +687,12 @@ library(viridis)
 heatmap.2(corr_DEG_genes, Rowv = as.dendrogram(hcl_DEG_genes), Colv = as.dendrogram(hcl_DEG_genes),
 trace = "none", scale = "none", labRow = NA, labCol = NA, col = viridis)
 
-cl_DEG_genes <- cutree(hcl_DEG_genes, k = 3) #k can be adjusted
+cl_DEG_genes <- cutree(hcl_DEG_genes, k = 4) #k can be adjusted
 heatmap.2(corr_DEG_genes, Rowv = as.dendrogram(hcl_DEG_genes), Colv = as.dendrogram(hcl_DEG_genes),
 trace = "none", scale = "none", labRow = NA, labCol = NA, col = viridis,
 ColSideColors = rainbow(15)[cl_DEG_genes]) 
 ```
-#### hierarchical clustering of aDR MICE (GENES is above)
+#### hierarchical clustering of YMP MICE (GENES is above)
 ```{r}
 corr_DEG_mice <- cor(expr_YMP[DEG_YMP,], method = "spearman")
 #corr_DEG_genes <- cor(t(expr_aDR[DEG_aDR,]), method = "spearman")
@@ -607,13 +708,66 @@ library(viridis)
 heatmap.2(corr_DEG_mice, Rowv = as.dendrogram(hcl_DEG_mice), Colv = as.dendrogram(hcl_DEG_mice),
 trace = "none", scale = "none", labRow = NA, labCol = NA, col = viridis)
 
-cl_DEG_mice <- cutree(hcl_DEG_mice, k = 3) #k can be adjusted
+cl_DEG_mice <- cutree(hcl_DEG_mice, k = 2) #k can be adjusted
 heatmap.2(corr_DEG_mice, Rowv = as.dendrogram(hcl_DEG_mice), Colv = as.dendrogram(hcl_DEG_mice),
 trace = "none", scale = "none", labRow = NA, labCol = NA, col = viridis,
 ColSideColors = rainbow(15)[cl_DEG_mice]) 
 ```
 
+#### 3-6 Making sense of the genes (page 66)
+```{r}
+#YMP
 
+#Convert list of DEG's into a format that you can upload into DAVID.
+#Think of what cluster of genes we want to analyze!
+#write.table(meta_genes[meta_genes$ensembl_gene_id_version %in% names(which(cl_DEG==2)), "ensembl_gene"], file = "genes_C2.txt",quote = F, row.names = F, col.names = F) #DEG's
+
+#Convert DEG gene id versions to gene id (this is what DAVID wants)
+# Remove everything after the dot
+
+setwd(pwd)
+getwd()
+DEG_YMP_gene_id <- sub("\\..*", "", DEG_YMP)
+
+
+write.table(DEG_YMP_gene_id, file = "DEG_genes_YMP.txt", quote = F, row.names = F, col.names = F) #DEG's, dies ist der Code der meiner Meinung nach Sinn macht.
+
+# write.table(meta_genes[meta_genes$expressed, "ensembl_gene_id"],
+# file = "genes_expressed.txt",
+# quote = F, row.names = F, col.names = F) #All expressed genes (background gene panel)
+```
+
+#### Gene Ontology enrichment GORILLA (page 70)
+```{r}
+# webtool: https://cbl-gorilla.cs.technion.ac.il/
+# using two unranked lists of genes
+# Results: https://cbl-gorilla.cs.technion.ac.il/GOrilla/a0hgan88/GOResults.html
+
+# Results show very interesting Enrichment for genes: Nefh, Nefl, Nefm
+setwd(pwd2)
+YMP_Nef_ens <- read.table("GOrilla/YMP_Nef.txt", header = TRUE, sep = "\t")
+Nef_gene_ids <- meta_genes[meta_genes$ensembl_gene_id %in% YMP_Nef_ens$Ensembl.ID,]
+neurofilament_expr_YMP <- avg_sc_expr_YMP[Nef_gene_ids$ensembl_gene_id,] ### LOL. wtf, wwhat
+
+
+max_treatment_DEG_YMP <- setNames(colnames(avg_sc_expr_YMP)[apply(avg_sc_expr_YMP[DEG_YMP,], 1, which.max)],DEG_YMP)
+avg_expr_DEG_list_YMP <- tapply(names(max_treatment_DEG_YMP), max_treatment_DEG_YMP, function(x) avg_sc_expr_YMP[x,])
+
+
+rownames(avg_expr_DEG_list_YMP) %in% neurofilament_expr_YMP$ensembl_gene_id_version
+
+neurofilament_list_YMP <- lapply(avg_expr_DEG_list_YMP, function(df) df[rownames(df) %in% neurofilament_expr_YMP$ensembl_gene_id_version,])
+
+
+#pos_cell_list_aDR <- lapply(avg_expr_DEG_list_aDR, function(df) df[rownames(df) %in% cell_proc_meta$ensembl_gene_id_version,])
+
+layout(matrix(1:2, nrow = 1, byrow = T))
+par(mar=c(3,3,3,3))
+lineplot(neurofilament_expr_YMP, main = paste0(treatment, " (", nrow(neurofilament_expr_YMP),")")) # wie stelle ich das gut dar?
+#          ylim = c(-6e-16, 6e-16))
+
+
+```
 
 
 ## 3.7 Other analysis (page 72)
@@ -1211,4 +1365,9 @@ ColSideColors = rainbow(15)[cl_DEG_mice])
 
 
 ## 3.7 Other analysis (page 72)
+
+
+
+
+
 

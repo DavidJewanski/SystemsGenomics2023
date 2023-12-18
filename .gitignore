@@ -1,6 +1,11 @@
 .DS_Store
 data/GeneCounts_untrimmed_optional/.DS_Store
+<<<<<<< HEAD
 plots/.DS_Store
 data/rsem_genes_resutls_trimmed/.DS_Store
 .Rhistory
 .RData
+=======
+data/rsem_genes_results_trimmed/.DS_Store
+plots/.DS_Store
+>>>>>>> 97eb06f72c48d34acd6b6d3fafacd808e7700bc5

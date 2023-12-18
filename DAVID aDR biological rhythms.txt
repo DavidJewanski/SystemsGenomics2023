@@ -1,0 +1,7 @@
+ID	Gene Name	Species
+ENSMUSG00000020580	Rho-associated coiled-coil containing protein kinase 2(Rock2)	Mus musculus	
+ENSMUSG00000038550	circadian associated repressor of transcription(Ciart)	Mus musculus	
+ENSMUSG00000020038	cryptochrome circadian regulator 1(Cry1)	Mus musculus	
+ENSMUSG00000068742	cryptochrome circadian regulator 2(Cry2)	Mus musculus	
+ENSMUSG00000003949	hepatic leukemia factor(Hlf)	Mus musculus	
+ENSMUSG00000022389	thyrotroph embryonic factor(Tef)	Mus musculus	
