@@ -9,21 +9,22 @@ title: "Systems Genomics data analysis pipeline"
 #install.packages(c("pheatmap","RColorBrewer","devEMF", "plotly"))
 #BiocManager::install(c("svglite", "fgsea"))
 #install.packages("stringi", dependencies=TRUE)
+#install.packages("viridis")
 ```
 
 # load libraries
 ```{r, include=FALSE, }
 libraries = c("tidyverse","ggrepel","BiocManager","pbapply","gplots","msigdbr", "biomaRt","sva","DESeq2","edgeR", "dplyr", "biomaRt", "tximport", "ggplot2", "pheatmap", "RColorBrewer", "svglite","devEMF")
 lapply(libraries, library, character.only=TRUE)
-install.packages("viridis")
+
 library(stringi)
 library(viridis)
 ```
 
 ```{r}
-# pwd <- "/Users/david/Library/CloudStorage/OneDrive-Persönlich/Master ETH/Courses/11_Systems Genomics/project local repository/data"
+pwd <- "/Users/david/Library/CloudStorage/OneDrive-Persönlich/Master ETH/Courses/11_Systems Genomics/project local repository/data"
 # pwd <- "C:/Users/nicks/Desktop/Systems_Genomics/GitHub David/SystemsGenomics2023/data"
-pwd <- "/Users/valentin/Documents/ETH/Master Biotechnologie/Lectures/Sytems_Genomics/Local_git_hub_repository/data"
+# pwd <- "/Users/valentin/Documents/ETH/Master Biotechnologie/Lectures/Sytems_Genomics/Local_git_hub_repository/data"
 ```
 
 # Nextera trimmed
@@ -199,7 +200,7 @@ geom_point(aes(x = PC1, y = PC2, color = treatment),size=5)
 
 ```
 ##### batch effect correction? --> probbaly does not make sense as we do not have different layers
-```{r}
+```{r, eval=FALSE}
 library(sva)
 expr_combat <- ComBat_seq(counts = expr,
                           batch = meta1$Name)
@@ -314,7 +315,7 @@ DEG_aDR <- rownames(res_DESeq2_aDR_DEG)
 #plot(res_DESeq2_aDR$log2FoldChange, -log10(p.adjust(res_DESeq2_aDR$pvalue)), method = "BH")
 
 #BiocManager::install("EnhancedVolcano")
-#library(EnhancedVolcano)
+library(EnhancedVolcano)
 
 plot <- EnhancedVolcano(res_DESeq2_aDR_fitered,
                 lab = rownames(res_DESeq2_aDR_fitered),
@@ -341,7 +342,7 @@ plot
 #### Grouping of identified genes (p. 59)
 ```{r}
 expr_aDR <- expr[,7:15]
-treatment_aDR <- sort(unique(meta1_aDR$treatment))
+treatment_aDR <- unique(meta1_aDR$treatment)
 avg_sc_expr_aDR <- sapply(treatment_aDR, function(treatment)
   #rowMeans(expr_aDR[,which(meta1_aDR$treatment == treatment)])) #V1: aDR, V2: AL
   rowMeans(t(scale(t(expr_aDR[,which(meta1_aDR$treatment == treatment)]))))) 
@@ -475,12 +476,12 @@ reg_met_expr <- avg_sc_expr_aDR[rownames(expr) %in% reg_met_meta$ensembl_gene_id
 
 length(intersect(pos_reg_met,pos_cellular_process))# lol, same genes.
 
-meta_genes[!meta_genes$mgi_symbol %in% pos_cellular_process ,]
-pos_cellular_process[!pos_cellular_process %in%  meta_genes$mgi_symbol]
+#meta_genes[!meta_genes$mgi_symbol %in% pos_cellular_process ,]
+#pos_cellular_process[!pos_cellular_process %in%  meta_genes$mgi_symbol]
 
 
-meta_genes[meta_genes$ensembl_gene_id == "ENSMUSG00000026796",]
-res_DESeq2_aDR["ENSMUSG00000021482.11",]
+#meta_genes[meta_genes$ensembl_gene_id == "ENSMUSG00000026796",]
+#res_DESeq2_aDR["ENSMUSG00000021482.11",]
 
 max_treatment_DEG_aDR <- setNames(colnames(avg_sc_expr_aDR)[apply(avg_sc_expr_aDR[DEG_aDR,], 1, which.max)],DEG_aDR)
 avg_expr_DEG_list_aDR <- tapply(names(max_treatment_DEG_aDR), max_treatment_DEG_aDR, function(x) avg_sc_expr_aDR[x,])
@@ -488,10 +489,11 @@ avg_expr_DEG_list_aDR <- tapply(names(max_treatment_DEG_aDR), max_treatment_DEG_
 myelin_list_aDR <- lapply(avg_expr_DEG_list_aDR, function(df) df[rownames(df) %in% myelin_meta$ensembl_gene_id_version,])
 pos_cell_list_aDR <- lapply(avg_expr_DEG_list_aDR, function(df) df[rownames(df) %in% cell_proc_meta$ensembl_gene_id_version,])
 
-layout(matrix(1:1, nrow = 1, byrow = T))
+layout(matrix(1:2, nrow = 1, byrow = T))
 par(mar=c(3,3,3,3))
-boxplot(myelin_expr,
-        main = paste0("myelination (", nrow(myelin_expr),")"))
+for(treatment in names(myelin_list_aDR))
+  boxplot(myelin_list_aDR[[treatment]],
+          main = paste0(treatment, " (", nrow(myelin_list_aDR[[treatment]]),")"))
 
 layout(matrix(1:2, nrow = 1, byrow = T))
 par(mar=c(3,3,3,3))
