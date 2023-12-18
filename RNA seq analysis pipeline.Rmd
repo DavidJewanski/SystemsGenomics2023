@@ -376,7 +376,8 @@ layout(matrix(1:2, nrow = 1, byrow = T))
 par(mar=c(3,3,3,3))
 for(treatment in names(avg_expr_DEG_list_aDR))
   boxplot(avg_expr_DEG_list_aDR[[treatment]],
-          main = paste0(treatment, " (", nrow(avg_expr_DEG_list_aDR[[treatment]]),")"))
+          main = paste0(treatment, " (", nrow(avg_expr_DEG_list_aDR[[treatment]]),")"),
+          ylim = c(-3.5e-15, 3.5e-15))
 ```
 
 #### hierarchical clustering of aDR GENES (MICE is below in a new chunk)
@@ -653,35 +654,39 @@ plot
 #### Grouping of identified genes (p. 59)
 ```{r}
 expr_YMP <- expr[,1:6]
-avg_expr_YMP <- sapply(sort(unique(meta1_YMP$treatment)), function(treatment)
-rowMeans(expr_YMP[,which(meta1_YMP$treatment == treatment)])) #V1: YMP, V2: PBS
-head(avg_expr_YMP)
+treatment_YMP <- unique(meta1_YMP$treatment)
+avg_sc_expr_YMP <- sapply(treatment_YMP, function(treatment)
+rowMeans(t(scale(t(expr_YMP[,which(meta1_YMP$treatment == treatment)]))))) #V1: YMP, V2: PBS
+colnames(avg_sc_expr_YMP) <- treatment_YMP
+head(avg_sc_expr_YMP)
 
-
-
-#test, if this code is doing the right thing:
-#rowMeans(expr_aDR[c("ENSMUSG00000000001.5","ENSMUSG00000000028.16"),which(meta1_aDR$treatment == "aDR")])
-
-avg_expr_YMP <- data.frame(avg_expr_YMP)
-
+avg_sc_expr_YMP <- data.frame(avg_sc_expr_YMP)
 ```
 
 ```{r}
-max_treatment_DEG_YMP <- setNames(colnames(avg_expr_YMP)[apply(avg_expr_YMP[DEG_YMP,], 1, which.max)],DEG_YMP)
-avg_expr_DEG_list_YMP <- tapply(names(max_treatment_DEG_YMP), max_treatment_DEG_YMP, function(x) avg_expr_YMP[x,])
-#avg_expr_DEG_list_aDR_df <- data.frame(avg_expr_DEG_list_aDR)
-#avg_expr_DEG_list_aDR_df_up <- data.frame(avg_expr_DEG_list_aDR[1])
-#avg_expr_DEG_list_aDR_df_up_scale <- scale(avg_expr_DEG_list_aDR_df_up)
-#avg_expr_DEG_list_aDR_df_down <- data.frame(avg_expr_DEG_list_aDR[2])
-test <- t(data.frame(avg_expr_DEG_list_YMP[1]))
-#avg_expr_DEG_list_aDR_df[2,1]
+max_treatment_DEG_aDR <- setNames(colnames(avg_sc_expr_aDR)[apply(avg_sc_expr_aDR[DEG_aDR,], 1, which.max)],DEG_aDR)
+avg_expr_DEG_list_aDR <- tapply(names(max_treatment_DEG_aDR), max_treatment_DEG_aDR, function(x) avg_sc_expr_aDR[x,])
 
-scaled_expr_DEG_list_YMP <- lapply(avg_expr_DEG_list_YMP, function(x) t(scale(t(x),scale = FALSE))) # scaling converts all of the genes into one value instead of a normalized distribtion
+
 layout(matrix(1:2, nrow = 1, byrow = T))
 par(mar=c(3,3,3,3))
-for(treatment in names(scaled_expr_DEG_list_YMP))
-boxplot(scaled_expr_DEG_list_YMP[[treatment]],
-main = paste0(treatment, " (", nrow(avg_expr_DEG_list_YMP[[treatment]]),")"))
+for(treatment in names(avg_expr_DEG_list_aDR))
+  boxplot(avg_expr_DEG_list_aDR[[treatment]],
+          main = paste0(treatment, " (", nrow(avg_expr_DEG_list_aDR[[treatment]]),")"),
+          ylim = c(-3.5e-15, 3.5e-15))
+```
+
+
+```{r}
+max_treatment_DEG_YMP <- setNames(colnames(avg_sc_expr_YMP)[apply(avg_sc_expr_YMP[DEG_YMP,], 1, which.max)],DEG_YMP)
+avg_expr_DEG_list_YMP <- tapply(names(max_treatment_DEG_YMP), max_treatment_DEG_YMP, function(x) avg_sc_expr_YMP[x,])
+
+layout(matrix(1:2, nrow = 1, byrow = T))
+par(mar=c(3,3,3,3))
+for(treatment in names(avg_expr_DEG_list_YMP))
+boxplot(avg_expr_DEG_list_YMP[[treatment]],
+main = paste0(treatment, " (", nrow(avg_expr_DEG_list_YMP[[treatment]]),")"),
+ylim = c(-2.5e-15, 2.5e-15))
 
 ```
 
