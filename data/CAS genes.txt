@@ -1,4 +1,4 @@
-Gene Symbol	Gene name\
+Gene_Symbol	Gene_name\
 Gpr17	G protein-coupled receptor 17\
 Pcdhb9	protocadherin beta 9\
 C1qa	complement component 1, q subcomponent, alpha polypeptide\
