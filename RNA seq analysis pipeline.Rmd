@@ -180,7 +180,7 @@ cumulative_variance <- cumsum(variance_proportion)
 ggplot(data.frame(pca$x, meta1)) +
 #geom_point(aes(x = PC1, y = PC2, color = Name, shape = treatment),size=5)
 geom_point(aes(x = PC1, y = PC2, shape = treatment, color = treatment),size=5) +
-ggtitle("PCA: Mice cerebellum samples") #+ theme_minimal() + xlab(str_glue("PC1, variance: ", round(variance_proportion[1], 3))
+ggtitle("PCA of mice cerebellum samples") #+ theme_minimal() + xlab(str_glue("PC1, variance: ", round(variance_proportion[1], 3))
 
 # plot_ly(
 #   x = pca$x[,1],
@@ -388,7 +388,7 @@ library(viridis)
 heatmap.2(corr_DEG_genes, Rowv = as.dendrogram(hcl_DEG_genes), Colv = as.dendrogram(hcl_DEG_genes),
 trace = "none", scale = "none", labRow = NA, labCol = NA, col = viridis)
 
-cl_DEG_genes <- cutree(hcl_DEG_genes, k = 7) #k can be adjusted
+cl_DEG_genes <- cutree(hcl_DEG_genes, k = 4) #k can be adjusted
 heatmap.2(corr_DEG_genes, Rowv = as.dendrogram(hcl_DEG_genes), Colv = as.dendrogram(hcl_DEG_genes),
 trace = "none", scale = "none", labRow = NA, labCol = NA, col = viridis,
 ColSideColors = rainbow(15)[cl_DEG_genes]) 
@@ -409,7 +409,7 @@ library(viridis)
 heatmap.2(corr_DEG_mice, Rowv = as.dendrogram(hcl_DEG_mice), Colv = as.dendrogram(hcl_DEG_mice),
 trace = "none", scale = "none", labRow = NA, labCol = NA, col = viridis)
 
-cl_DEG_mice <- cutree(hcl_DEG_mice, k = 3) #k can be adjusted
+cl_DEG_mice <- cutree(hcl_DEG_mice, k = 4) #k can be adjusted
 heatmap.2(corr_DEG_mice, Rowv = as.dendrogram(hcl_DEG_mice), Colv = as.dendrogram(hcl_DEG_mice),
 trace = "none", scale = "none", labRow = NA, labCol = NA, col = viridis,
 ColSideColors = rainbow(15)[cl_DEG_mice]) 
@@ -691,7 +691,7 @@ library(viridis)
 heatmap.2(corr_DEG_genes, Rowv = as.dendrogram(hcl_DEG_genes), Colv = as.dendrogram(hcl_DEG_genes),
 trace = "none", scale = "none", labRow = NA, labCol = NA, col = viridis)
 
-cl_DEG_genes <- cutree(hcl_DEG_genes, k = 3) #k can be adjusted
+cl_DEG_genes <- cutree(hcl_DEG_genes, k = 4) #k can be adjusted
 heatmap.2(corr_DEG_genes, Rowv = as.dendrogram(hcl_DEG_genes), Colv = as.dendrogram(hcl_DEG_genes),
 trace = "none", scale = "none", labRow = NA, labCol = NA, col = viridis,
 ColSideColors = rainbow(15)[cl_DEG_genes]) 
@@ -712,7 +712,7 @@ library(viridis)
 heatmap.2(corr_DEG_mice, Rowv = as.dendrogram(hcl_DEG_mice), Colv = as.dendrogram(hcl_DEG_mice),
 trace = "none", scale = "none", labRow = NA, labCol = NA, col = viridis)
 
-cl_DEG_mice <- cutree(hcl_DEG_mice, k = 3) #k can be adjusted
+cl_DEG_mice <- cutree(hcl_DEG_mice, k = 4) #k can be adjusted
 heatmap.2(corr_DEG_mice, Rowv = as.dendrogram(hcl_DEG_mice), Colv = as.dendrogram(hcl_DEG_mice),
 trace = "none", scale = "none", labRow = NA, labCol = NA, col = viridis,
 ColSideColors = rainbow(15)[cl_DEG_mice]) 
