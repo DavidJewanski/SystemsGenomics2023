@@ -1,0 +1,70 @@
+---
+title: "Additional graphs"
+output: pdf_document
+date: "2023-12-18"
+---
+
+```{r setup, include=FALSE}
+library(knitr)
+knitr::opts_chunk$set(echo = TRUE, include = TRUE, fig.align = "center")
+knitr::opts_knit$set(global.par = TRUE)
+library(tidyverse); options(dplyr.summarise.inform = FALSE) # suppress summarise warnings
+library(cowplot)
+```
+
+```{r}
+df <- read.csv("Readmapping_FastQC_overview.csv",header=TRUE)
+```
+
+```{r}
+df$uniquely.mapped.reads.. <- as.numeric(gsub("%", "", df$uniquely.mapped.reads..))
+df$Multi.mapping.reads.. <- as.numeric(gsub("%", "", df$Multi.mapping.reads..))
+df$Unmapped.reads.. <- as.numeric(gsub("%", "", df$Unmapped.reads..))
+```
+
+```{r}
+# Select columns 3 to 11 for y values
+selected_columns <- c("trim_status","uniquely.mapped.reads..", "Multi.mapping.reads..", "Unmapped.reads..")
+selected_df <- df[selected_columns]
+
+df_longer <- selected_df %>% pivot_longer(cols = c("uniquely.mapped.reads..",
+                                                   "Multi.mapping.reads..", "Unmapped.reads.."),
+                                          names_to = "Name",
+                                          values_to = "values")
+
+# Reorder the levels of the "trim_status" factor
+df_longer$trim_status <- factor(df_longer$trim_status, levels = c("untrimmed", "trimmed"))
+df_longer$Name <- factor(df_longer$Name, levels =  c("uniquely.mapped.reads..",
+                                                   "Multi.mapping.reads..", "Unmapped.reads.."))
+
+
+facet_titles <- c(
+  "uniquely.mapped.reads.." = "Uniquely mapped reads",
+  "Multi.mapping.reads.." = "Multi-mapped reads",
+  "Unmapped.reads.." = "Unmapped reads"
+)
+
+# Create a faceted box plot for each value
+plot <- ggplot(df_longer, aes(x = trim_status, y = values, color = trim_status)) +
+  geom_boxplot(alpha = 0.7) +
+  geom_text(aes(label = trim_status), y = 105, vjust = -0.5, size = 4, show.legend = FALSE) +
+  scale_colour_manual(values = c("darkgreen", "darkorchid")) +
+  scale_y_continuous(limits = c(0, 100), breaks = seq(0, 100, by = 20)) +
+  theme_minimal() +
+  theme(
+    axis.text.x = element_blank(),
+    axis.title.x = element_blank(),
+    axis.title.y = element_text(size = 13),
+    strip.text = element_text(size = 13, face = "bold", hjust = 0.5, margin = margin(b = 10)),
+    legend.position = "right",  # Remove legend
+    legend.title = element_blank(),
+    legend.text = element_text(size = 12),
+    axis.text.y = element_text(size = 12)
+  ) +
+  facet_wrap(~Name, ncol = 3, labeller = labeller(Name = facet_titles)) +
+  labs(fill = "Trim Status", y = "Percentage of total reads")
+
+ggsave("Gene_mapping_comparison.png",plot = plot, width = 9, height = 4, path = "/Users/valentin/Documents/ETH/Master Biotechnologie/Lectures/Sytems_Genomics/Local_git_hub_repository/plots")
+```
+
+
