@@ -329,27 +329,31 @@ DEG_comaprison <-  data_frame("trim status" ="trimmed", "Rejuvenation approach"=
 
 #BiocManager::install("EnhancedVolcano")
 library(EnhancedVolcano)
+FCcutoff = 1
 
 plot <- EnhancedVolcano(res_DESeq2_aDR_fitered,
-                lab = meta_genes[meta_genes$ensembl_gene_id_version %in% rownames(res_DESeq2_aDR_fitered), "mgi_symbol"],
+                lab = meta_genes[meta_genes$ensembl_gene_id_version %in% 
+                                   rownames(res_DESeq2_aDR_fitered), "mgi_symbol"],
                 labSize = 5,
                 x = "log2FoldChange",
                 y = "pvalue_BH",
                 title = "DEG of DESeq2 aDR/AL",
                 subtitle = "",
-                #selectLab =,
                 pCutoff = 0.05,
                 FCcutoff = 1,
                 pointSize = 3,
+                selectLab = res_DESeq2_aDR_fitered$log2FoldChange < FCcutoff & 
+                  res_DESeq2_aDR_fitered$log2FoldChange < -FCcutoff,
                 xlim = c(-6,6),
                 ylim = c(0, 10),
                 drawConnectors = TRUE,
                 directionConnectors = 'both',
                 arrowheads = FALSE,
                 boxedLabels = FALSE,
-                legendPosition = "top")
+                legendPosition = "none"
+)
 plot
-#ggsave("Volcano plot aDR_AL DESeq2.svg",plot = plot, width = 8, height = 8, path = "/Users/david/Library/CloudStorage/OneDrive-Persönlich/Master ETH/Courses/11_Systems Genomics/project local repository/plots")
+ggsave("Volcano plot aDR_AL DESeq2.png",plot = plot, width = 8, height = 8, path = "/Users/valentin/Documents/ETH/Master Biotechnologie/Lectures/Sytems_Genomics/Local_git_hub_repository/plots")
 ```
 
 #### Grouping of identified genes (p. 59)
@@ -670,24 +674,27 @@ library(EnhancedVolcano)
 
 plot <- EnhancedVolcano(res_DESeq2_YMP_fitered,
                 lab = meta_genes[meta_genes$ensembl_gene_id_version %in% rownames(res_DESeq2_YMP_fitered), "mgi_symbol"],
-                labSize = 5,
+               labSize = 5,
                 x = "log2FoldChange",
                 y = "pvalue_BH",
-                title = "DEG of DESeq2 YMP/PBS",
+                title = "DEG of DESeq2 aDR/AL",
                 subtitle = "",
-                #selectLab =,
                 pCutoff = 0.05,
                 FCcutoff = 1,
                 pointSize = 3,
+                selectLab = res_DESeq2_aDR_fitered$log2FoldChange < FCcutoff & 
+                  res_DESeq2_aDR_fitered$log2FoldChange < -FCcutoff,
                 xlim = c(-6,6),
                 ylim = c(0, 10),
                 drawConnectors = TRUE,
                 directionConnectors = 'both',
                 arrowheads = FALSE,
                 boxedLabels = FALSE,
-                legendPosition = "top")
+                legendPosition = "none"
+)
 plot
-#ggsave("Volcano plot aDR_AL DESeq2.svg",plot = plot, width = 8, height = 8, path = "/Users/david/Library/CloudStorage/OneDrive-Persönlich/Master ETH/Courses/11_Systems Genomics/project local repository/plots")
+ggsave("Volcano plot YMP_PBS DESeq2.png",plot = plot, width = 8, height = 8, path = "/Users/valentin/Documents/ETH/Master Biotechnologie/Lectures/Sytems_Genomics/Local_git_hub_repository/plots")
+
 ```
 
 
