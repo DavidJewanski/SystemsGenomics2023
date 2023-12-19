@@ -331,8 +331,8 @@ DEG_comaprison <-  data_frame("trim status" ="trimmed", "Rejuvenation approach"=
 library(EnhancedVolcano)
 
 plot <- EnhancedVolcano(res_DESeq2_aDR_fitered,
-                lab = rownames(res_DESeq2_aDR_fitered),
-                labSize = 2,
+                lab = meta_genes[meta_genes$ensembl_gene_id_version %in% rownames(res_DESeq2_aDR_fitered), "mgi_symbol"],
+                labSize = 5,
                 x = "log2FoldChange",
                 y = "pvalue_BH",
                 title = "DEG of DESeq2 aDR/AL",
@@ -474,6 +474,7 @@ myelination <- gsub("-.*", "", myelination)
 myelination <- gsub(" ", "", myelination)
 myelin_meta <- meta_genes[meta_genes$mgi_symbol %in% myelination ,]
 myelin_expr <- avg_sc_expr_aDR[rownames(expr) %in% myelin_meta$ensembl_gene_id_version,]
+myelin_expr$mgi_symbol <- myelin_meta$mgi_symbol
 
 pos_cellular_process <- unlist(str_split(GO_aDR$Genes[4], ","))
 pos_cellular_process <- gsub("-.*", "", pos_cellular_process)
@@ -481,6 +482,7 @@ pos_cellular_process <- gsub(" ", "", pos_cellular_process)
 pos_cellular_process <- c(pos_cellular_process, "Prxl2c", "Niban2")
 cell_proc_meta <- meta_genes[meta_genes$mgi_symbol %in% pos_cellular_process ,]
 cell_proc_expr <- avg_sc_expr_aDR[rownames(expr) %in% cell_proc_meta$ensembl_gene_id_version,]
+cell_proc_expr$mgi_symbol <- cell_proc_meta$mgi_symbol
 
 pos_reg_met <- unlist(str_split(GO_aDR$Genes[9], ","))
 pos_reg_met <- gsub("-.*", "", pos_reg_met)
@@ -516,17 +518,45 @@ for(treatment in names(pos_cell_list_aDR))
   boxplot(pos_cell_list_aDR[[treatment]],
           main = paste0(treatment, " (", nrow(pos_cell_list_aDR[[treatment]]),")"),
           ylim = c(-6e-15, 6e-15))
+```
 
 
-# layout(matrix(1:4, nrow = 2, byrow = T))
-# par(mar=c(3,3,3,3))
-# for(GOset in c(myelin_list_aDR, pos_cell_list_aDR)) {
-#   for(treatment in names(GOset)) {
-#     boxplot(GOset[[treatment]],
-#             main = paste0(treatment, " (", nrow(GOset[[treatment]]),")"))
-#   }
-# }
-  
+```{r}
+# myelin_expr contains expr data for all enriched genes for AD and aDR and another column with the mgi_symbol
+myelin_expr_long <- myelin_expr %>%
+  gather(key = "treatment", value = "Expression", -mgi_symbol) # reshape the df
+myelin_expr_long$Expression <- round(myelin_expr_long$Expression * 10e15, digits = 3)
+
+# Plot
+grouping_plot <- ggplot(myelin_expr_long, aes(x = treatment, y = Expression, group = mgi_symbol, color = mgi_symbol)) +
+  geom_line() +
+  geom_point() +
+  labs(title = "Process gene enrichment\nin aDR: Myelination",
+       x = "Treatment",
+       y = "Normalized expression") +
+  theme_minimal() +
+  theme(plot.title = element_text(hjust = 0.5))
+grouping_plot
+ggsave("Grouping_GO_Myelination.png",plot = grouping_plot, width = 3, height = 3, path = paste0(pwd2, "/plots"))
+
+
+cell_proc_expr_long <- cell_proc_expr %>%
+  gather(key = "treatment", value = "Expression", -mgi_symbol) # reshape the df
+cell_proc_expr_long$Expression <- round(cell_proc_expr_long$Expression * 10e14, digits = 3)
+
+grouping_plot <- ggplot(cell_proc_expr_long, aes(x = treatment, y = Expression, group = mgi_symbol, color = mgi_symbol)) +
+  geom_line() +
+  geom_point() +
+  labs(title = "Process gene enrichment\nin aDR: Cellular processes",
+       x = "Treatment",
+       y = "Normalized expression") +
+  theme_minimal() +
+  theme(plot.title = element_text(hjust = 0.5))
+grouping_plot
+ggsave("Grouping_GO_Cellular_processes.png",plot = grouping_plot, width = 5.5, height = 4, path = paste0(pwd2, "/plots"))
+
+
+
 ```
 
 
@@ -599,7 +629,6 @@ CAS_genes[Cereb_genes$Ensembl.ID %in% common_CAS_DEG_aDR,]
 ### DESeq YMP/PBS (slide 57)
 ```{r}
 dds_YMP <- DESeqDataSetFromTximport(txi_YMP, colData = meta1_YMP, design = ~ treatment) #the output we be in gene_ids!
-#summary(dds_aDR)
 rownames(dds_YMP) %>% length() #gene_id_versions
 # txi_aDR, dds_aDR: 56'884 genes
 
@@ -611,7 +640,8 @@ rownames(dds_filtered_YMP) %>% length() #gene_id_versions
 dds_filtered_YMP <- DESeq(dds_filtered_YMP, test="LRT", reduced= ~ 1) #If only one covariate, use ~1
 
 res_DESeq2_YMP <- results(dds_filtered_YMP) # 25649 genes, same amount
-res_DESeq2_YMP <- data.frame(res_DESeq2_YMP) 
+res_DESeq2_YMP <- data.frame(res_DESeq2_YMP)
+res_DESeq2_YMP$log2FoldChange <- -res_DESeq2_YMP$log2FoldChange
 res_DESeq2_YMP$pvalue_BH <- p.adjust(res_DESeq2_YMP$pvalue, method="BH") #Argumentieren wieso BH correction
 res_DESeq2_YMP$minuslog10_pvalue_BH <- -log10(res_DESeq2_YMP$pvalue_BH)
 
@@ -639,8 +669,8 @@ DEG_comaprison <- rbind(DEG_comaprison, new_row)
 library(EnhancedVolcano)
 
 plot <- EnhancedVolcano(res_DESeq2_YMP_fitered,
-                lab = rownames(res_DESeq2_YMP_fitered),
-                labSize = 2,
+                lab = meta_genes[meta_genes$ensembl_gene_id_version %in% rownames(res_DESeq2_YMP_fitered), "mgi_symbol"],
+                labSize = 5,
                 x = "log2FoldChange",
                 y = "pvalue_BH",
                 title = "DEG of DESeq2 YMP/PBS",
@@ -762,8 +792,8 @@ write.table(DEG_YMP_gene_id, file = "DEG_genes_YMP.txt", quote = F, row.names = 
 setwd(pwd2)
 YMP_Nef_ens <- read.table("GOrilla/YMP_Nef.txt", header = TRUE, sep = "\t")
 Nef_gene_ids <- meta_genes[meta_genes$ensembl_gene_id %in% YMP_Nef_ens$Ensembl.ID,]
-neurofilament_expr_YMP <- avg_sc_expr_YMP[Nef_gene_ids$ensembl_gene_id,] ### LOL. wtf, wwhat
-
+neurofilament_expr_YMP <- avg_sc_expr_YMP[Nef_gene_ids$ensembl_gene_id,]
+neurofilament_expr_YMP$mgi_symbol <- Nef_gene_ids$mgi_symbol
 
 max_treatment_DEG_YMP <- setNames(colnames(avg_sc_expr_YMP)[apply(avg_sc_expr_YMP[DEG_YMP,], 1, which.max)],DEG_YMP)
 avg_expr_DEG_list_YMP <- tapply(names(max_treatment_DEG_YMP), max_treatment_DEG_YMP, function(x) avg_sc_expr_YMP[x,])
@@ -781,6 +811,20 @@ par(mar=c(3,3,3,3))
 boxplot(neurofilament_expr_YMP, main = paste0(treatment, " (", nrow(neurofilament_expr_YMP),")")) # wie stelle ich das gut dar?
 #          ylim = c(-6e-16, 6e-16))
 
+neurofilament_expr_YMP_long <- neurofilament_expr_YMP %>%
+  gather(key = "treatment", value = "Expression", -mgi_symbol) # reshape the df
+neurofilament_expr_YMP_long$Expression <- round(neurofilament_expr_YMP_long$Expression * 10e14, digits = 3)
+
+grouping_plot <- ggplot(neurofilament_expr_YMP_long, aes(x = treatment, y = Expression, group = mgi_symbol, color = mgi_symbol)) +
+  geom_line() +
+  geom_point() +
+  labs(title = "Process gene enrichment\nin YMP: Neurofilament",
+       x = "Treatment",
+       y = "Normalized expression") +
+  theme_minimal() +
+  theme(plot.title = element_text(hjust = 0.5))
+grouping_plot
+ggsave("Grouping_GO_Neurofilament.png",plot = grouping_plot, width = 3.5, height = 3, path = paste0(pwd2, "/plots"))
 
 ```
 
