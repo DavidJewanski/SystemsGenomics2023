@@ -24,10 +24,10 @@ library(viridis)
 ```{r}
 #pwd <- "/Users/david/Library/CloudStorage/OneDrive-Persönlich/Master ETH/Courses/11_Systems Genomics/project local repository/data"
 #pwd2 <- "/Users/david/Library/CloudStorage/OneDrive-Persönlich/Master ETH/Courses/11_Systems Genomics/project local repository"
-#pwd <- "C:/Users/nicks/Desktop/Systems_Genomics/GitHub 2.0/SystemsGenomics2023/data"
-#pwd2 <- "C:/Users/nicks/Desktop/Systems_Genomics/GitHub 2.0/SystemsGenomics2023"
+pwd <- "C:/Users/nicks/Desktop/Systems_Genomics/GitHub 2.0/SystemsGenomics2023/data"
+pwd2 <- "C:/Users/nicks/Desktop/Systems_Genomics/GitHub 2.0/SystemsGenomics2023"
 
-pwd <- "/Users/valentin/Documents/ETH/Master Biotechnologie/Lectures/Sytems_Genomics/Local_git_hub_repository/data"
+#pwd <- "/Users/valentin/Documents/ETH/Master Biotechnologie/Lectures/Sytems_Genomics/Local_git_hub_repository/data"
 ```
 
 # Nextera trimmed
@@ -193,7 +193,7 @@ ggtitle("PCA of mice cerebellum samples") + theme_minimal() +
         axis.text.y = element_text(size = 11),
         axis.text.x = element_text(size = 11)) 
 
-ggsave("PCA.png",plot = plot, width = 9, height = 4, path = "/Users/valentin/Documents/ETH/Master Biotechnologie/Lectures/Sytems_Genomics/Local_git_hub_repository/plots")
+#ggsave("PCA.png",plot = plot, width = 9, height = 4, path = "/Users/valentin/Documents/ETH/Master Biotechnologie/Lectures/Sytems_Genomics/Local_git_hub_repository/plots")
 
 # plot_ly(
 #   x = pca$x[,1],
@@ -612,6 +612,7 @@ head(DA_aDR_expr)
 DA_aDR_expr_long <- DA_aDR_expr %>%
   gather(key = "treatment", value = "Expression", -mgi_symbol) # reshape the df
 DA_aDR_expr_long$Expression <- round(DA_aDR_expr_long$Expression * 10e16,digits=3)
+DA_aDR_expr_long$treatment <- factor(DA_aDR_expr_long$treatment, levels=c("AL","aDR"))
 # Plot
 grouping_plot <- ggplot(DA_aDR_expr_long, aes(x = treatment, y = Expression, group = mgi_symbol, color = mgi_symbol)) +
   geom_line() +
