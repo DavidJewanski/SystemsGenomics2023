@@ -22,10 +22,10 @@ library(viridis)
 ```
 
 ```{r}
-#pwd <- "/Users/david/Library/CloudStorage/OneDrive-Persönlich/Master ETH/Courses/11_Systems Genomics/project local repository/data"
-#pwd2 <- "/Users/david/Library/CloudStorage/OneDrive-Persönlich/Master ETH/Courses/11_Systems Genomics/project local repository"
+pwd <- "/Users/david/Library/CloudStorage/OneDrive-Persönlich/Master ETH/Courses/11_Systems Genomics/project local repository/data"
+pwd2 <- "/Users/david/Library/CloudStorage/OneDrive-Persönlich/Master ETH/Courses/11_Systems Genomics/project local repository"
 # pwd <- "C:/Users/nicks/Desktop/Systems_Genomics/GitHub David/SystemsGenomics2023/data"
- pwd <- "/Users/valentin/Documents/ETH/Master Biotechnologie/Lectures/Sytems_Genomics/Local_git_hub_repository/data"
+# pwd <- "/Users/valentin/Documents/ETH/Master Biotechnologie/Lectures/Sytems_Genomics/Local_git_hub_repository/data"
 ```
 
 # Nextera trimmed
@@ -400,10 +400,14 @@ plot(hcl_DEG_genes, labels = FALSE)
 #Virdis color palette
 #install.packages("viridis")
 library(viridis)
+
+setwd(paste0(pwd2, "/plots"))
+png("Heatmap_genes_aDR.png", width = 7, height = 4.5, units = "in", res = 300)
 heatmap.2(corr_DEG_genes, Rowv = as.dendrogram(hcl_DEG_genes), Colv = as.dendrogram(hcl_DEG_genes),
 trace = "none", scale = "none", labRow = NA, labCol = NA, col = viridis)
+dev.off()
 
-cl_DEG_genes <- cutree(hcl_DEG_genes, k = 4) #k can be adjusted
+cl_DEG_genes <- cutree(hcl_DEG_genes, k = 2) #k can be adjusted
 heatmap.2(corr_DEG_genes, Rowv = as.dendrogram(hcl_DEG_genes), Colv = as.dendrogram(hcl_DEG_genes),
 trace = "none", scale = "none", labRow = NA, labCol = NA, col = viridis,
 ColSideColors = rainbow(15)[cl_DEG_genes]) 
@@ -421,14 +425,32 @@ plot(hcl_DEG_mice, labels = FALSE)
 #Virdis color palette
 #install.packages("viridis")
 library(viridis)
-heatmap.2(corr_DEG_mice, Rowv = as.dendrogram(hcl_DEG_mice), Colv = as.dendrogram(hcl_DEG_mice),
-trace = "none", scale = "none", labRow = NA, labCol = NA, col = viridis)
+heatplot <- heatmap.2(corr_DEG_mice, Rowv = as.dendrogram(hcl_DEG_mice), Colv = as.dendrogram(hcl_DEG_mice),
+trace = "none", scale = "none", labRow = NA, labCol = NA, col = viridis::magma(100))
+ggsave("Heatmap_samles_aDR.png",plot = heatplot, width = 5, height = 5, path = paste0(pwd2, "/plots"))
 
 cl_DEG_mice <- cutree(hcl_DEG_mice, k = 4) #k can be adjusted
 heatmap.2(corr_DEG_mice, Rowv = as.dendrogram(hcl_DEG_mice), Colv = as.dendrogram(hcl_DEG_mice),
-trace = "none", scale = "none", labRow = NA, labCol = NA, col = viridis,
+trace = "none", scale = "none", labRow = NA, labCol = NA, col = viridis::magma(100),
 ColSideColors = rainbow(15)[cl_DEG_mice]) 
 ```
+
+#####save heatmap
+
+```{r}
+setwd(paste0(pwd2, "/plots"))
+png("Heatmap_samles_aDR.png", width = 7, height = 4.5, units = "in", res = 300)
+heatmap_obj <- heatmap.2(corr_DEG_mice, 
+                        Rowv = as.dendrogram(hcl_DEG_mice), 
+                        Colv = as.dendrogram(hcl_DEG_mice),
+                        trace = "none", 
+                        scale = "none", 
+                        labRow = NA, 
+                        labCol = NA, 
+                        col = viridis::magma(100))
+dev.off()
+```
+
 
 #### 3-6 Making sense of the genes (page 66)
 ```{r}
@@ -728,15 +750,21 @@ plot(hcl_DEG_genes, labels = FALSE)
 
 #Virdis color palette
 #install.packages("viridis")
+
+#setwd(paste0(pwd2, "/plots"))
+#png("Heatmap_genes_YMP.png", width = 7, height = 4.5, units = "in", res = 300)
 library(viridis)
 heatmap.2(corr_DEG_genes, Rowv = as.dendrogram(hcl_DEG_genes), Colv = as.dendrogram(hcl_DEG_genes),
 trace = "none", scale = "none", labRow = NA, labCol = NA, col = viridis)
+#dev.off()
 
 cl_DEG_genes <- cutree(hcl_DEG_genes, k = 4) #k can be adjusted
 heatmap.2(corr_DEG_genes, Rowv = as.dendrogram(hcl_DEG_genes), Colv = as.dendrogram(hcl_DEG_genes),
 trace = "none", scale = "none", labRow = NA, labCol = NA, col = viridis,
 ColSideColors = rainbow(15)[cl_DEG_genes]) 
 ```
+
+
 #### hierarchical clustering of YMP MICE (GENES is above)
 ```{r}
 corr_DEG_mice <- cor(expr_YMP[DEG_YMP,], method = "spearman")
@@ -758,6 +786,22 @@ heatmap.2(corr_DEG_mice, Rowv = as.dendrogram(hcl_DEG_mice), Colv = as.dendrogra
 trace = "none", scale = "none", labRow = NA, labCol = NA, col = viridis,
 ColSideColors = rainbow(15)[cl_DEG_mice]) 
 ```
+
+
+```{r}
+setwd(paste0(pwd2, "/plots"))
+png("Heatmap_samles_YMP.png", width = 7, height = 4.5, units = "in", res = 300)
+heatmap.2(corr_DEG_mice,
+          Rowv = as.dendrogram(hcl_DEG_mice), 
+          Colv = as.dendrogram(hcl_DEG_mice),
+          trace = "none",
+          scale = "none", 
+          labRow = NA, 
+          labCol = NA, 
+          col = viridis::magma(100))
+dev.off()
+```
+
 
 ### 3-6 Making sense of the genes (page 66)
 ```{r}
