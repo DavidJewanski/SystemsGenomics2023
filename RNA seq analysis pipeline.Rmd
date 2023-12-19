@@ -22,9 +22,11 @@ library(viridis)
 ```
 
 ```{r}
-pwd <- "/Users/david/Library/CloudStorage/OneDrive-Persönlich/Master ETH/Courses/11_Systems Genomics/project local repository/data"
-pwd2 <- "/Users/david/Library/CloudStorage/OneDrive-Persönlich/Master ETH/Courses/11_Systems Genomics/project local repository"
-# pwd <- "C:/Users/nicks/Desktop/Systems_Genomics/GitHub David/SystemsGenomics2023/data"
+#pwd <- "/Users/david/Library/CloudStorage/OneDrive-Persönlich/Master ETH/Courses/11_Systems Genomics/project local repository/data"
+#pwd2 <- "/Users/david/Library/CloudStorage/OneDrive-Persönlich/Master ETH/Courses/11_Systems Genomics/project local repository"
+pwd <- "C:/Users/nicks/Desktop/Systems_Genomics/GitHub 2.0/SystemsGenomics2023/data"
+pwd2 <- "C:/Users/nicks/Desktop/Systems_Genomics/GitHub 2.0/SystemsGenomics2023"
+
 # pwd <- "/Users/valentin/Documents/ETH/Master Biotechnologie/Lectures/Sytems_Genomics/Local_git_hub_repository/data"
 ```
 
@@ -516,6 +518,156 @@ for(treatment in names(pos_cell_list_aDR))
 # }
   
 ```
+#### Gene Ontology enrichment DAVID aDR (page 70)
+```{r}
+# webtool: https://cbl-gorilla.cs.technion.ac.il/
+# using two unranked lists of genes
+# Results: https://cbl-gorilla.cs.technion.ac.il/GOrilla/q5z11jdw/GOResults.html#genes_info
+setwd(pwd2)
+#Biological rhythms, 6 genes
+DA_aDR <- read.table("DAVID/DAVID aDR biological rhythms.txt", header = TRUE, sep = "\t")
+head(DA_aDR)
+DA_aDR$gene_id <- rownames(DA_aDR)
+DA_aDR <- data.frame(DA_aDR)
+
+DA_aDR_gene_ids <- meta_genes[meta_genes$ensembl_gene_id %in% DA_aDR$gene_id,]
+#DA_aDR_expr <- avg_sc_expr_aDR[DA_aDR_gene_ids$ensembl_gene_id,]
+DA_aDR_expr <- avg_sc_expr_aDR[DA_aDR_gene_ids$ensembl_gene_id_version,] 
+DA_aDR_expr$mgi_symbol <- meta_genes[meta_genes$ensembl_gene_id_version %in% rownames(DA_aDR_expr),"mgi_symbol"]
+
+#DA_aDR_expr <- left_join(DA_aDR_expr, DA_aDR_gene_ids)
+head(DA_aDR_expr)
+
+
+#Create a nice, corresponding graph
+# myelin_expr contains expr data for all enriched genes for AD and aDR and another column with the mgi_symbol
+DA_aDR_expr_long <- DA_aDR_expr %>%
+  gather(key = "treatment", value = "Expression", -mgi_symbol) # reshape the df
+DA_aDR_expr_long$Expression <- round(DA_aDR_expr_long$Expression * 10e16,digits=3)
+# Plot
+grouping_plot <- ggplot(DA_aDR_expr_long, aes(x = treatment, y = Expression, group = mgi_symbol, color = mgi_symbol)) +
+  geom_line() +
+  geom_point() +
+  labs(title = "Process gene enrichment\nin aDR: Biological rhythms",
+       x = "Treatment",
+       y = "Normalized expression") +
+  theme_minimal() +
+  theme(plot.title = element_text(hjust = 0.5))
+grouping_plot
+ggsave("Grouping_DAVID_biological_rhythms.png",plot = grouping_plot, width = 3.5, height = 3, path = paste0(pwd2,"/plots"))
+
+
+```
+
+```{r}
+#Testing chat gpt code
+# Assuming your gene expression data is stored in a data frame called 'gene_expression'
+# with row names as gene names and columns 'condition_a' and 'condition_b'
+#install.packages("reshape2")
+library(ggplot2)
+library(tidyr)
+
+
+# Assuming your gene expression data is stored in a data frame called 'gene_expression'
+# with row names as gene names and columns 'condition_a' and 'condition_b'
+
+library(ggplot2)
+library(tidyr)
+
+# Sample data
+set.seed(123)
+gene_names <- letters[1:10]
+gene_expression <- data.frame(
+  condition_a = rnorm(10, mean = 10, sd = 2),
+  condition_b = rnorm(10, mean = 12, sd = 2)
+)
+rownames(gene_expression) <- gene_names
+gene_expression$name <- rownames(gene_expression)
+
+
+# Convert data to long format using tidyr::pivot_longer
+gene_expression_long <- pivot_longer(gene_expression, cols = c(condition_a, condition_b), names_to = "Condition", values_to = "Expression")
+
+# Create a scatter plot with connecting lines
+ggplot(gene_expression_long, aes(x = Condition, y = Expression, group = name, color = name)) +
+  geom_point() +
+  geom_line() +
+  labs(title = "Gene Expression in Conditions A and B",
+       x = "Conditions", y = "Expression Level") +
+  theme_minimal()
+
+
+
+```
+
+```{r}
+
+
+GO_aDR <- GO_aDR %>%
+  mutate_at(vars(N, B, n, b, Enrichment), as.numeric)
+GO_aDR$Enrichment <- (GO_aDR$b/GO_aDR$n) / (GO_aDR$B/GO_aDR$N)
+GO_aDR$Genes <- sub("^\\[|\\]$", "", GO_aDR$Genes)
+
+
+myelination <- unlist(str_split(GO_aDR$Genes[1], ","))
+myelination <- gsub("-.*", "", myelination)
+myelination <- gsub(" ", "", myelination)
+myelin_meta <- meta_genes[meta_genes$mgi_symbol %in% myelination ,]
+myelin_expr <- avg_sc_expr_aDR[rownames(expr) %in% myelin_meta$ensembl_gene_id_version,]
+
+pos_cellular_process <- unlist(str_split(GO_aDR$Genes[4], ","))
+pos_cellular_process <- gsub("-.*", "", pos_cellular_process)
+pos_cellular_process <- gsub(" ", "", pos_cellular_process)
+pos_cellular_process <- c(pos_cellular_process, "Prxl2c", "Niban2")
+cell_proc_meta <- meta_genes[meta_genes$mgi_symbol %in% pos_cellular_process ,]
+cell_proc_expr <- avg_sc_expr_aDR[rownames(expr) %in% cell_proc_meta$ensembl_gene_id_version,]
+
+pos_reg_met <- unlist(str_split(GO_aDR$Genes[9], ","))
+pos_reg_met <- gsub("-.*", "", pos_reg_met)
+pos_reg_met <- gsub(" ", "", pos_reg_met)
+reg_met_meta <- meta_genes[meta_genes$mgi_symbol %in% pos_reg_met ,]
+reg_met_expr <- avg_sc_expr_aDR[rownames(expr) %in% reg_met_meta$ensembl_gene_id_version,]
+
+length(intersect(pos_reg_met,pos_cellular_process))# lol, same genes.
+
+#meta_genes[!meta_genes$mgi_symbol %in% pos_cellular_process ,]
+#pos_cellular_process[!pos_cellular_process %in%  meta_genes$mgi_symbol]
+
+
+#meta_genes[meta_genes$ensembl_gene_id == "ENSMUSG00000026796",]
+#res_DESeq2_aDR["ENSMUSG00000021482.11",]
+
+max_treatment_DEG_aDR <- setNames(colnames(avg_sc_expr_aDR)[apply(avg_sc_expr_aDR[DEG_aDR,], 1, which.max)],DEG_aDR)
+avg_expr_DEG_list_aDR <- tapply(names(max_treatment_DEG_aDR), max_treatment_DEG_aDR, function(x) avg_sc_expr_aDR[x,])
+
+myelin_list_aDR <- lapply(avg_expr_DEG_list_aDR, function(df) df[rownames(df) %in% myelin_meta$ensembl_gene_id_version,])
+pos_cell_list_aDR <- lapply(avg_expr_DEG_list_aDR, function(df) df[rownames(df) %in% cell_proc_meta$ensembl_gene_id_version,])
+
+layout(matrix(1:2, nrow = 1, byrow = T))
+par(mar=c(3,3,3,3))
+for(treatment in names(myelin_list_aDR))
+  boxplot(myelin_list_aDR[[treatment]],
+          main = paste0(treatment, " (", nrow(myelin_list_aDR[[treatment]]),")"),
+          ylim = c(-6e-16, 6e-16))
+
+layout(matrix(1:2, nrow = 1, byrow = T))
+par(mar=c(3,3,3,3))
+for(treatment in names(pos_cell_list_aDR))
+  boxplot(pos_cell_list_aDR[[treatment]],
+          main = paste0(treatment, " (", nrow(pos_cell_list_aDR[[treatment]]),")"),
+          ylim = c(-6e-15, 6e-15))
+
+
+# layout(matrix(1:4, nrow = 2, byrow = T))
+# par(mar=c(3,3,3,3))
+# for(GOset in c(myelin_list_aDR, pos_cell_list_aDR)) {
+#   for(treatment in names(GOset)) {
+#     boxplot(GOset[[treatment]],
+#             main = paste0(treatment, " (", nrow(GOset[[treatment]]),")"))
+#   }
+# }
+  
+```
 
 
 
@@ -714,7 +866,7 @@ trace = "none", scale = "none", labRow = NA, labCol = NA, col = viridis,
 ColSideColors = rainbow(15)[cl_DEG_mice]) 
 ```
 
-#### 3-6 Making sense of the genes (page 66)
+#### 3-6 Making sense of the genes YMP (page 66)
 ```{r}
 #YMP
 
@@ -1163,7 +1315,7 @@ trace = "none", scale = "none", labRow = NA, labCol = NA, col = viridis,
 ColSideColors = rainbow(15)[cl_DEG_mice]) 
 ```
 
-#### 3-6 Making sense of the genes (page 66)
+#### 3-6 Making sense of the genes aDR (page 66)
 ```{r}
 #aDR
 
@@ -1177,7 +1329,7 @@ DEG_aDR_gene_id <- sub("\\..*", "", DEG_aDR)
 
 
 write.table(DEG_aDR_gene_id,
-file = "genes_C2.txt",
+file = "DEG_genes_aDR.txt",
 quote = F, row.names = F, col.names = F) #DEG's, dies ist der Code der meiner Meinung nach Sinn macht.
 
 write.table(meta_genes[meta_genes$expressed, "ensembl_gene_id"],
