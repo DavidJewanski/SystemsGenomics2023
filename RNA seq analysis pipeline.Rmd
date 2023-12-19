@@ -179,10 +179,19 @@ variance_proportion <- variances / sum(variances)
 cumulative_variance <- cumsum(variance_proportion)
 
 
-ggplot(data.frame(pca$x, meta1)) +
+plot <- ggplot(data.frame(pca$x, meta1)) +
 #geom_point(aes(x = PC1, y = PC2, color = Name, shape = treatment),size=5)
 geom_point(aes(x = PC1, y = PC2, shape = treatment, color = treatment),size=5) +
-ggtitle("PCA of mice cerebellum samples") #+ theme_minimal() + xlab(str_glue("PC1, variance: ", round(variance_proportion[1], 3))
+ggtitle("PCA of mice cerebellum samples") + theme_minimal() + 
+  xlab(str_glue("PC1, variance: ",round(variance_proportion[1], 3))) +
+  ylab(str_glue("PC2, variance: ",round(variance_proportion[2], 3))) +
+  theme(plot.title = element_text(hjust = 0.5, size=16),
+        axis.title.y = element_text(size = 14),
+        axis.title.x = element_text(size = 14),
+        axis.text.y = element_text(size = 11),
+        axis.text.x = element_text(size = 11)) 
+
+ggsave("PCA.png",plot = plot, width = 9, height = 4, path = "/Users/valentin/Documents/ETH/Master Biotechnologie/Lectures/Sytems_Genomics/Local_git_hub_repository/plots")
 
 # plot_ly(
 #   x = pca$x[,1],
