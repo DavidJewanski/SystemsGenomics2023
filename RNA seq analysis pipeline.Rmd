@@ -24,10 +24,10 @@ library(viridis)
 ```{r}
 #pwd <- "/Users/david/Library/CloudStorage/OneDrive-Persönlich/Master ETH/Courses/11_Systems Genomics/project local repository/data"
 #pwd2 <- "/Users/david/Library/CloudStorage/OneDrive-Persönlich/Master ETH/Courses/11_Systems Genomics/project local repository"
-pwd <- "C:/Users/nicks/Desktop/Systems_Genomics/GitHub 2.0/SystemsGenomics2023/data"
-pwd2 <- "C:/Users/nicks/Desktop/Systems_Genomics/GitHub 2.0/SystemsGenomics2023"
+#pwd <- "C:/Users/nicks/Desktop/Systems_Genomics/GitHub 2.0/SystemsGenomics2023/data"
+#pwd2 <- "C:/Users/nicks/Desktop/Systems_Genomics/GitHub 2.0/SystemsGenomics2023"
 
-#pwd <- "/Users/valentin/Documents/ETH/Master Biotechnologie/Lectures/Sytems_Genomics/Local_git_hub_repository/data"
+pwd <- "/Users/valentin/Documents/ETH/Master Biotechnologie/Lectures/Sytems_Genomics/Local_git_hub_repository/data"
 ```
 
 # Nextera trimmed
@@ -1659,6 +1659,10 @@ ggsave("DEGs_trimming_comparison.png",plot = plot, width = 9, height = 4, path =
 ```
 
 ```{r}
+DEG_comaprison <-  data_frame("trim status" ="trimmed", "Rejuvenation approach"="aDR",DEGs = 84)
+new_row <- c("trimmed", "YMP", 33)
+DEG_comaprison <- rbind(DEG_comaprison, new_row)
+
 # only plotting trimmed data
 plot <- ggplot(DEG_comaprison, aes(x = `Rejuvenation approach`, y = DEGs, fill = `trim status`)) +
   geom_bar(stat = "identity", position = "dodge", colour="black", width = 0.7) +
@@ -1675,7 +1679,6 @@ plot <- ggplot(DEG_comaprison, aes(x = `Rejuvenation approach`, y = DEGs, fill =
     axis.text.x = element_text(size = 14),
     title = element_text(size = 15)
     ) 
-
 
 ggsave("DEGs_trimmed_for_Nick.png",plot = plot, width = 6, height = 5, path = "/Users/valentin/Documents/ETH/Master Biotechnologie/Lectures/Sytems_Genomics/Local_git_hub_repository/plots")
 ```
